@@ -1,0 +1,1082 @@
+name: 'Vortex Mod Manager'
+game_slug: 'vortex-mod-manager'
+year: 2016
+version: 'wine'
+slug: 'vortex-mod-manager-wine'
+runner: 'wine'
+description: 'A Wine prefix installer for Vortex mod manager! Includes full Steam Library detection across any mount points. Steam Deck compatible!'
+notes: 'Games installed in any detected steam library will be linked.
+
+  Games not supported by any Vortex Extension will still be linked.
+
+  Includes support for Lutris'' WINE Steam!
+
+  Includes a manual script which adds any games to the Vortex prefix WITHOUT REINSTALLING.
+
+  This installer requires the following:
+
+  Vortex https://www.nexusmods.com/about/vortex/
+
+  Steam https://store.steampowered.com/about/
+
+  bash https://www.gnu.org/software/bash/
+
+  sed https://www.gnu.org/software/sed/
+
+  grep https://www.gnu.org/software/grep/
+
+  sqlite3 https://www.sqlite.org/
+
+  xdg-utils https://freedesktop.org/wiki/Software/xdg-utils/
+
+  coreutils https://www.gnu.org/software/coreutils/
+
+  findutils https://www.gnu.org/software/findutils/'
+credits: 'GitHub https://github.com/Nexus-Mods/Vortex/issues/10686'
+script:
+  files:
+  - setup: "https://github.com/Nexus-Mods/Vortex/releases/download/v1.5.13/vortex-setup-1.5.13.exe"
+  game:
+    exe: "drive_c/Program Files/Black Tree Gaming Ltd/Vortex/Vortex.exe"
+    args: "-d"
+  install_complete_text: 'Vortex was installed successfully!
+
+    RECOMMENDED:
+
+
+    Use the "Execute script" context menu option to remove unnecessary windows files added by vortex setup.
+
+    See the FAQ at
+
+    https://github.com/NicBOMB/Vortex/blob/master/vortex-lutris-installer.md
+
+
+    OPTIONAL:
+
+
+    Close Vortex, then Move/Copy your %APPDATA%/Vortex folder from a previous install into the appropriate folder.
+
+    This will launch Vortex with your previous preferences including your nexus account, game extensions, themes, and storage locations.
+
+    Only attempt this if Vortex launches and closes, you know the correct filepath, and you want to get adventurous with your file manager.'
+  installer:
+  - task:
+      name: 'winetricks'
+      prefix: '$GAMEDIR'
+      app: 'win10 dotnet48 corefonts'
+      description: 'Installing .NET 4.8 and Corefonts via winetricks'
+  - task:
+      description: 'Adding Steam to the Wine Prefix Registry 1/2'
+      key: 'SteamPath'
+      name: 'set_regedit'
+      path: 'HKEY_CURRENT_USER\Software\Valve\Steam'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam'
+  - task:
+      description: 'Adding Steam to the Wine Prefix Registry 2/2'
+      key: 'SteamExe'
+      name: 'set_regedit'
+      path: 'HKEY_CURRENT_USER\Software\Valve\Steam'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\Steam.exe'
+  - task:
+      description: 'Adding DARK SOULS to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\NAMCO BANDAI GAMES\DARK SOULS'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls Prepare to Die Edition'
+  - task:
+      description: 'Adding DARK SOULS to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\211420'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls Prepare to Die Edition'
+  - task:
+      description: 'Adding DARK SOULS REMASTERED to the Wine Prefix Registry 1/1'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\570940'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS REMASTERED'
+  - task:
+      description: 'Adding DARK SOULS II to the Wine Prefix Registry 1/1'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\236430'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls II'
+  - task:
+      description: 'Adding DARK SOULS II Scholar of the First Sin to the Wine Prefix Registry 1/1'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\335300'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls II Scholar of the First Sin'
+  - task:
+      description: 'Adding DARK SOULS III to the Wine Prefix Registry 1/1'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\374320'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS III'
+  - task:
+      description: 'Adding ELDEN RING to the Wine Prefix Registry 1/2'
+      key: 'InstallLocation'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ELDEN RING_is1'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\ELDEN RING'
+  - task:
+      description: 'Adding ELDEN RING to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\1245620'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\ELDEN RING'
+  - task:
+      description: 'Adding Fallout 3 to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Fallout 3'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 3'
+  - task:
+      description: 'Adding Fallout 3 to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22300'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 3'
+  - task:
+      description: 'Adding Fallout 3 Game of the Year Edition to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Fallout 3 goty'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 3 goty'
+  - task:
+      description: 'Adding Fallout 3 Game of the Year Edition to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22370'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 3 goty'
+  - task:
+      description: 'Adding Fallout 4 to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Fallout4'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4'
+  - task:
+      description: 'Adding Fallout 4 to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\377160'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4'
+  - task:
+      description: 'Adding Fallout 4 VR to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Fallout 4 VR'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4 VR'
+  - task:
+      description: 'Adding Fallout 4 VR to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\611660'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4 VR'
+  - task:
+      description: 'Adding Fallout 76 to the Wine Prefix Registry 1/2'
+      key: 'Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Fallout 76'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout76'
+  - task:
+      description: 'Adding Fallout 76 to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\1151340'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout76'
+  - task:
+      description: 'Adding Fallout New Vegas to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\FalloutNV'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout New Vegas'
+  - task:
+      description: 'Adding Fallout New Vegas to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22380'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout New Vegas'
+  - task:
+      description: 'Adding MechWarrior 5: Mercenaries to the Wine Prefix Registry 1/1'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\784080'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\MechWarrior 5 Mercenaries'
+  - task:
+      description: 'Adding Middle Earth: Shadow of War to the Wine Prefix Registry 1/1'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\356190'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\ShadowOfWar'
+  - task:
+      description: 'Adding Monster Hunter: World to the Wine Prefix Registry 1/2'
+      key: 'InstallLocation'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 582010'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Monster Hunter World'
+  - task:
+      description: 'Adding Monster Hunter: World to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\582010'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Monster Hunter World'
+  - task:
+      description: 'Adding Morrowind to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Morrowind'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Morrowind'
+  - task:
+      description: 'Adding Morrowind to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22320'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Morrowind'
+  - task:
+      description: 'Adding Oblivion to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\oblivion'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Oblivion'
+  - task:
+      description: 'Adding Oblivion to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22330'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Oblivion'
+  - task:
+      description: 'Adding Sekiro: Shadows Die Twice to the Wine Prefix Registry 1/1'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\814380'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Sekiro'
+  - task:
+      description: 'Adding Skyrim to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Skyrim'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim'
+  - task:
+      description: 'Adding Skyrim to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\72850'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim'
+  - task:
+      description: 'Adding Skyrim Special Edition to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Skyrim Special Edition'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition'
+  - task:
+      description: 'Adding Skyrim Special Edition to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\489830'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition'
+  - task:
+      description: 'Adding Skyrim VR to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Skyrim VR'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\SkyrimVR'
+  - task:
+      description: 'Adding Skyrim VR to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\611670'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\SkyrimVR'
+  - task:
+      description: 'Adding Stardew Valley to the Wine Prefix Registry 1/1'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\413150'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Stardew Valley'
+  - task:
+      description: 'Adding The Witcher to the Wine Prefix Registry 1/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\CD Project Red\Witcher'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\The Witcher Enhanced Edition'
+  - task:
+      description: 'Adding The Witcher to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\20900'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\The Witcher Enhanced Edition'
+  - task:
+      description: 'Adding The Witcher 2 to the Wine Prefix Registry 1/1'
+      key: 'InstallFolder'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\CD Project Red\The Witcher 2'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\the witcher 2'
+  - task:
+      description: 'Adding The Witcher 3 to the Wine Prefix Registry 1/2'
+      key: 'InstallFolder'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\CD Project Red\The Witcher 3'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\The Witcher 3'
+  - task:
+      description: 'Adding The Witcher 3 to the Wine Prefix Registry 2/2'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\209230'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\The Witcher 3'
+  - task:
+      description: 'Adding Valheim to the Wine Prefix Registry 1/1'
+      key: 'Installed Path'
+      name: 'set_regedit'
+      path: 'HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\892970'
+      prefix: '$GAMEDIR'
+      type: 'REG_SZ'
+      value: 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Valheim'
+  - input_menu:
+      description: "Is Lutris installed via a flatpak?\nSelect 'Yes' on Steam Deck."
+      id: VERSION
+      options:
+      - flatpak: "Yes"
+      - native: "No"
+  - write_file:
+      content: '#!/usr/bin/bash
+
+        if [ ! -d "$VORTEX_PREFIX" ]; then
+
+            VORTEX_PREFIX="$PWD";
+
+        fi;
+
+        if [ ! -d "$VORTEX_PREFIX" ]; then
+
+            VORTEX_PREFIX="$(realpath "$(dirname "$0";)";)";
+
+        fi;
+
+        if [ -d "$VORTEX_PREFIX" ]; then
+
+            printf "%s\n" "INFO: Using Vortex prefix at \"$VORTEX_PREFIX\"";
+
+        else
+
+            printf "%s\n" "EROR: Invalid Vortex prefix at \"$VORTEX_PREFIX\"";
+
+            exit 1;
+
+        fi;
+
+        DESKTOP_FNAME="vortex-downloads-handler.desktop";
+
+        DESKTOP_APPLS=~/.local/share/applications/;
+
+        DESKTOP_FPATH="$DESKTOP_APPLS$DESKTOP_FNAME";
+
+        if [ "$INPUT_VERSION" == "flatpak" ]; then
+
+            LUTRIS_DB_PATH=~/.var/app/net.lutris.Lutris/data/lutris/pga.db;
+
+            LUTRIS_CONFIGS=~/.var/app/net.lutris.Lutris/config/lutris/games/;
+
+            LUTRIS_CMD="flatpak run net.lutris.Lutris";
+
+        else
+
+            LUTRIS_DB_PATH=~/.local/share/lutris/pga.db;
+
+            LUTRIS_CONFIGS=~/.config/lutris/games/;
+
+            LUTRIS_CMD="lutris";
+
+        fi
+
+        if [ -f "$DESKTOP_APPLS/wine/Programs/Black Tree Gaming Ltd/Vortex.desktop" ]; then
+
+            rm -f "$DESKTOP_APPLS/wine/Programs/Black Tree Gaming Ltd/Vortex.desktop";
+
+            rmdir --ignore-fail-on-non-empty -p "$DESKTOP_APPLS/wine/Programs/Black Tree Gaming Ltd";
+
+        fi;
+
+        if [ -f "$DESKTOP_FPATH" ]; then
+
+            rm -f "$DESKTOP_FPATH";
+
+        fi;
+
+        printf "%s\n" "INFO: Updating nxm link handling for Vortex!";
+
+        printf "%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n\n" \
+
+        "[Desktop Entry]" \
+
+        "Categories=Game;Network;" \
+
+        "Comment[en_US]=NXM Protocol Download Handler" \
+
+        "Comment=NXM Protocol Download Handler" \
+
+        "Exec=sh -c \"CONFIGPATH=\$(sqlite3 \\\\\"$LUTRIS_DB_PATH\\\\\" \\\\\"select configpath from games where installer_slug = \\\\\\\\\\\\\"vortex-mod-manager-wine\\\\\\\\\\\\\" order by id asc limit 1;\\\\\");sed -i \\\\\"s/^  args:.*$/  args: -d \$(printf \\\\\"%%s\\\\\\\\\\\\\\\\n\\\\\" \\\\\"%u\\\\\" | sed \\\\\"s/^''//;s/''$//;s/\\\\//\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\//g;s/\\\\\\\\\\\\\\\\&/\\\\\\\\\\\\\\\\\\\\&/g\\\\\")/\\\\\" \\\\\"$LUTRIS_CONFIGS\$CONFIGPATH.yml\\\\\";env LUTRIS_SKIP_INIT=1 $LUTRIS_CMD lutris:rungameid/\$(sqlite3 \\\\\"$LUTRIS_DB_PATH\\\\\" \\\\\"select id from games where installer_slug = \\\\\\\\\\\\\"vortex-mod-manager-wine\\\\\\\\\\\\\" order by id asc limit 1;\\\\\")\"" \
+
+        "GenericName[en_US]=Writes the provided nxm url as an argument to Vortex by editing the Lutris game config for Vortex twice before launching." \
+
+        "GenericName=Writes the provided nxm url as an argument to Vortex by editing the Lutris game config for Vortex twice before launching." \
+
+        "Icon=lutris_vortex-mod-manager" \
+
+        "MimeType=x-scheme-handler/nxm-protocol;x-scheme-handler/nxm;" \
+
+        "Name[en_US]=Vortex" \
+
+        "Name=Vortex" \
+
+        "NoDisplay=true" \
+
+        "Path=$VORTEX_PREFIX" \
+
+        "StartupNotify=true" \
+
+        "Terminal=false" \
+
+        "Type=Application" \
+
+        > "$DESKTOP_FPATH";
+
+        xdg-mime default "$DESKTOP_FPATH" x-scheme-handler/nxm x-scheme-handler/nxm-protocol;
+
+        fix_mimetypes(){
+
+            if [ -f "$1" ]; then
+
+                printf "%s\n" "INFO: Fixing mimetype association of nxm: links in \"$1\"";
+
+                sed -E -i "s/x-scheme-handler\/nxm=[^[=$=]]\+/x-scheme-handler\/nxm=$DESKTOP_FNAME;/" "$1";
+
+                check="$(grep -a -o -e "x-scheme-handler/nxm=$DESKTOP_FNAME;" "$1")";
+
+                if [ -z "$check" ]; then
+
+                    printf "%s\n" "x-scheme-handler/nxm=$DESKTOP_FNAME;" >> "$1";
+
+                fi;
+
+                sed -E -i "s/x-scheme-handler\/nxm-protocol=[^[=$=]]\+/x-scheme-handler\/nxm-protocol=$DESKTOP_FNAME;/" "$1";
+
+                check="$(grep -a -o -e "x-scheme-handler/nxm-protocol=$DESKTOP_FNAME;" "$1")"
+
+                if [ -z "$check" ]; then
+
+                    printf "%s\n" "x-scheme-handler/nxm-protocol=$DESKTOP_FNAME;" >> "$1";
+
+                fi;
+
+            else
+
+                printf "%s\n%s\n%s\n\n" "$2" "x-scheme-handler/nxm=$DESKTOP_FNAME;" "x-scheme-handler/nxm-protocol=$DESKTOP_FNAME;" > "$1";
+
+            fi;
+
+        };
+
+        fix_mimetypes "$DESKTOP_APPLS"mimeinfo.cache "[MIME Cache]";
+
+        fix_mimetypes "$DESKTOP_APPLS"defaults.list "[Default Applications]";
+
+        printf "%s\n" "DONE: Made a desktop entry for Vortex at \"$DESKTOP_FPATH\"";
+
+        '
+
+      description: "Writing vortex-entry-writer.sh to the Vortex Prefix 1/3"
+      file: '$GAMEDIR/vortex-entry-writer.sh'
+  - chmodx: '$GAMEDIR/vortex-entry-writer.sh'
+  - write_file:
+      content: '#!/usr/bin/bash
+
+        if [ ! -d "$VORTEX_PREFIX" ]; then
+
+            VORTEX_PREFIX="$PWD";
+
+        fi;
+
+        if [ ! -d "$VORTEX_PREFIX" ]; then
+
+            VORTEX_PREFIX="$(realpath "$(dirname "$0";)";)";
+
+        fi;
+
+        if [ -d "$VORTEX_PREFIX" ]; then
+
+            printf "%s\n" \
+
+            "INFO: Using Vortex prefix at \"$VORTEX_PREFIX\"";
+
+        else
+
+            printf "%s\n" \
+
+            "EROR: Invalid Vortex prefix at \"$VORTEX_PREFIX\"";
+
+            exit 1;
+
+        fi;
+
+        rmlink(){
+
+            if [ -h "$1" ];
+
+            then unlink "$1";
+
+            fi;
+
+        }
+
+        mklink(){
+
+            rmlink "$2";
+
+            ln -s -T "$1" "$2";
+
+        }
+
+        manifest_attribute(){
+
+            grep -a -o -e "\"$2\"[[:space:]]*\".*\"$" "$1" \
+
+            | sed "s/\"$2\"[[:space:]]*\"//;s/\"$//";
+
+        };
+
+        manifest_userconfig_attribute(){
+
+            manifest_attribute \
+
+            <(grep \
+
+                -a -o -P -z \
+
+                "\"UserConfig\"\s*{(\s*[^}]*\s*)*}" \
+
+                "$1"\
+
+            ) "$2";
+
+        };
+
+        manifest_mountedconfig_attribute(){
+
+            manifest_attribute \
+
+            <(grep \
+
+                -a -o -P -z \
+
+                "\"MountedConfig\"\s*{(\s*[^}]*\s*)*}" \
+
+                "$1"\
+
+            ) "$2";
+
+        };
+
+        link_sub_targets(){
+
+            TARGET="";
+
+            DIR_LS=("$2"/*);
+
+            for TARGET in "${DIR_LS[@]}"; do
+
+                foldername="$(basename "$TARGET")";
+
+                checklink="$1/$foldername";
+
+                rmlink "$checklink";
+
+                if [ "$foldername" != "Vortex" ] && \
+
+                [ "$foldername" != "openvr" ] && \
+
+                [ "$foldername" != "Microsoft" ] && \
+
+                [ -d "$TARGET" ]; then
+
+                    ln -s "$TARGET" "$1/";
+
+                fi;
+
+            done;
+
+        };
+
+        mkdir -p \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/AppData/Roaming" \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/AppData/Local" \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/AppData/LocalLow" \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/Documents/My Games" \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/Local Settings" \
+
+        "$VORTEX_PREFIX/drive_c/Program Files (x86)/Steam/steamapps/common" \
+
+        "$VORTEX_PREFIX/drive_c/Program Files (x86)/Steam/config";
+
+        mklink \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/Documents" \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/My Documents";
+
+        mklink \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/AppData/Roaming" \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/Application Data";
+
+        mklink \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/AppData/Local" \
+
+        "$VORTEX_PREFIX/drive_c/users/$USER/Local Settings/Application Data";
+
+        sed "s/\"\/.*\"$/\"C:\\\\\\\\Program Files \(x86\)\\\\\\\\Steam\"/g" < \
+
+        ~/.steam/steam/steamapps/libraryfolders.vdf |& tee \
+
+        "$VORTEX_PREFIX/drive_c/Program Files (x86)/Steam/steamapps/libraryfolders.vdf" \
+
+        "$VORTEX_PREFIX/drive_c/Program Files (x86)/Steam/config/libraryfolders.vdf" \
+
+        1>/dev/null;
+
+        STEAM_LIBRARY_PATHS=();
+
+        while read -r library; do
+
+            rmdir --ignore-fail-on-non-empty "$library"/steamapps/common/* 2>/dev/null;
+
+            if [ -d "$library" ] && [ -d "$library/steamapps/common" ]; then
+
+                if [ -d "$library/steamapps/compatdata/" ]; then
+
+                STEAM_COMPATDATA=("$(find "$library/steamapps/compatdata/" -type d -name "pfx")");
+
+                for compatdata in "${STEAM_COMPATDATA[@]}"; do
+
+                    rmdir --ignore-fail-on-non-empty "$compatdata" 2>/dev/null;
+
+                done;
+
+                fi;
+
+                STEAM_LIBRARY_PATHS+=("$library");
+
+            fi;
+
+        done < <(grep -a -o -e "/[^\"]*" ~/.steam/steam/steamapps/libraryfolders.vdf);
+
+        for library in "${STEAM_LIBRARY_PATHS[@]}"; do
+
+            printf "%s\n" "INFO: Found Steam Library at \"$library\"! Linking all games in the library:";
+
+            MANIFESTS=();
+
+            readarray -t MANIFESTS < <(find "$library/steamapps" -mindepth 1 -maxdepth 1 -type f -name "appmanifest_*\.acf");
+
+            for CURRENT_APPMANIFEST in "${MANIFESTS[@]}"; do
+
+                CURRENT_APPID="$(manifest_attribute "$CURRENT_APPMANIFEST" "appid")";
+
+                CURRENT_GAME="$(manifest_attribute "$CURRENT_APPMANIFEST" "name")";
+
+                CURRENT_INSTALLDIR="$(manifest_attribute "$CURRENT_APPMANIFEST" "installdir")";
+
+                printf "%s\n" \
+
+                "INFO: \
+
+                CURRENT_APPID=\"$CURRENT_APPID\" \
+
+                CURRENT_GAME=\"$CURRENT_GAME\" \
+
+                CURRENT_INSTALLDIR=\"$CURRENT_INSTALLDIR\"\
+
+                ";
+
+                checkdir="$(\
+
+                    printf "%s" "$CURRENT_APPMANIFEST" | \
+
+                    sed "s/\/steamapps\/.\+/\/steamapps\/common\//"\
+
+                )$CURRENT_INSTALLDIR";
+
+                if [ -d "$checkdir" ]; then
+
+                    CURRENT_INSTALL_PATH="$checkdir";
+
+                    checkdir="$(\
+
+                        printf "%s" "$CURRENT_APPMANIFEST" | \
+
+                        sed "s/\/steamapps\/.\+/\/steamapps\/compatdata\/$CURRENT_APPID\/pfx/"\
+
+                    )";
+
+                    printf "%s\n" \
+
+                    "GOOD: Found $CURRENT_GAME installation at \"$CURRENT_INSTALL_PATH\"";
+
+                    if [ "$(manifest_userconfig_attribute \
+
+                            "$CURRENT_APPMANIFEST" \
+
+                            "platform_override_dest"\
+
+                        )" == "linux" ] && \
+
+                    [ "$(manifest_userconfig_attribute \
+
+                            "$CURRENT_APPMANIFEST" \
+
+                            "platform_override_source"\
+
+                        )" == "windows" ];
+
+                    then
+
+                        printf "%s\n" \
+
+                        "INFO: platform_override_dest: \
+
+                        \"$(manifest_userconfig_attribute \
+
+                            "$CURRENT_APPMANIFEST" \
+
+                            "platform_override_dest"\
+
+                        )\" platform_override_source: \
+
+                        \"$(manifest_userconfig_attribute \
+
+                            "$CURRENT_APPMANIFEST" \
+
+                            "platform_override_source"\
+
+                        )\"\
+
+                        ";
+
+                        if [ -d "$checkdir" ]; then
+
+                            CURRENT_PREFIX_PATH="$checkdir";
+
+                            printf "%s\n" \
+
+                                "GOOD: Found $CURRENT_GAME \
+
+                                Proton Prefix at \
+
+                                \"$CURRENT_PREFIX_PATH\"\
+
+                            ";
+
+                        else
+
+                            checkdir="${STEAM_LIBRARY_PATHS[0]}/steamapps/compatdata/$CURRENT_APPID/pfx/";
+
+                            printf "%s\n%s\n" \
+
+                            "INFO: Proton Prefix for \
+
+                            $CURRENT_GAME not found at \"$checkdir\"." \
+
+                            "INFO: Trying \"$checkdir\" instead!";
+
+                            if [ -d "$checkdir" ]; then
+
+                                CURRENT_PREFIX_PATH="$checkdir";
+
+                                printf "%s\n%s\n" \
+
+                                "GOOD: Found $CURRENT_GAME Proton Prefix \
+
+                                in default Steam Library at \
+
+                                \"$CURRENT_PREFIX_PATH\"" \
+
+                                "WARN: This feature should only be \
+
+                                automatically used on a Steam Deck!";
+
+                            else
+
+                                CURRENT_PREFIX_PATH="";
+
+                                printf "%s\n%s\n%s\n" \
+
+                                "WARN: $CURRENT_GAME is configured for Proton but no Prefix was found!" \
+
+                                "WARN: Its Proton Prefix is missing or has not been run yet!" \
+
+                                "WARN: Launch the game with Proton via Steam before modding!";
+
+                            fi;
+
+                        fi;
+
+                    elif [ -d "$checkdir" ]; then
+
+                        CURRENT_PREFIX_PATH="$checkdir";
+
+                        printf "%s\n%s\n" \
+
+                        "WARN: $CURRENT_GAME isn''t configured for Proton but a Prefix was found!" \
+
+                        "GOOD: Found $CURRENT_GAME Proton Prefix at \"$CURRENT_PREFIX_PATH\"";
+
+                    else
+
+                        CURRENT_PREFIX_PATH="";
+
+                        printf "%s\n" "INFO: No Proton Prefix for $CURRENT_GAME found!";
+
+                    fi;
+
+                else
+
+                    CURRENT_INSTALL_PATH="";
+
+                    CURRENT_PREFIX_PATH="";
+
+                    checkdir="$CURRENT_INSTALL_PATH/steamapps/compatdata/$CURRENT_APPID/pfx";
+
+                    if [ -d "$checkdir" ]; then
+
+                    printf "%s\n%s\n" \
+
+                    "WARN: A Proton Prefix for $CURRENT_GAME exists at \"$checkdir\" but no installation was detected!" \
+
+                    "WARN: If $CURRENT_GAME was uninstalled, Steam may have left behind files, like save data it syncs with the Steam Cloud.";
+
+                    else
+
+                        printf "%s\n" "INFO: No installation or Proton Prefix of $CURRENT_GAME found!";
+
+                    fi;
+
+                fi;
+
+                if [ -d "$CURRENT_INSTALL_PATH" ]; then
+
+                    checkdir="$VORTEX_PREFIX/drive_c/Program Files (x86)/Steam/steamapps/common/$CURRENT_INSTALLDIR";
+
+                    rmlink "$checkdir";
+
+                    checkdir="$CURRENT_INSTALL_PATH";
+
+                    if [ -d "$checkdir" ]; then
+
+                        ln -s "$checkdir" "$VORTEX_PREFIX/drive_c/Program Files (x86)/Steam/steamapps/common/";
+
+                    fi;
+
+                    checkdir="$VORTEX_PREFIX/drive_c/Program Files (x86)/Steam/steamapps/appmanifest_$CURRENT_APPID.acf";
+
+                    rmlink "$checkdir";
+
+                    checkdir="$CURRENT_APPMANIFEST";
+
+                    if [ -f "$checkdir" ]; then
+
+                        ln -s "$checkdir" "$VORTEX_PREFIX/drive_c/Program Files (x86)/Steam/steamapps/";
+
+                    fi;
+
+                fi;
+
+                if [ -d "$CURRENT_PREFIX_PATH" ]; then
+
+                    link_sub_targets \
+
+                    "$VORTEX_PREFIX/drive_c/users/$USER/My Documents/My Games" \
+
+                    "$CURRENT_PREFIX_PATH/drive_c/users/steamuser/My Documents/My Games";
+
+                    link_sub_targets \
+
+                    "$VORTEX_PREFIX/drive_c/users/$USER/AppData/Roaming" \
+
+                    "$CURRENT_PREFIX_PATH/drive_c/users/steamuser/AppData/Roaming";
+
+                    link_sub_targets \
+
+                    "$VORTEX_PREFIX/drive_c/users/$USER/AppData/Local" \
+
+                    "$CURRENT_PREFIX_PATH/drive_c/users/steamuser/AppData/Local";
+
+                    link_sub_targets \
+
+                    "$VORTEX_PREFIX/drive_c/users/$USER/AppData/LocalLow" \
+
+                    "$CURRENT_PREFIX_PATH/drive_c/users/steamuser/AppData/LocalLow";
+
+                fi;
+
+            done;
+
+        done;
+
+        printf "%s\n" "DONE: Finished linking all detected Steam Library folders!";
+
+        '
+      description: "Writing vortex-steam-symlinker.sh to the Vortex Prefix 2/3"
+      file: '$GAMEDIR/vortex-steam-symlinker.sh'
+  - chmodx: '$GAMEDIR/vortex-steam-symlinker.sh'
+  - write_file:
+      content: '#!/usr/bin/sh
+
+        if [ ! -d "$VORTEX_PREFIX" ]; then
+
+            VORTEX_PREFIX="$PWD";
+
+        fi;
+
+        if [ ! -d "$VORTEX_PREFIX" ]; then
+
+            VORTEX_PREFIX="$(realpath "$(dirname "$0";)";)";
+
+        fi;
+
+        if [ -d "$VORTEX_PREFIX" ]; then
+
+            printf "%s\n" \
+
+            "INFO: Using Vortex prefix at \"$VORTEX_PREFIX\"" \
+
+            | tee install.log;
+
+        else
+
+            printf "%s\n" \
+
+            "EROR: Invalid Vortex prefix at \"$VORTEX_PREFIX\"" \
+
+            | tee install.log;
+
+            exit 1;
+
+        fi;
+
+        "$VORTEX_PREFIX"/vortex-steam-symlinker.sh 2>&1 | tee -a install.log;
+
+        "$VORTEX_PREFIX"/vortex-entry-writer.sh 2>&1 | tee -a install.log;
+
+        '
+      description: "Writing vortex-prefix-updater.sh to the Vortex Prefix 3/3"
+      file: '$GAMEDIR/vortex-prefix-updater.sh'
+  - chmodx: '$GAMEDIR/vortex-prefix-updater.sh'
+  - execute:
+      command: './vortex-prefix-updater.sh'
+      description: "Updating the Vortex Download Handler\nUpdating Symbolic Links Targeting Known Game Locations"
+      working_dir: '$GAMEDIR'
+  - task:
+      description: "After vortex-setup finishes in logger below with\nInitial process has exited (return code: 0)\nClose Vortex to finish installing!"
+      executable: 'setup'
+      name: 'wineexec'
+      prefix: '$GAMEDIR'
+  #require-binaries: bash, dirname, find, grep, ln, mkdir, printf, realpath, sed, sh, sqlite3, steam, unlink, xdg-mime
+  system:
+    manual_command: '$GAMEDIR/vortex-prefix-updater.sh'
+    prefix_command: sh -c "\"$WINE\" \"$1\" $(CONFIGFILE=\"$(if [ -z \"$XDG_CONFIG_HOME\" ]; then printf \"%s\" \"$HOME/.local/share/lutris/pga.db\"; else printf \"%s\" \"$XDG_CONFIG_HOME/lutris/games/\"; fi;)$(sqlite3 \"$(if [ -z \"$XDG_DATA_HOME\" ]; then printf \"%s\" \"$HOME/.local/share/lutris/pga.db\"; else printf \"%s\" \"$XDG_DATA_HOME/lutris/pga.db\"; fi;)\" \"select configpath from games where installer_slug = \\\"vortex-mod-manager-wine\\\" order by id asc limit 1;\").yml\";sed -n \"/args:.*$/s/^  args://;T;p;Q\" \"$CONFIGFILE\";NOYAML=\" -d\";sed -i \"s/^  args:.*$/  args:$NOYAML/\" \"$CONFIGFILE\";) >/dev/null 2>&1;"
+  variables:
+    VERSION: '1.5.13'
+    HOME: '$HOME'
+    USER: '$USER'
