@@ -15,11 +15,11 @@ fi; # Use the default path
 if cd "$VORTEX_PREFIX"; # goto selected path
 then printf "%s\n" "INFO: Using Vortex prefix at \"$VORTEX_PREFIX\"";
 else printf "%s\n" "EROR: Couldn't go to Vortex prefix at \"$VORTEX_PREFIX\"";exit 2;
-fi; # try to download .NET 6 Runtime
+fi; # try to find latest vortex release
 if curl -O -L -s https://github.com/Nexus-Mods/Vortex/releases/latest;
 then VORTEX_LATEST="https://github.com$(grep -a -o -m 1 -E "/Nexus-Mods/Vortex/releases/download/v[[:digit:]\.]+/.+.exe" latest)";rm latest;
-else printf "%s\n" "EROR: Couldn't get the latest Vortex version!";exit 3;
-fi;
+else printf "%s\n" "EROR: Couldn't get the latest Vortex release!";exit 3;
+fi; # try to download dependencies
 if ! curl -\
 o windowsdesktop-runtime-6.0.8-win-x64.exe \
 "https://download.visualstudio.microsoft.com/download/pr/b4a17a47-2fe8-498d-b817-30ad2e23f413/00020402af25ba40990c6cc3db5cb270/windowsdesktop-runtime-6.0.8-win-x64.exe" -\
