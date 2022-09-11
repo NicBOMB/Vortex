@@ -1,0 +1,131 @@
+REGEDIT4
+
+[HKEY_CURRENT_USER\Software\Valve\Steam]
+"SteamPath"="C:\\Program Files (x86)\\Steam"
+"SteamExe"="C:\\Program Files (x86)\\Steam\\Steam.exe"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\NAMCO BANDAI GAMES\DARK SOULS]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls Prepare to Die Edition"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\211420]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls Prepare to Die Edition"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\570940]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS REMASTERED"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\236430]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls II"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\335300]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Dark Souls II Scholar of the First Sin"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\374320]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\DARK SOULS III"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\ELDEN RING_is1]
+"InstallLocation"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\ELDEN RING"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\1245620]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\ELDEN RING"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Fallout 3]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 3"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22300]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 3"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Fallout 3 goty]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 3 goty"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22370]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 3 goty"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Fallout4]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\377160]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Fallout 4 VR]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4 VR"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\611660]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4 VR"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Fallout 76]
+"Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout76"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\1151340]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout76"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\FalloutNV]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout New Vegas"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22380]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout New Vegas"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\784080]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\MechWarrior 5 Mercenaries"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\356190]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\ShadowOfWar"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 582010]
+"InstallLocation"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Monster Hunter World"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\582010]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Monster Hunter World"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Morrowind]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Morrowind"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22320]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Morrowind"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\oblivion]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Oblivion"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\22330]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Oblivion"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\814380]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Sekiro"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Skyrim]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\72850]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Skyrim Special Edition]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\489830]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Skyrim Special Edition"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Bethesda Softworks\Skyrim VR]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\SkyrimVR"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\611670]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\SkyrimVR"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\413150]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Stardew Valley"
+
+[HKEY_LOCAL_MACHINE\Software\CD Project Red\Witcher]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\The Witcher Enhanced Edition"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\20900]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\The Witcher Enhanced Edition"
+
+[HKEY_LOCAL_MACHINE\Software\CD Project Red\The Witcher 2]
+"InstallFolder"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\the witcher 2"
+
+[HKEY_LOCAL_MACHINE\Software\CD Project Red\The Witcher 3]
+"InstallFolder"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\The Witcher 3"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\209230]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\The Witcher 3"
+
+[HKEY_LOCAL_MACHINE\Software\Wow6432Node\Valve\Steam\Apps\892970]
+"Installed Path"="C:\\Program Files (x86)\\Steam\\steamapps\\common\\Valheim"
