@@ -70,4 +70,4 @@ fi;
 printf "%s\n" "GOOD: Installed Vortex Successfully!";
 }
 set -eo pipefail;
-main 2>&1 | tee install.log;
+main 2>&1 | tee 'install.log';
