@@ -16,17 +16,20 @@ if cd "$VORTEX_PREFIX"; # goto selected path
 then printf "%s\n" "INFO: Using Vortex prefix at \"$VORTEX_PREFIX\"";
 else printf "%s\n" "EROR: Couldn't go to Vortex prefix at \"$VORTEX_PREFIX\"";exit 2;
 fi; # try to download .NET 6 Runtime
-if ! curl \
--o windowsdesktop-runtime-6.0.8-win-x64.exe \
-"https://download.visualstudio.microsoft.com/download/pr/b4a17a47-2fe8-498d-b817-30ad2e23f413/00020402af25ba40990c6cc3db5cb270/windowsdesktop-runtime-6.0.8-win-x64.exe" \
--o vortex-steam-symlinker.sh \
-"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-scripts/vortex-steam-symlinker.sh" \
--o keys.reg \
-"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-scripts/keys.reg" \
--o vortex-entry-writer.sh \
-"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-scripts/vortex-entry-writer.sh" \
--o vortex-setup.exe \
-"https://github.com$(curl -s https://github.com/Nexus-Mods/vortex/releases/latest | grep -a -o -m 1 -E "/Nexus-Mods/Vortex/releases/download/v[[:digit:]\.]+/.+.exe")" \
+if curl -O -L -s https://github.com/Nexus-Mods/Vortex/releases/latest;
+then VORTEX_LATEST="https://github.com$(grep -a -o -m 1 -E "/Nexus-Mods/Vortex/releases/download/v[[:digit:]\.]+/.+.exe" latest)";rm latest;
+else printf "%s\n" "EROR: Couldn't get the latest Vortex version!";exit 3;
+fi;
+if ! curl -\
+o windowsdesktop-runtime-6.0.8-win-x64.exe \
+"https://download.visualstudio.microsoft.com/download/pr/b4a17a47-2fe8-498d-b817-30ad2e23f413/00020402af25ba40990c6cc3db5cb270/windowsdesktop-runtime-6.0.8-win-x64.exe" -\
+o vortex-steam-symlinker.sh \
+"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-scripts/vortex-steam-symlinker.sh" -\
+o keys.reg \
+"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-scripts/keys.reg" -\
+o vortex-entry-writer.sh \
+"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-scripts/vortex-entry-writer.sh" -\
+Lo vortex-setup.exe "$VORTEX_LATEST" \
 ; then printf "%s\n" "EROR: A download failed!";exit 3;
 fi; # test download against the checksum published by Microsoft before running
 if printf "%s %s" \
