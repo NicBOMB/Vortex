@@ -20,11 +20,11 @@ if ! curl \
 -o windowsdesktop-runtime-6.0.8-win-x64.exe \
 "https://download.visualstudio.microsoft.com/download/pr/b4a17a47-2fe8-498d-b817-30ad2e23f413/00020402af25ba40990c6cc3db5cb270/windowsdesktop-runtime-6.0.8-win-x64.exe" \
 -o vortex-steam-symlinker.sh \
-"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-script/vortex-steam-symlinker.sh" \
+"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-scripts/vortex-steam-symlinker.sh" \
 -o keys.reg \
-"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-script/keys.reg" \
+"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-scripts/keys.reg" \
 -o vortex-entry-writer.sh \
-"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-script/vortex-entry-writer.sh" \
+"https://raw.githubusercontent.com/NicBOMB/Vortex/wine-installer/installer-scripts/vortex-entry-writer.sh" \
 -o vortex-setup.exe \
 "https://github.com$(curl -s https://github.com/Nexus-Mods/vortex/releases/latest | grep -a -o -m 1 -E "/Nexus-Mods/Vortex/releases/download/v[[:digit:]\.]+/.+.exe")" \
 ; then printf "%s\n" "EROR: A download failed!";exit 3;
