@@ -50,22 +50,22 @@ else printf "%s\s%s\n" \
 exit 5;
 fi;
 if ! chmod ugo+x vortex-steam-symlinker.sh vortex-entry-writer.sh;
-then printf "%s\n" "EROR: Failed to set file permissions as executable!";
+then printf "%s\n" "EROR: Failed to set file permissions as executable!";exit 6;
 fi;
 if ./vortex-steam-symlinker.sh;
 then printf "%s\n" "INFO: Steam symlinker finished!";
-else printf "%s\n" "WARN: Steam symlinker failed!";exit 6;
+else printf "%s\n" "WARN: Steam symlinker failed!";exit 7;
 fi;
 # shellcheck disable=SC2034,SC1003
 DOTNET_ROOT='c:\Program Files\dotnet\'; # specify the dotnet location
 # after winetricks and installing the runtime but before running vortex
 if wine start /wait vortex-setup.exe >/dev/null 2>&1;
 then printf "%s\n" "GOOD: vortex-setup.exe finished!";
-else printf "%s\n" "EROR: Failed to run the latest vortex-setup.exe!";exit 7;
+else printf "%s\n" "EROR: Failed to run the latest vortex-setup.exe!";exit 8;
 fi;
 if ./vortex-entry-writer.sh;
 then printf "%s\n" "INFO: entry writer finished!";
-else printf "%s\n" "WARN: entry writer failed!";exit 8;
+else printf "%s\n" "WARN: entry writer failed!";exit 9;
 fi;
 printf "%s\n" "GOOD: Installed Vortex Successfully!";
 }
