@@ -20,7 +20,7 @@ interface IActionProps {
 type IProps = IConnectedProps & IActionProps;
 
 class CategoryDialog extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, showDialog } = this.props;
 
     return (

@@ -8,15 +8,15 @@ export type InstructionType =
 export interface IInstruction {
   type: InstructionType;
 
-  path?: string;
-  source?: string;
-  destination?: string;
-  section?: string;
-  key?: string;
-  value?: any;
-  submoduleType?: string;
-  data?: string | Buffer;
-  rule?: IRule;
+  path: string;
+  source: string;
+  destination: string;
+  section: string;
+  key: string;
+  value: any;
+  submoduleType: string;
+  data: string | Buffer;
+  rule: IRule;
 }
 
 export interface IInstallResult {

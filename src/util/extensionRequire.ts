@@ -2,10 +2,8 @@ import * as reactSelect from '../controls/ReactSelectWrap';
 
 import ExtensionManager, { IRegisteredExtension } from './ExtensionManager';
 
-import {} from 'module';
 import { dynreq } from 'vortex-run';
 
-// tslint:disable-next-line:no-var-requires
 const Module = require('module');
 
 import * as api from '../index';
@@ -30,17 +28,11 @@ class ExtProxyHandler implements ProxyHandler<typeof api> {
 
 const handlerMap: { [extId: string]: typeof api } = {};
 
-/**
- * require wrapper to allow extensions to load modules from
- * the context of the main application
- * @param {any} orig
- * @returns
- */
-function extensionRequire(orig, getExtensions: () => IRegisteredExtension[]) {
+function extensionRequire(orig: any, getExtensions: () => IRegisteredExtension[]) {
   const extensionPaths = ExtensionManager.getExtensionPaths();
   return function(id) {
     if (id === 'vortex-api') {
-      const ext = getExtensions().find(iter => this.filename.startsWith(iter.path));
+      const ext = getExtensions().find((iter) => this.filename.startsWith(iter.path));
       if (ext !== undefined) {
         if (handlerMap[ext.name] === undefined) {
           handlerMap[ext.name] = new Proxy(api, new ExtProxyHandler(ext));
@@ -72,6 +64,6 @@ function extensionRequire(orig, getExtensions: () => IRegisteredExtension[]) {
 }
 
 export default function(getExtensions: () => IRegisteredExtension[]) {
-  const orig = (Module as any).prototype.require;
-  (Module as any).prototype.require = extensionRequire(orig, getExtensions);
+  const orig = Module.prototype.require;
+  Module.prototype.require = extensionRequire(orig, getExtensions);
 }

@@ -6,7 +6,6 @@ import * as fs from '../../../util/fs';
 import getVortexPath from '../../../util/getVortexPath';
 import { log } from '../../../util/log';
 import { activeGameId } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
 import MainPage from '../../../views/MainPage';
 
 import { IDiscoveryResult } from '../../gamemode_management/types/IDiscoveryResult';
@@ -77,7 +76,7 @@ class ProfileView extends ComponentEx<IProps, IViewState> {
     };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, activity, features, gameId, language, profiles } = this.props;
     const { edit, showOther } = this.state;
 
@@ -178,7 +177,7 @@ class ProfileView extends ComponentEx<IProps, IViewState> {
         t={t}
         key={profileId}
         profile={profile}
-        mods={mods[profile.gameId] ?? emptyObject}
+        mods={mods[profile.gameId] ?? {}}
         features={features}
         active={currentProfile === profileId}
         available={available && gameAvailable}
@@ -271,7 +270,7 @@ class ProfileView extends ComponentEx<IProps, IViewState> {
 
     const game = games.find((iter: IGameStored) => iter.id === gameId);
     const discovered = discoveredGames[gameId];
-    let gameName = getSafe(discovered, ['name'], getSafe(game, ['name'], ''));
+    let gameName = discovered?.name ?? game?.name ?? '';
     if (gameName !== undefined) {
       gameName = gameName.split('\t').map(part => t(part)).join(' ');
     }
@@ -366,9 +365,6 @@ class ProfileView extends ComponentEx<IProps, IViewState> {
   }
 }
 
-const emptyArray = [];
-const emptyObject = {};
-
 function mapStateToProps(state: IState): IConnectedProps {
   const gameId = activeGameId(state);
   return {
@@ -376,10 +372,10 @@ function mapStateToProps(state: IState): IConnectedProps {
     currentProfile: state.settings.profiles.activeProfileId,
     profiles: state.persistent.profiles,
     language: state.settings.interface.language,
-    mods: state.persistent.mods || emptyObject,
+    mods: state.persistent.mods ?? {},
     games: state.session.gameMode.known,
     discoveredGames: state.settings.gameMode.discovered,
-    activity: getSafe(state, ['session', 'base', 'activity', 'mods'], emptyArray),
+    activity: Object.keys(state?.session?.base?.activity ?? {}),
   };
 }
 

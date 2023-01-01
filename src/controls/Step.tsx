@@ -11,8 +11,8 @@ export interface IStepProps {
 }
 
 class Step extends React.Component<IStepProps, {}> {
-  public render(): JSX.Element {
-    const { description, index, state, title } = this.props;
+  public override render() {
+    const { index, state, title } = this.props;
     return (
       <div className={`steps-step ${state}`}>
         <div className='steps-step-number'>

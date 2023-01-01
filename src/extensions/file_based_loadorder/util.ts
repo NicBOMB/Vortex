@@ -21,7 +21,7 @@ export async function genCollectionLoadOrder(api: types.IExtensionApi,
   const state = api.getState();
   let loadOrder: LoadOrder = [];
   try {
-    const prev = util.getSafe(state, ['persistent', 'loadOrder', profileId], []);
+    const prev = state?.persistent?.loadOrder?.[profileId] ?? [];
     loadOrder = await gameEntry.deserializeLoadOrder();
     loadOrder = loadOrder.filter(entry => (collection !== undefined)
       ? isValidMod(mods[entry.modId]) && (isModInCollection(collection, mods[entry.modId]))

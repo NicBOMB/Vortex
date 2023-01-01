@@ -1,8 +1,8 @@
 import { addReducer, IReducerSpec } from '../../types/IExtensionContext';
-import {getSafe, pushSafe, setDefaultArray, setSafe} from '../../util/storeHelper';
+import { setSafe } from '../../util/storeHelper';
 
 import * as actions from './actions';
-import { IHistoryEvent, IHistoryStack } from './types';
+import { IHistoryEvent } from './types';
 
 export interface IHistoryPersistent {
   historyStacks: { [key: string]: IHistoryEvent[] };
@@ -11,11 +11,10 @@ export interface IHistoryPersistent {
 const persistentReducer: IReducerSpec<IHistoryPersistent> = {
   reducers: {
     ...addReducer(actions.addHistoryEvent, (state, payload) => {
-      const path = ['historyStacks', payload.stack];
-      const copy = getSafe(state, path, [])
+      const copy = (state?.historyStacks?.[payload.stack] ?? [])
         .slice(payload.limit * -1 - 1);
       copy.push(payload.event);
-      return setSafe(state, path, copy);
+      return setSafe(state, ['historyStacks', payload.stack], copy);
     }),
     ...addReducer(actions.setHistoryEvent, (state, payload) => {
       const idx = state.historyStacks[payload.stack].findIndex(evt => evt.id === payload.event.id);

@@ -28,8 +28,8 @@ interface IConnectedProps {
 type IProps = IBaseProps & IConnectedProps;
 
 class InstallButton extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
-    const { t, buttonType } = this.props;
+  public override render(): JSX.Element {
+    const { t } = this.props;
 
     return (
       <ToolbarIcon

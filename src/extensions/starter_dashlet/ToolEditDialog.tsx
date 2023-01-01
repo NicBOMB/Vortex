@@ -18,7 +18,6 @@ import { Col, ControlLabel, Form, FormControl, FormGroup,
          Modal, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 import * as Redux from 'redux';
 import { IGameStored } from '../gamemode_management/types/IGameStored';
-import { IToolStored } from '../gamemode_management/types/IToolStored';
 import { useTranslation } from 'react-i18next';
 
 import { toDirname, isEqual, toToolDiscovery, toEditStarter, updateImage, splitCommandLine, resolveToolName } from './util';
@@ -64,7 +63,7 @@ export default function ToolEditDialog(props: IProps) {
   }, [tool, setEditTool]);
 
   let exePathPlaceholder = t('Target');
-  const predefinedToolPath = ((game?.supportedTools ?? []).find(st => st.id === editTool.id) as IToolStored)?.executable;
+  const predefinedToolPath = ((game?.supportedTools ?? []).find(st => st.id === editTool.id))?.executable;
   if (predefinedToolPath !== undefined) {
     exePathPlaceholder = `../${predefinedToolPath}`;
   }
@@ -105,7 +104,7 @@ export default function ToolEditDialog(props: IProps) {
 
   const onUpdateImage = React.useCallback((filePath: string) => {
     updateImage(tool, filePath, (err => {
-      if (err !== null) {
+      if (err !== null && err !== undefined) {
         const reportable = !((err instanceof ProcessCanceled) || (err instanceof UserCanceled));
         if (reportable) {
           onShowError('Failed to change tool icon', err, false);

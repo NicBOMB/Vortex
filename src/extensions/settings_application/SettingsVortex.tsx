@@ -34,7 +34,7 @@ class SettingsVortex extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {t, multiUser} = this.props;
     const {oldMultiUser} = this.state;
 

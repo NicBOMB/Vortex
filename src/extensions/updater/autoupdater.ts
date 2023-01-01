@@ -4,7 +4,6 @@ import { IState, UpdateChannel } from '../../types/IState';
 import { getVisibleWindow, UserCanceled } from '../../util/api';
 import { log } from '../../util/log';
 import opn from '../../util/opn';
-import { truthy } from '../../util/util';
 
 import { NEXUS_BASE_URL } from '../nexus_integration/constants';
 
@@ -18,7 +17,7 @@ import { getApplication } from '../../util/application';
 let app = appIn;
 let dialog = dialogIn;
 if (process.type === 'renderer') {
-  // tslint:disable-next-line:no-var-requires
+
   const remote = require('@electron/remote');
   app = remote.app;
   dialog = remote.dialog;
@@ -280,7 +279,7 @@ function setupAutoUpdate(api: IExtensionApi) {
     autoUpdater.checkForUpdates()
       .then(check => {
         log('info', 'completed update check');
-        if (truthy(check.downloadPromise)) {
+        if (!!check.downloadPromise){
           check.downloadPromise.catch(err => {
             log('warn', 'Checking for update failed', err);
           });

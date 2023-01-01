@@ -1,6 +1,5 @@
 import { IDiscoveryResult, IState } from '../../types/IState';
 import { activeGameId } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
 
 import { getGame } from '../gamemode_management/util/getGame';
 
@@ -64,10 +63,8 @@ export const needToDeployForGame = createCachedSelector(
     (inNeedToDeploy: INeedToDeployMap, inGameId: string) => inNeedToDeploy[inGameId])(
       (state, gameId) => gameId);
 
-const emptyObj = {};
-
 function discoveries(state: IState) {
-  return getSafe(state, ['settings', 'gameMode', 'discovered'], emptyObj);
+  return state?.settings?.gameMode?.discovered ?? {};
 }
 
 export const modPathsForGame = createSelector(

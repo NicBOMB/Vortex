@@ -1,7 +1,6 @@
 import { IExtensionApi, IExtensionContext } from '../../types/IExtensionContext';
 import { UserCanceled } from '../../util/CustomErrors';
-import { getSafe } from '../../util/storeHelper';
-import { makeQueue, setdefault } from '../../util/util';
+import { makeQueue } from '../../util/util';
 
 import BrowserView, { SubscriptionResult } from './views/BrowserView';
 
@@ -22,21 +21,22 @@ const subscriptions: {
   };
 } = {};
 
-function subscribe(subscriber: string, eventId: string,
-                   callback: (...args: any[]) => SubscriptionResult) {
-  setdefault(setdefault(subscriptions, subscriber, {}), eventId, []).push(callback);
+function subscribe(subscriber: string, eventId: string, callback: SubscriptionFunction) {
+  subscriptions[subscriber] ??= {};
+  subscriptions[subscriber][eventId] ??= [];
+  subscriptions[subscriber][eventId].push(callback);
 }
 
 function unsubscribeAll(subscriber: string) {
   delete subscriptions[subscriber];
 }
 
-function triggerEvent(subscriber: string, eventId: string, ...args: any): SubscriptionResult {
+function triggerEvent(subscriber: string, eventId: string, value: any): SubscriptionResult {
   let res: SubscriptionResult = 'continue';
 
-  getSafe(subscriptions, [subscriber, eventId], []).forEach(sub => {
+  (subscriptions?.subscriber?.[eventId] ?? []).forEach((sub) => {
     if (res === 'continue') {
-      res = sub(...args);
+      res = sub(eventId, value);
     }
   });
 
@@ -50,8 +50,8 @@ function doBrowse(api: IExtensionApi, navUrl: string,
                   skippable: boolean) {
   return new Promise<string>((resolve, reject) => {
     lastURL = navUrl;
-    subscribe(subscriptionId, 'close', (skip: boolean) => {
-      reject(new UserCanceled(skip));
+    subscribe(subscriptionId, 'close', (skip: string) => {
+      reject(new UserCanceled(!!skip));
       return 'continue';
     });
     subscribe(subscriptionId, 'navigate', (newUrl: string) => {

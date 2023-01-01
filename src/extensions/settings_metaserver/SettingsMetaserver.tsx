@@ -119,7 +119,7 @@ type RowProps = IRowProps & IDragProps & IDropProps;
  * One row in the meta-server list
  */
 class ServerRow extends React.Component<RowProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {t, connectDragSource, connectDropTarget, isDragging, server} = this.props;
     return connectDropTarget(
       connectDragSource((
@@ -178,17 +178,17 @@ class ServerList extends React.Component<IListProps, IListState> {
     };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.pullServerState();
   }
 
-  public componentDidUpdate(prevProps: IListProps, prevState: IListState) {
+  public override componentDidUpdate(prevProps: IListProps, prevState: IListState) {
     if (!_.isEqual(prevProps.metaservers, this.props.metaservers)) {
       this.pullServerState();
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {t, onAddMetaserver} = this.props;
     const { orderedServers } = this.state;
     const keys = Object.keys(orderedServers);
@@ -273,7 +273,7 @@ class SettingsMetaserver extends ComponentEx<IProps, IState> {
     };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, metaservers, onAddMetaserver,
             onRemoveMetaserver, onSetMetaserverPriority } = this.props;
 

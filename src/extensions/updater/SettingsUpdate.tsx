@@ -24,7 +24,7 @@ interface IActionProps {
 type IProps = IActionProps & IConnectedProps;
 
 class SettingsUpdate extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, installType, updateChannel } = this.props;
 
     if (installType === 'managed') {

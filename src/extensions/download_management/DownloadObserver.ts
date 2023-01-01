@@ -6,8 +6,7 @@ import * as fs from '../../util/fs';
 import {log} from '../../util/log';
 import {renderError, showError} from '../../util/message';
 import * as selectors from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
-import { flatten, setdefault, truthy } from '../../util/util';
+import { flatten } from '../../util/util';
 
 import { showURL } from '../browser/actions';
 
@@ -109,7 +108,8 @@ export class DownloadObserver {
   // enqueues an operation to be run when a download finishes
   private queueFinishCB(id: string, cb: () => Promise<void>): Promise<void> {
     return new Promise((resolve) => {
-      setdefault(this.mOnFinishCBs, id, []).push(() => cb().then(resolve));
+      this.mOnFinishCBs[id] ??= [];
+      this.mOnFinishCBs[id].push(() => cb().then(resolve));
     });
   }
 
@@ -136,8 +136,7 @@ export class DownloadObserver {
                               callback?: (err: Error, id: string) => void): Promise<void> {
     const innerState: IState = this.mApi.getState();
     if (err instanceof DownloadIsHTML) {
-      const filePath: string =
-        getSafe(innerState.persistent.downloads.files, [id, 'localPath'], undefined);
+      const filePath: string = innerState.persistent.downloads.files?.[id]?.localPath;
 
       this.mApi.store.dispatch(removeDownload(id));
       if (allowOpenHTML) {
@@ -151,8 +150,7 @@ export class DownloadObserver {
           });
       }
     } else if ((err instanceof ProcessCanceled) || (err instanceof UserCanceled)) {
-      const filePath: string =
-        getSafe(innerState.persistent.downloads.files, [id, 'localPath'], undefined);
+      const filePath: string = innerState.persistent.downloads.files?.[id]?.localPath;
       const prom: Promise<void> = (filePath !== undefined)
         ? fs.removeAsync(path.join(downloadPath, filePath))
           .catch(cleanupErr => {
@@ -314,7 +312,7 @@ export class DownloadObserver {
       return;
     }
     const fileName = path.basename(res.filePath);
-    if (truthy(fileName)) {
+    if (!!fileName){
       log('debug', 'setting final download name', { id, fileName });
       this.mApi.store.dispatch(setDownloadFilePath(id, fileName));
     } else {
@@ -397,13 +395,13 @@ export class DownloadObserver {
     };
 
     const onceStopped = (): Promise<void> => {
-      if (truthy(download.localPath) && truthy(download.game)) {
+      if (!!download.localPath && !!download.game){
         // this is a workaround required as of 1.3.5. Previous versions (1.3.4 and 1.3.5)
         // would put manually added downloads into the download root if no game was being managed.
         // Newer versions won't do this anymore (hopefully) but we still need to enable users to
         // clean up these broken downloads
         const gameId = getDownloadGames(download)[0];
-        const dlPath = truthy(gameId)
+        const dlPath = !!gameId
           ? selectors.downloadPathForGame(this.mApi.store.getState(), gameId)
           : selectors.downloadPath(this.mApi.store.getState());
 

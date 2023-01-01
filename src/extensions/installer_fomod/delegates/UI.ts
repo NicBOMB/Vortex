@@ -1,10 +1,9 @@
-import {IExtensionApi} from '../../../types/IExtensionContext';
+import { IExtensionApi } from '../../../types/IExtensionContext';
 import { log } from '../../../util/log';
-import {showError} from '../../../util/message';
-import { truthy } from '../../../util/util';
+import { showError } from '../../../util/message';
 
-import {endDialog, setDialogState, startDialog} from '../actions/installerUI';
-import {IInstallerInfo, IInstallerState, IReportError, StateCallback} from '../types/interface';
+import { endDialog, setDialogState, startDialog } from '../actions/installerUI';
+import { IInstallerInfo, IInstallerState, IReportError, StateCallback } from '../types/interface';
 
 import DelegateBase from './DelegateBase';
 
@@ -27,7 +26,7 @@ class UI extends DelegateBase {
       .on('fomod-installer-cancel', this.onDialogEnd);
   }
 
-  public detach() {
+  public override detach() {
     this.api.events
       .removeListener('fomod-installer-select', this.onDialogSelect)
       .removeListener('fomod-installer-continue', this.onDialogContinue)
@@ -85,16 +84,22 @@ class UI extends DelegateBase {
   public reportError = (parameters: IReportError, callback: (err) => void) => {
     log('debug', 'reportError', inspect(parameters, null));
     try {
-      let msg = parameters.message;
-      if (truthy(parameters.details)) {
-        msg += '\n' + parameters.details;
-      }
-      this.api.showErrorNotification(parameters.title, parameters.details ?? undefined,
-        { isHTML: true, allowReport: false, message: parameters.message });
+      this.api.showErrorNotification(
+        parameters.title,
+        parameters.details,
+        {
+          isHTML: true,
+          allowReport: false,
+          message: parameters.message
+        }
+      );
       callback(null);
     } catch (err) {
-      showError(this.api.store.dispatch,
-        'Failed to display error message from installer', err);
+      showError(
+        this.api.store.dispatch,
+        'Failed to display error message from installer',
+        err
+      );
       callback(err);
     }
   }

@@ -18,7 +18,7 @@ export interface IItemRendererProps {
   setRef?: (ref: any) => void;
 }
 
-export interface ILoadOrderEntry<T = any> {
+export interface ILoadOrderEntry {
   // An arbitrary unique id for the load order item
   id: string;
 
@@ -42,7 +42,7 @@ export interface ILoadOrderEntry<T = any> {
   modId?: string;
 
   // Custom data passed along with the load order entry
-  data?: T;
+  data?: any;
 }
 
 export interface IInvalidResult {

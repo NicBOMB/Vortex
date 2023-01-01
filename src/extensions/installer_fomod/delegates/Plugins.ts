@@ -1,14 +1,9 @@
-import {IExtensionApi} from '../../../types/IExtensionContext';
-import {getSafe} from '../../../util/storeHelper';
-
-import { getNativePlugins } from '../util/gameSupport';
+import { IExtensionApi } from '../../../types/IExtensionContext';
 import DelegateBase from './DelegateBase';
 
 class Plugins extends DelegateBase {
-  private mGameId: string;
-  constructor(api: IExtensionApi, gameId: string) {
+  constructor(api: IExtensionApi) {
     super(api);
-    this.mGameId = gameId;
   }
 
   public isActive =
@@ -30,10 +25,8 @@ class Plugins extends DelegateBase {
         try {
           const state = this.api.store.getState();
 
-          const plugins = Object.keys(
-            getSafe(state, ['session', 'plugins', 'pluginList'], undefined) ?? {});
-          const localName = plugins.find(plugin =>
-            plugin.toLowerCase() === pluginName.toLowerCase());
+          const plugins = Object.keys(state?.session?.plugins?.pluginList ?? {});
+          const localName = plugins.find((plugin) => plugin.toLowerCase() === pluginName.toLowerCase());
 
           return callback(null, localName !== undefined);
         } catch (err) {

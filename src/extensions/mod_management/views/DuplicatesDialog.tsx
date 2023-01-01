@@ -5,7 +5,6 @@ import { Modal } from '../../../controls/api';
 
 import { activeGameId } from '../../../util/selectors';
 import { useSelector } from 'react-redux';
-import { renderModName } from '../../../util/api';
 
 export interface IDuplicatesMap {
   duplicates: { [modName: string]: string[] };

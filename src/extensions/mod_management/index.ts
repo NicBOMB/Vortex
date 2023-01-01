@@ -33,8 +33,7 @@ import {
   modPathsForGame,
   profileById,
 } from '../../util/selectors';
-import {getSafe} from '../../util/storeHelper';
-import { batchDispatch, isChildPath, truthy, wrapExtCBAsync } from '../../util/util';
+import { batchDispatch, isChildPath, wrapExtCBAsync } from '../../util/util';
 import { setAutoDeployment } from '../settings_interface/actions/automation';
 
 import { setDialogVisible } from '../../actions';
@@ -126,7 +125,7 @@ class BlacklistSet extends Set<string> {
     this.mPatterns = [].concat(DEPLOY_BLACKLIST, game.details?.ignoreDeploy ?? []);
   }
 
-  public has(value: string): boolean {
+  public override has(value: string): boolean {
     return super.has(value)
       || (this.mPatterns.find(pat => minimatch(value, pat, { nocase: true })) !== undefined);
   }
@@ -326,7 +325,7 @@ function doSortMods(api: IExtensionApi, profile: IProfile, mods: { [modId: strin
     profile !== undefined ? profile.modState : {};
   const unsorted = Object.keys(mods)
     .map((key: string) => mods[key])
-    .filter((mod: IMod) => getSafe(modState, [mod.id, 'enabled'], false));
+    .filter((mod: IMod) => modState?.[mod.id]?.enabled ?? false);
 
   return sortMods(profile.gameId, unsorted, api)
     .catch(CycleError, err => Promise.reject(
@@ -369,7 +368,7 @@ function doMergeMods(api: IExtensionApi,
 
   // clean up merged mods
   return Promise.mapSeries(mergeModTypes, typeId => {
-    const mergePath = truthy(typeId)
+    const mergePath = !!typeId
       ? MERGED_PATH + '.' + typeId
       : MERGED_PATH;
     return fs.removeAsync(path.join(stagingPath, mergePath));
@@ -468,7 +467,7 @@ function reportRedundant(api: IExtensionApi, profileId: string, overwritten: IMo
 
 function deployableModTypes(modPaths: { [typeId: string]: string }) {
   return Object.keys(modPaths)
-    .filter(typeId => truthy(modPaths[typeId]));
+    .filter(typeId => !!modPaths[typeId]);
 }
 
 function genUpdateModDeployment() {
@@ -491,10 +490,10 @@ function genUpdateModDeployment() {
     };
     const state = api.store.getState();
     let profile: IProfile = profileId !== undefined
-      ? getSafe(state, ['persistent', 'profiles', profileId], undefined)
+      ? state?.persistent?.profiles?.[profileId]
       : activeProfile(state);
 
-    if (Object.keys(getSafe(state, ['session', 'base', 'toolsRunning'], {})).length > 0) {
+    if (Object.keys(state?.session?.base?.toolsRunning ?? {}).length > 0){
       api.sendNotification({
         type: 'info',
         id: 'deployment-not-possible',
@@ -512,8 +511,7 @@ function genUpdateModDeployment() {
       return Promise.resolve();
     }
     const gameId = profile.gameId;
-    const gameDiscovery =
-      getSafe(state, ['settings', 'gameMode', 'discovered', gameId], undefined);
+    const gameDiscovery = state?.settings?.gameMode?.discovered?.[gameId];
     const game = getGame(gameId);
     if ((game === undefined)
         || (gameDiscovery?.path === undefined)) {
@@ -632,7 +630,7 @@ function genUpdateModDeployment() {
               progress(t('Deploying: ') + name, 50 + percent / 2);
 
             const undiscovered = Object.keys(modPaths)
-              .filter(typeId => !truthy(modPaths[typeId]));
+              .filter(typeId => !modPaths[typeId]);
             return validateDeploymentTarget(api, undiscovered)
               .then(() => deployAllModTypes(api, activator, profile, sortedModList,
                                             stagingPath, mergeResult,
@@ -868,26 +866,26 @@ function genValidActivatorCheck(api: IExtensionApi) {
 
 function attributeExtractor(input: any) {
   return Promise.resolve({
-    version: getSafe(input.meta, ['fileVersion'], undefined),
-    logicalFileName: getSafe(input.meta, ['logicalFileName'], undefined),
-    rules: getSafe(input.meta, ['rules'], undefined),
+    version: input.meta?.fileVersion,
+    logicalFileName: input.meta?.logicalFileName,
+    rules: input.meta?.rules,
     source: input.meta?.source,
-    category: getSafe(input.meta, ['details', 'category'], undefined),
-    description: getSafe(input.meta, ['details', 'description'], undefined),
-    author: getSafe(input.meta, ['details', 'author'], undefined),
-    homepage: getSafe(input.meta, ['details', 'homepage'], undefined),
-    variant: getSafe(input.custom, ['variant'], undefined),
+    category: input.meta?.details?.category,
+    description: input.meta?.details?.description,
+    author: input.meta?.details?.author,
+    homepage: input.meta?.details?.homepage,
+    variant: input.custom?.variant
   });
 }
 
 function upgradeExtractor(input: any) {
   return Promise.resolve({
-    category: getSafe(input.previous, ['category'], undefined),
-    customFileName: getSafe(input.previous, ['customFileName'], undefined),
-    variant: getSafe(input.previous, ['variant'], undefined),
-    notes: getSafe(input.previous, ['notes'], undefined),
-    icon: getSafe(input.previous, ['icon'], undefined),
-    color: getSafe(input.previous, ['color'], undefined),
+    category: input.previous?.category,
+    customFileName: input.previous?.customFileName,
+    variant: input.previous?.variant,
+    notes: input.previous?.notes,
+    icon: input.previous?.icon,
+    color: input.previous?.color
   });
 }
 
@@ -952,11 +950,11 @@ function onDeploySingleMod(api: IExtensionApi) {
   return (gameId: string, modId: string, enable?: boolean) => {
     const state: IState = api.store.getState();
     const game = getGame(gameId);
-    const discovery = getSafe(state, ['settings', 'gameMode', 'discovered', gameId], undefined);
+    const discovery = state?.settings?.gameMode?.discovered?.[gameId];
     if ((game === undefined) || (discovery === undefined) || (discovery.path === undefined)) {
       return Promise.resolve();
     }
-    const mod: IMod = getSafe(state, ['persistent', 'mods', game.id, modId], undefined);
+    const mod = state?.persistent?.mods?.[game.id]?.[modId];
     if (mod === undefined) {
       return Promise.resolve();
     }
@@ -967,7 +965,7 @@ function onDeploySingleMod(api: IExtensionApi) {
     }
 
     const dataPath = game.getModPaths(discovery.path)[mod.type || ''];
-    if (!truthy(dataPath)) {
+    if (!dataPath){
       return Promise.resolve();
     }
     const stagingPath: string = installPathForGame(state, gameId);
@@ -1147,8 +1145,8 @@ function once(api: IExtensionApi) {
   api.events.on('install-dependencies',
     (profileId: string, gameId: string, modIds: string[], silent?: boolean) => {
       try {
-        const state: IState = api.store.getState();
-        const profile: IProfile = getSafe(state, ['persistent', 'profiles', profileId], undefined);
+        const state = api.store.getState();
+        const profile = state?.persistent?.profiles?.[profileId];
 
         Promise.map(modIds, modId =>
           installManager.installDependencies(api, profile, gameId, modId, silent === true)
@@ -1162,8 +1160,8 @@ function once(api: IExtensionApi) {
   api.events.on('install-recommendations',
     (profileId: string, gameId: string, modIds: string[]) => {
       try {
-        const state: IState = api.store.getState();
-        const profile: IProfile = getSafe(state, ['persistent', 'profiles', profileId], undefined);
+        const state = api.store.getState();
+        const profile = state?.persistent?.profiles?.[profileId];
         if (profile === undefined) {
           api.showErrorNotification('Failed to install recommendations', 'Invalid profile');
         }
@@ -1304,8 +1302,7 @@ function checkPendingTransfer(api: IExtensionApi): Promise<ITestResult> {
     return Promise.resolve(result);
   }
 
-  const pendingTransfer: string[] = ['persistent', 'transactions', 'transfer', gameMode];
-  const transferDestination = getSafe(state, pendingTransfer, undefined);
+  const transferDestination = state?.persistent?.transactions?.transfer?.[gameMode];
   if (transferDestination === undefined) {
     return Promise.resolve(result);
   }
@@ -1351,9 +1348,9 @@ function getModInfo(api: IExtensionApi, gameMode: string, modId: string) {
   const mods = state.persistent.mods[gameMode] ?? {};
   const profiles = state.persistent.profiles ?? {};
   const mod = Object.values(mods).find(mod => mod.id === modId);
-  const version = getSafe(mod, ['attributes', 'version'], 'Unknown');
-  const installTime = getSafe(mod, ['attributes', 'installTime'], 0);
-  const profileId = Object.keys(profiles).find(id => getSafe(profiles[id], ['modState', modId, 'enabled'], false));
+  const version = mod?.attributes?.version ?? 'Unknown';
+  const installTime = mod?.attributes?.installTime ?? 0;
+  const profileId = Object.keys(profiles).find(id => profiles[id]?.modState?.[modId]?.enabled ?? false);
   const profName = profiles[profileId]?.name ?? 'None';
   return `Profile: ${profName}(${profileId}); Version: ${version}; InstallTime: ${new Date(installTime)}`;
 }
@@ -1370,22 +1367,21 @@ function getDuplicateMods(api: IExtensionApi): IDuplicatesMap {
   }
 
   const mods = Object.values(state.persistent.mods[gameMode]);
-  const profiles = Object.values(state.persistent.profiles)
-    .reduce((accum, profile) => {
-      if (profile.gameId === gameMode) {
-        accum[profile.id] = { modState: profile.modState, name: profile.name };
-      }
-      return accum;
-    }, {});
+  const profiles: {[profileId: string]: {
+    modState: IProfile["modState"];
+    name: IProfile["name"]
+  }} = Object.values(state.persistent.profiles)
+    .filter((profile) => profile.gameId === gameMode)
+    .reduce((accum, profile)=>(accum[profile.id] = { modState: profile.modState, name: profile.name }),{});
 
   const getVariantValue = (mod: IMod) => {
-    const variant = getSafe(mod.attributes, ['variant'], '');
-    return truthy(variant) ? variant : 'default';
+    const variant = mod.attributes?.variant ?? '';
+    return !!variant ? variant : 'default';
   };
 
   const hasProfileReference = (modId: string) => {
     for (const prof of Object.values(profiles)) {
-      const enabled = getSafe(prof, ['modState', modId, 'enabled'], false);
+      const enabled = prof?.modState?.[modId]?.enabled ?? false;
       if (enabled) {
         return true;
       }
@@ -1397,8 +1393,7 @@ function getDuplicateMods(api: IExtensionApi): IDuplicatesMap {
   const preselected: string[] = [];
   const duplicates = mods.reduce((accum, m1) => {
     const name = renderModName(m1)
-    if (!truthy(m1.archiveId)
-        || arcIdsChecked.includes(m1.archiveId)) {
+    if (!m1.archiveId || arcIdsChecked.includes(m1.archiveId)) {
       return accum;
     }
 
@@ -1579,7 +1574,7 @@ function init(context: IExtensionContext): boolean {
   const validActivatorCheck = genValidActivatorCheck(context.api);
 
   context.registerActionCheck('SET_MOD_INSTALLATION_PATH', (state, action: any) => {
-    if (!truthy(action.payload.installPath)) {
+    if (!action.payload.installPath){
       return `Attempt to set an invalid mod installation path`;
     }
 
@@ -1606,12 +1601,12 @@ function init(context: IExtensionContext): boolean {
       onRemoveMods: (dupMap: IRemoveDuplicateMap) => {
         const state = context.api.getState();
         const gameMode = activeGameId(state);
-        const profiles = getSafe(state, ['persistent', 'profiles'], {});
+        const profiles = state?.persistent?.profiles ?? {};
         const batchedActions = [];
         const modIds = Object.keys(dupMap);
         for (const modId of modIds) {
           for (const profileId in profiles) {
-            const enabled = getSafe(profiles[profileId], ['modState', modId, 'enabled'], false);
+            const enabled = profiles[profileId]?.modState?.[modId]?.enabled ?? false;
             batchedActions.push(forgetMod(profileId, modId));
             if (enabled) {
               if (dupMap[modId] !== undefined) {
@@ -1656,7 +1651,7 @@ function init(context: IExtensionContext): boolean {
 
   context.registerActionCheck('ADD_MOD', (state, action: any) => {
     const { mod }: { mod: IMod } = action.payload;
-    if (!truthy(mod.installationPath)) {
+    if (!mod.installationPath){
       return 'Can\'t create mod without installation path';
     }
 
@@ -1665,7 +1660,7 @@ function init(context: IExtensionContext): boolean {
 
   context.registerActionCheck('ADD_MODS', (state, action: any) => {
     const { mods }: { mods: IMod[] } = action.payload;
-    if (mods.find(iter => !truthy(iter.installationPath)) !== undefined) {
+    if (mods.find(iter => !iter.installationPath) !== undefined){
       return 'Can\'t create mod without installation path';
     }
 

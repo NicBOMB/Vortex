@@ -1,9 +1,7 @@
-import Icon from '../../../controls/Icon';
 import ProgressBar from '../../../controls/ProgressBar';
 import RadialProgress from '../../../controls/RadialProgress';
-import { IDiscoveryPhase, IDiscoveryState } from '../../../types/IState';
+import { IDiscoveryState } from '../../../types/IState';
 import { connect, PureComponentEx, translate } from '../../../util/ComponentEx';
-import { sum } from '../../../util/util';
 
 import * as React from 'react';
 
@@ -18,7 +16,7 @@ interface IConnectedProps {
 type IProps = IBaseProps & IConnectedProps;
 
 class ProgressFooter extends PureComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, discovery, slim } = this.props;
 
     const phaseIds = Object.keys(discovery.phases);
@@ -28,7 +26,9 @@ class ProgressFooter extends PureComponentEx<IProps, {}> {
     }
 
     const totalProgress =
-      sum(phaseIds.map(idx => discovery.phases[idx].progress)) / phaseIds.length;
+      phaseIds.map((idx) => discovery.phases[idx].progress).reduce(
+        (p: number, e): number => (p += e), 0
+      ) / phaseIds.length;
 
     if (slim) {
       return (

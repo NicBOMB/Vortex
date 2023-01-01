@@ -1,6 +1,5 @@
 import { IFilterProps, ITableFilter } from '../../types/ITableAttribute';
 import bindProps from '../../util/bindProps';
-import { truthy } from '../../util/util';
 
 import * as React from 'react';
 import Select from 'react-select';
@@ -108,11 +107,11 @@ class OptionsFilter implements ITableFilter {
       return (value.find(filt) !== undefined);
     } else {
       if (this.mMulti) {
-        if (filtUnsane.has(OptionsFilter.EMPTY) && !truthy(value)) {
+        if (filtUnsane.has(OptionsFilter.EMPTY) && !value){
           return true;
         }
       } else if (filter === OptionsFilter.EMPTY) {
-        return !truthy(value);
+        return !value;
       }
 
       return this.mMulti

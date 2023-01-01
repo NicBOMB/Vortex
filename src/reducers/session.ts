@@ -1,7 +1,7 @@
 import * as actions from '../actions/session';
 import { IReducerSpec } from '../types/IExtensionContext';
 
-import { addUniqueSafe, deleteOrNop, pushSafe, removeValue, setSafe } from '../util/storeHelper';
+import { addUniqueSafe, deleteOrNop, removeValue, setSafe } from '../util/storeHelper';
 
 import * as path from 'path';
 

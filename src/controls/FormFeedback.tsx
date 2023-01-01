@@ -20,7 +20,7 @@ class FormFeedback extends React.Component<IFormFeedbackProps, {}> {
     bsRole: 'feedback',
   };
 
-  public render(): JSX.Element {
+  public override render() {
     const formGroup = this.context.$bs_formGroup;
     const { className } = this.props;
 
@@ -47,12 +47,12 @@ class FormFeedback extends React.Component<IFormFeedbackProps, {}> {
     if (pending) {
       return <Spinner style={style} />;
     }
-    switch (state) {
-      case 'success': return <Icon name='feedback-success' style={style} />;
-      case 'warning': return <Icon name='feedback-warning' style={style} />;
-      case 'error': return <Icon name='feedback-error' style={style} />;
-      default: return undefined;
-    }
+    return (
+      state === 'success' ? <Icon name='feedback-success' style={style} /> :
+      state === 'warning' ? <Icon name='feedback-warning' style={style} /> :
+      state === 'error' ? <Icon name='feedback-error' style={style} /> :
+      undefined
+    );
   }
 }
 

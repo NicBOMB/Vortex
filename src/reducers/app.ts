@@ -1,8 +1,6 @@
 import * as actions from '../actions/app';
-import {IReducerSpec} from '../types/IExtensionContext';
-import {deleteOrNop, pushSafe, setSafe} from '../util/storeHelper';
-
-import {app} from 'electron';
+import { IReducerSpec } from '../types/IExtensionContext';
+import { deleteOrNop, pushSafe, setSafe } from '../util/storeHelper';
 
 export const appReducer: IReducerSpec = {
   reducers: {

@@ -18,7 +18,7 @@ function elevatedMain(moduleRoot: string, ipcPath: string,
         }
       });
     };
-    // tslint:disable-next-line:no-console
+
     console.error('Elevated code failed', error.stack);
     if (client !== undefined) {
       testIfScriptInvalid();
@@ -27,12 +27,12 @@ function elevatedMain(moduleRoot: string, ipcPath: string,
 
   process.on('uncaughtException', handleError);
   process.on('unhandledRejection', handleError);
-  // tslint:disable-next-line:no-shadowed-variable
+
   (module as any).paths.push(moduleRoot);
-  // tslint:disable-next-line:no-shadowed-variable
+
   const net = require('net');
   const JsonSocket = require('json-socket');
-  // tslint:disable-next-line:no-shadowed-variable
+
   const path = require('path');
 
   client = new JsonSocket(new net.Socket());
@@ -53,7 +53,7 @@ function elevatedMain(moduleRoot: string, ipcPath: string,
   .on('error', err => {
     if (err.code !== 'EPIPE') {
       // will anyone ever see this?
-      // tslint:disable-next-line:no-console
+
       console.error('Connection failed', err.message);
     }
   });
@@ -119,7 +119,7 @@ function runElevated(ipcPath: string, func: (ipc: any, req: NodeRequire) =>
           try {
             cleanup();
           } catch (cleanupErr) {
-            // tslint:disable-next-line:no-console
+
             console.error('failed to clean up temporary script', cleanupErr.message);
           }
           return reject(writeErr);

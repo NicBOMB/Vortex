@@ -36,7 +36,7 @@ class PortalMenu extends React.Component<IPortalMenuProps, { x: number, y: numbe
     };
   }
 
-  public render() {
+  public override render() {
     const { onClose, open, placement, target, useMousePosition } = this.props;
 
     return (
@@ -66,14 +66,13 @@ class PortalMenu extends React.Component<IPortalMenuProps, { x: number, y: numbe
               args.props.style.top = useMousePosition.y;
               args.props.style.left = useMousePosition.x;
               delete args.props.style.transform;
-            } else if ((args.props.style !== undefined)
-              && (args.props.style.transform !== undefined)) {
+            } else if (typeof args.props?.style?.transform === "string") {
               // translate3d causes blurry text on "low-res" screens.
               // Newer popper versions seem to account for that but react-popper still
               // relies on an old version at the time of writing
               const translateMatch =
                 args.props.style.transform.match(/translate3d\((\w+), (\w+), 0\)/);
-              if (translateMatch !== undefined) {
+              if (translateMatch !== undefined && translateMatch !== null) {
                 args.props.style.top = translateMatch[2];
                 args.props.style.left = translateMatch[1];
                 delete args.props.style.transform;

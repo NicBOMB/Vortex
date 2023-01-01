@@ -1,8 +1,7 @@
 import { IReducerSpec } from '../../../types/IExtensionContext';
 import { log } from '../../../util/log';
-import {removeValue} from '../../../util/storeHelper';
-import { deleteOrNop, getSafe,
-  merge, pushSafe, removeValueIf, setSafe } from '../../../util/storeHelper';
+import { removeValue } from '../../../util/storeHelper';
+import { deleteOrNop, merge, pushSafe, removeValueIf, setSafe } from '../../../util/storeHelper';
 
 import * as actions from '../actions/mods';
 import {IMod} from '../types/IMod';
@@ -85,7 +84,7 @@ export const modsReducer: IReducerSpec = {
     },
     [actions.setModType as any]: (state, payload) => {
       const { gameId, modId, type } = payload;
-      if (getSafe(state, [gameId, modId], undefined) === undefined) {
+      if (state?.[gameId]?.[modId] === undefined) {
         return state;
       }
       return setSafe(state, [gameId, modId, 'type'], type);
@@ -117,7 +116,7 @@ export const modsReducer: IReducerSpec = {
         group = [rule.type];
       }
 
-      idx = getSafe(state, [gameId, modId, 'rules'], [])
+      idx = (state?.[gameId]?.[modId]?.rules ?? [])
         .findIndex((iterRule: IRule) => {
           const typeMatch = group.indexOf(rule.type) !== -1;
           const filteredIter = _.omitBy(iterRule.reference, _.isUndefined);
@@ -149,7 +148,7 @@ export const modsReducer: IReducerSpec = {
       }
 
       const indices: number[] = [];
-      const rules: IRule[] = getSafe(state, [gameId, modId, 'rules'], []);
+      const rules: IRule[] = state?.[gameId]?.[modId]?.rules ?? [];
       for (let i = 0; i < rules.length; ++i) {
         if (referenceEqual(rules[i].reference, reference)) {
           indices.push(i);

@@ -1,5 +1,5 @@
 {
-  "$schema": "node_modules/electron-builder/node_modules/app-builder-lib/scheme.json",
+  "$schema": "node_modules/app-builder-lib/scheme.json",
   "directories": {
     "output": "dist_web"
   },
@@ -50,6 +50,7 @@
     "!**/build/Debug${/*}",
     "!**/build/Release/obj${/*}",
     "!**/build/.vs${/*}",
+    "!**/build/node_gyp_bins",
     "!**/autogypi.json",
     "!**/binding.gyp",
     "!**/binding.map",
@@ -67,5 +68,5 @@
     "!**/node_modules/d3-geo/img"
   ],
   "buildDependenciesFromSource": false,
-  "npmRebuild": false
+  "npmRebuild": true
 }

@@ -2,34 +2,39 @@ import { DialogActions, DialogType, IDialogContent, IDialogResult } from '../typ
 import { INotification, NotificationDismiss } from '../types/INotification';
 import local from '../util/local';
 import {log} from '../util/log';
-import {truthy} from '../util/util';
 
 import safeCreateAction from './safeCreateAction';
 
 import Promise from 'bluebird';
 import { ipcMain, ipcRenderer } from 'electron';
-
-import * as reduxAct from 'redux-act';
 import { generate as shortid } from 'shortid';
 
 export * from '../types/IDialog';
 
-const identity = input => input;
+const identity = (input) => input;
 
 /**
  * adds a notification to be displayed. Takes one parameter of type INotification. The id may be
  * left unset, in that case one will be generated
  */
-export const startNotification = safeCreateAction('ADD_NOTIFICATION', identity);
+export const startNotification = safeCreateAction(
+  'ADD_NOTIFICATION',
+  identity
+);
 
-export const updateNotification = safeCreateAction('UPDATE_NOTIFICATION',
+export const updateNotification = safeCreateAction(
+  'UPDATE_NOTIFICATION',
   (id: string, progress: number, message: string) => ({ id, progress, message }),
-  () => ({ forward: false, scope: 'local' }));
+  () => ({ forward: false, scope: 'local' })
+);
 
 /**
  * dismiss a notification. Takes the id of the notification
  */
-export const stopNotification = safeCreateAction('STOP_NOTIFICATION', identity);
+export const stopNotification = safeCreateAction(
+  'STOP_NOTIFICATION',
+  identity
+);
 
 /**
  * show a modal dialog to the user
@@ -39,8 +44,15 @@ export const stopNotification = safeCreateAction('STOP_NOTIFICATION', identity);
 export const addDialog = safeCreateAction(
     'SHOW_MODAL_DIALOG',
     (id: string, type: string, title: string, content: IDialogContent,
-     defaultAction: string, actions: string[]) =>
-        ({id, type, title, content, defaultAction, actions}));
+     defaultAction: string, actions: string[]) => ({
+       id,
+       type,
+       title,
+       content,
+       defaultAction,
+       actions
+    })
+);
 
 /**
  * dismiss the dialog being displayed
@@ -49,7 +61,10 @@ export const addDialog = safeCreateAction(
  * you leak (a tiny amount of) memory and the action callbacks aren't called.
  * Use closeDialog instead
  */
-export const dismissDialog = safeCreateAction('DISMISS_MODAL_DIALOG', identity);
+export const dismissDialog = safeCreateAction(
+  'DISMISS_MODAL_DIALOG',
+  identity
+);
 
 const timers = local<{ [id: string]: NodeJS.Timer }>('notification-timers', {});
 
@@ -203,7 +218,7 @@ export function showDialog(type: DialogType, title: string,
                          actions.map(action => action.label)));
       DialogCallbacks.instance()[id] = (actionKey: string, input?: any) => {
         const action = actions.find(iter => iter.label === actionKey);
-        if (truthy(action.action)) {
+        if (!!action.action){
           try {
             const res: any = action.action(input);
             if ((res !== undefined) && (res.catch !== undefined)) {

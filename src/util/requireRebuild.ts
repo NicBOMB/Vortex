@@ -9,15 +9,12 @@ import * as path from 'path';
 import * as reqResolve from 'resolve';
 import getVortexPath from './getVortexPath';
 
-// tslint:disable-next-line:no-var-requires
 const Module = require('module');
 
 const loggingHandler = {
   get: (obj, prop) => {
     if (typeof(obj[prop]) === 'function') {
-      // tslint:disable-next-line:only-arrow-functions
       return function(...args) {
-        // tslint:disable-next-line:no-console
         console.log(prop, args);
         return obj[prop](...args);
       };
@@ -169,10 +166,9 @@ function makeRebuildFunc(orig) {
 
 function patchedLoad(orig) {
   const rebuildLib = makeRebuildFunc(orig);
-  // tslint:disable-next-line:only-arrow-functions
-  return function(request: string, parent: typeof Module) {
+  return function anon(request: string, parent: typeof Module) {
     try {
-      const res = orig.apply(this, arguments);
+      const res = orig.apply(anon, arguments);
       if (modulesToLog.has(request)) {
         return new Proxy(res, loggingHandler);
       } else {
@@ -182,7 +178,7 @@ function patchedLoad(orig) {
       const reqName = path.basename(request);
       if (nativeLibs.includes(reqName)) {
         if (rebuildLib(parent, request)) {
-          return orig.apply(this, arguments);
+          return orig.apply(anon, arguments);
         } else {
           throw err;
         }

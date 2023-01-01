@@ -9,8 +9,6 @@ import * as levelup from 'levelup';
 
 const SEPARATOR: string = '###';
 
-const READ_TIMEOUT: number = 10000;
-
 export class DatabaseLocked extends Error {
   constructor() {
     super('Database is locked');

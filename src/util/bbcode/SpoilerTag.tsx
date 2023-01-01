@@ -17,7 +17,7 @@ class Spoiler extends React.Component<ISpoilerProps, { display: boolean }> {
     this.state = { display: false };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t } = this.props;
     return (
       <div className='bbcode-spoiler-tag'>
@@ -41,11 +41,11 @@ class Spoiler extends React.Component<ISpoilerProps, { display: boolean }> {
 const SpoilerTrans = withTranslation(['common'])(Spoiler) as React.ComponentClass<any>;
 
 class SpoilerTag extends Tag {
-  public toHTML(): string[] {
+  public override toHTML(): string[] {
     return [this.getContent()];
   }
 
-  public toReact() {
+  public override toReact() {
     return <SpoilerTrans content={this.getComponents()} label={this.params.label} />;
   }
 }

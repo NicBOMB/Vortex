@@ -16,8 +16,6 @@ import { log } from '../util/log';
 import { showError } from '../util/message';
 import { activeGameId, currentGame, currentGameDiscovery } from '../util/selectors';
 import StarterInfo from '../util/StarterInfo';
-import { getSafe } from '../util/storeHelper';
-import { truthy } from '../util/util';
 
 import Promise from 'bluebird';
 import * as React from 'react';
@@ -70,15 +68,15 @@ class QuickLauncher extends ComponentEx<IProps, IComponentState> {
     this.initState({ starter: this.makeStarter(props), gameIconCache: this.genGameIconCache() });
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.context.api.events.on('quick-launch', this.start);
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.context.api.events.removeListener('quick-launch', this.start);
   }
 
-  public UNSAFE_componentWillReceiveProps(nextProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: IProps) {
     if ((nextProps.discoveredTools !== this.props.discoveredTools)
         || (nextProps.game !== this.props.game)
         || (nextProps.gameDiscovery !== this.props.primaryTool)) {
@@ -91,7 +89,7 @@ class QuickLauncher extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element|null {
     const { t, game, toolsRunning } = this.props;
     const { starter } = this.state;
 
@@ -101,7 +99,7 @@ class QuickLauncher extends ComponentEx<IProps, IComponentState> {
 
     const exclusiveRunning =
       Object.keys(toolsRunning).find(exeId => toolsRunning[exeId].exclusive) !== undefined;
-    const primaryRunning = (truthy(starter.exePath))
+    const primaryRunning = !!starter.exePath
       && Object.keys(toolsRunning).find(exeId =>
         exeId === makeExeId(starter.exePath)) !== undefined;
 
@@ -112,7 +110,7 @@ class QuickLauncher extends ComponentEx<IProps, IComponentState> {
           className='btn-quicklaunch'
           title={this.renderGameOption(game.id) as any}
           key={game.id}
-          onSelect={this.changeGame}
+          onSelect={(e) => this.changeGame(e)}
           noCaret
         >
           {this.renderGameOptions()}
@@ -149,7 +147,7 @@ class QuickLauncher extends ComponentEx<IProps, IComponentState> {
 
     return Object.keys(gameIconCache)
       .filter(gameId => gameId !== game.id)
-      .filter(gameId => !getSafe(discoveredGames, [gameId, 'hidden'], false))
+      .filter(gameId => !discoveredGames?.[gameId]?.hidden ?? false)
       .map(gameId => (
         <MenuItem key={gameId} eventKey={gameId}>
           {this.renderGameOption(gameId)}
@@ -175,13 +173,7 @@ class QuickLauncher extends ComponentEx<IProps, IComponentState> {
 
     const profile = profiles[lastActiveProfile[gameId]];
 
-    let displayName =
-      getSafe(discovered, ['shortName'], getSafe(game, ['shortName'], undefined))
-      || getSafe(discovered, ['name'], getSafe(game, ['name'], undefined));
-
-    if (displayName !== undefined) {
-      displayName = displayName.replace(/\t/g, ' ');
-    }
+    const displayName = (discovered.shortName ?? game.shortName ?? discovered.name ?? game.name).replace(/\t/g, ' ');
 
     return (
       <div
@@ -206,7 +198,7 @@ class QuickLauncher extends ComponentEx<IProps, IComponentState> {
 
     const managedGamesIds = Array.from(new Set<string>(Object.keys(profiles)
       .map(profileId => profiles[profileId].gameId)
-      .filter(gameId => truthy(getSafe(discoveredGames, [gameId, 'path'], undefined)))));
+      .filter(gameId => !!discoveredGames?.[gameId]?.path)));
 
     return managedGamesIds.reduce((prev, gameId) => {
       const game = knownGames.find(iter => iter.id === gameId);
@@ -221,7 +213,7 @@ class QuickLauncher extends ComponentEx<IProps, IComponentState> {
     }, {});
   }
 
-  private changeGame = (gameId) => {
+  private changeGame = (gameId: string) => {
     if (gameId === '__more') {
       this.context.api.events.emit('show-main-page', 'Games');
     } else {
@@ -243,37 +235,7 @@ class QuickLauncher extends ComponentEx<IProps, IComponentState> {
 
   private makeStarter(props: IProps): StarterInfo {
     const { discoveredTools, game, gameDiscovery, primaryTool } = props;
-    if ((gameDiscovery === undefined)
-        || (gameDiscovery.path === undefined)
-        || ((game === undefined) && (gameDiscovery.id === undefined))) {
-      return undefined;
-    }
-
-    try {
-      if (!truthy(primaryTool)
-        || ((game.supportedTools[primaryTool] === undefined)
-          && (discoveredTools[primaryTool] === undefined))) {
-        return new StarterInfo(game, gameDiscovery);
-      } else {
-        try {
-          if (truthy(discoveredTools[primaryTool].path)) {
-            return new StarterInfo(game, gameDiscovery,
-              game !== undefined ? game.supportedTools[primaryTool] : undefined,
-              discoveredTools[primaryTool]);
-          } else {
-            // Annoying, but a valid issue where for some reason the tool's
-            //  path has been manually deleted by the user OR is undefined.
-            throw new Error('invalid path to primary tool');
-          }
-        } catch (err) {
-          log('warn', 'invalid primary tool', { err });
-          return new StarterInfo(game, gameDiscovery);
-        }
-      }
-    } catch (err) {
-      log('error', 'invalid game', { err });
-      return undefined;
-    }
+    return new StarterInfo(game, gameDiscovery, game.supportedTools[primaryTool], discoveredTools[primaryTool]);
   }
 }
 
@@ -284,10 +246,9 @@ function mapStateToProps(state: IState): IConnectedProps {
     gameMode,
     game: currentGame(state),
     gameDiscovery: currentGameDiscovery(state),
-    discoveredTools: getSafe(state, [ 'settings', 'gameMode',
-                                      'discovered', gameMode, 'tools' ], {}),
-    primaryTool: getSafe(state, ['settings', 'interface', 'primaryTool', gameMode], undefined),
-    tabsMinimized: getSafe(state, ['settings', 'window', 'tabsMinimized'], false),
+    discoveredTools: state.settings?.gameMode?.discovered?.[gameMode]?.tools ?? {},
+    primaryTool: state.settings?.interface?.primaryTool?.[gameMode] ?? '',
+    tabsMinimized: state.settings?.window?.tabsMinimized ?? false,
 
     knownGames: state.session.gameMode.known,
     profiles: state.persistent.profiles,

@@ -1,6 +1,6 @@
 import { IReducerSpec, VerifierDropParent } from '../../../types/IExtensionContext';
 import { terminate } from '../../../util/errorHandling';
-import { deleteOrNop, getSafe, merge, setOrNop, setSafe } from '../../../util/storeHelper';
+import { deleteOrNop, merge, setOrNop, setSafe } from '../../../util/storeHelper';
 
 import * as action from '../actions/state';
 
@@ -26,7 +26,7 @@ export const stateReducer: IReducerSpec = {
                    + 'would destroy user data. The action was: \'initDownload\' '
                    + 'with id \'' + payload.id + '\'.'
                    + 'This is a bug in the calling code, please report id.',
-        }, {});
+        });
         return state;
       }
       return setSafe(state, [ 'files', payload.id ], {
@@ -94,7 +94,7 @@ export const stateReducer: IReducerSpec = {
     },
     [action.startDownload as any]: (state, payload) => {
       if (typeof(payload.id) !== 'string') { throw new Error('invalid download id'); }
-      if (getSafe<string>(state, [ 'files', payload.id, 'state' ], 'unknown') !== 'init') {
+      if ((state?.files?.[payload.id]?.state ?? 'unknown') !== 'init'){
         return state;
       }
       return merge(state, [ 'files', payload.id ], {

@@ -4,7 +4,6 @@ import Toggle from '../../../controls/Toggle';
 import { Button } from '../../../controls/TooltipControls';
 import { ITableAttribute } from '../../../types/ITableAttribute';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
-import { setdefault } from '../../../util/util';
 
 import { confirmExternalChanges, setExternalChangeAction } from '../actions/session';
 
@@ -71,7 +70,8 @@ interface ISourceMap {
 }
 
 function bySource(prev: ISourceMap, value: IFileEntry): ISourceMap {
-  setdefault(prev, value.source, []).push(value);
+  prev[value.source] ??= [];
+  prev[value.source].push(value);
   return prev;
 }
 
@@ -118,7 +118,7 @@ class ExternalChangeDialog extends ComponentEx<IProps, IComponentState> {
     this.state = { showFiles: false };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, changes } = this.props;
     const { showFiles } = this.state;
 
@@ -170,12 +170,10 @@ class ExternalChangeDialog extends ComponentEx<IProps, IComponentState> {
     const { t } = this.props;
 
     const rcmap = refChanged.reduce(bySource, {});
-    const vcmap = valChanged.reduce(bySource, {});
     const dmap = deleted.reduce(bySource, {});
     const sdmap = srcDeleted.reduce(bySource, {});
 
     const rc = Object.keys(rcmap).map(source => transform(source, rcmap[source]));
-    const vc = Object.keys(vcmap).map(source => transform(source, vcmap[source]));
     const d = Object.keys(dmap).map(source => transform(source, dmap[source]));
     const sd = Object.keys(sdmap).map(source => transform(source, sdmap[source]));
 
@@ -198,7 +196,7 @@ class ExternalChangeDialog extends ComponentEx<IProps, IComponentState> {
 
   private renderFiles = (refChanged: IFileEntry[], valChanged: IFileEntry[],
                          deleted: IFileEntry[], srcDeleted: IFileEntry[]): JSX.Element => {
-    const { t, changes } = this.props;
+    const { t } = this.props;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -323,7 +321,7 @@ class ExternalChangeDialog extends ComponentEx<IProps, IComponentState> {
       });
   }
 
-  // tslint:disable-next-line:member-ordering
+
   private genSourceColumns = (() => {
     const cache: { [type: string]: ITableAttribute[] } = {};
 
@@ -387,7 +385,7 @@ class ExternalChangeDialog extends ComponentEx<IProps, IComponentState> {
     };
   })();
 
-  // tslint:disable-next-line:member-ordering
+
   private genColumns = (() => {
     const cache: { [type: string]: ITableAttribute[] } = {};
 

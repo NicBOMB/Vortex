@@ -7,7 +7,6 @@ import { connect } from 'react-redux';
 import * as actions from '../../../actions/index';
 import { DraggableList, EmptyPlaceholder, FlexLayout, IconBar, Spinner, ToolbarIcon } from '../../../controls/api';
 import * as types from '../../../types/api';
-import * as util from '../../../util/api';
 import { ComponentEx } from '../../../util/ComponentEx';
 import * as selectors from '../../../util/selectors';
 import { DNDContainer, MainPage } from '../../../views/api';
@@ -104,7 +103,7 @@ class FileBasedLoadOrderPage extends ComponentEx<IProps, IComponentState> {
     ];
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     const { onSetOrder, onStartUp, profile } = this.props;
     onStartUp(profile?.gameId)
       .then(lo => {
@@ -125,11 +124,11 @@ class FileBasedLoadOrderPage extends ComponentEx<IProps, IComponentState> {
       .finally(() => this.nextState.loading = false);
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.resetState();
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, loadOrder, getGameEntry, profile } = this.props;
     const { validationError } = this.state;
     const gameEntry = getGameEntry(profile?.gameId);
@@ -223,7 +222,7 @@ class FileBasedLoadOrderPage extends ComponentEx<IProps, IComponentState> {
   }
 
   private onApply = (ordered: IItemRendererProps[]) => {
-    const { onSetOrder, onShowError, loadOrder, profile, validateLoadOrder } = this.props;
+    const { onSetOrder, onShowError, profile, validateLoadOrder } = this.props;
     const newLO = ordered.map(item => item.loEntry);
     validateLoadOrder(profile, newLO)
       .then(() => this.nextState.validationError = undefined)
@@ -260,7 +259,7 @@ class FileBasedLoadOrderPage extends ComponentEx<IProps, IComponentState> {
 
 function mapStateToProps(state: types.IState, ownProps: IProps): IConnectedProps {
   const profile = selectors.activeProfile(state) || undefined;
-  let loadOrder = util.getSafe(state, ['persistent', 'loadOrder', profile?.id], []);
+  let loadOrder = state?.persistent?.loadOrder?.[profile?.id] ?? [];
   if (!Array.isArray(loadOrder)) {
     loadOrder = [];
   }

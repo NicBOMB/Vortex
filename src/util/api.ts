@@ -57,9 +57,9 @@ import relativeTime, { userFriendlyTime } from './relativeTime';
 import StarterInfo from './StarterInfo';
 import steam, { GameNotFound, ISteamEntry } from './Steam';
 import { batchDispatch, bytesToString, deBOM, delay, isChildPath, isFilenameValid, isPathValid,
-         makeQueue, makeUnique, makeUniqueByKey, nexusModsURL, objDiff, pad, sanitizeCSSId,
-         sanitizeFilename, semverCoerce, setdefault, toBlue, toPromise, unique,
-         makeOverlayableDictionary } from './util';
+         makeQueue, nexusModsURL, objDiff, pad, sanitizeCSSId,
+         sanitizeFilename, semverCoerce, toBlue, toPromise, makeOverlayableDictionary
+} from './util';
 import { Campaign, Section, Overlayable } from './util';
 import walk from './walk';
 
@@ -126,8 +126,6 @@ export {
   makeQueue,
   makeReactive,
   makeRemoteCall,
-  makeUnique,
-  makeUniqueByKey,
   MissingInterpreter,
   nexusGameId,
   nexusModsURL,
@@ -154,7 +152,6 @@ export {
   sanitizeFilename,
   Section,
   semverCoerce,
-  setdefault,
   SetupError,
   SevenZip,
   sortMods,
@@ -165,7 +162,6 @@ export {
   testModReference,
   toBlue,
   toPromise,
-  unique,
   UserCanceled,
   userFriendlyTime,
   walk,

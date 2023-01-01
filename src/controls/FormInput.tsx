@@ -1,6 +1,5 @@
 import { ValidationState } from '../types/ITableAttribute';
 import Debouncer from '../util/Debouncer';
-import { isFunction } from '../util/util';
 
 import { IconButton } from './TooltipControls';
 
@@ -51,14 +50,14 @@ class FormInput extends React.PureComponent<IProps, IComponentState> {
       cachedValue: props.value,
     };
     this.mDebouncer = new Debouncer(newValue => {
-      const { onChange, value } = this.props;
+      const { onChange } = this.props;
       this.mLastCommitted = newValue;
       onChange(newValue, props.id);
       return null;
     }, this.props.debounceTimer || 1000);
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if ((newProps.value !== this.props.value)
         && (this.mLastCommitted !== newProps.value)) {
       this.mLastCommitted = newProps.value;
@@ -66,7 +65,7 @@ class FormInput extends React.PureComponent<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { className, clearable, emptyIcon, groupClass, id, label, min, max, maxLength,
             placeholder, readOnly, style, type, validate } = this.props;
     const { cachedValue } = this.state;
@@ -133,7 +132,7 @@ class FormInput extends React.PureComponent<IProps, IComponentState> {
       return null;
     }
     let validateRes = validate;
-    if (isFunction(validate)) {
+    if (typeof validate === "function") {
       validateRes = (validate as any)(value);
     }
     return validateRes as ValidationState;

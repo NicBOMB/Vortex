@@ -3,15 +3,13 @@ import ToolButton from './ToolButton';
 import { IStarterInfo } from '../../util/StarterInfo';
 import { makeExeId } from '../../reducers/session';
 
-import { getSafe } from '../../util/storeHelper';
-
 import * as React from 'react';
 import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 
 import { activeGameId } from '../../util/selectors';
 
-import { IRunningTool } from '../../types/IState';
+import { IRunningTool, IState } from '../../types/IState';
 
 import { useDebouncedCallback } from './useDebouncedCallback';
 
@@ -41,7 +39,7 @@ function Tool(props: IToolProps) {
 
   const running = (starter.exePath !== undefined)
                && (toolsRunning[makeExeId(starter.exePath)] !== undefined);
-  
+
   const moveItem = useDebouncedCallback((srcId: string, destId: string) => {
     const sourceIndex = tools.findIndex(item => item.id === srcId);
     const destinationIndex = tools.findIndex(item => item.id === destId);
@@ -77,11 +75,11 @@ function Tool(props: IToolProps) {
     </BoxWithHandle>);
 }
 
-function mapStateToProps(state: any): IConnectedProps {
+function mapStateToProps(state: IState): IConnectedProps {
   const gameMode: string = activeGameId(state);
 
   return {
-    primaryTool: getSafe(state, ['settings', 'interface', 'primaryTool', gameMode], undefined),
+    primaryTool: state?.settings?.interface?.primaryTool?.[gameMode],
     toolsRunning: state.session.base.toolsRunning,
   };
 }

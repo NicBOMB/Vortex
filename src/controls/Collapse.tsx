@@ -20,7 +20,7 @@ class Collapse extends PureComponentEx<ICollapseProps, ICollapseState> {
     };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, children, showText, hideText } = this.props;
     const { show } = this.state;
 

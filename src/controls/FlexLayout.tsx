@@ -56,7 +56,7 @@ class FlexLayout extends React.PureComponent<IProps, {}> {
   public static Fixed = Fixed;
   public static Flex = Flex;
 
-  public render(): JSX.Element {
+  public override render() {
     const { fill, style, type } = this.props;
     const relayProps = _.omit(this.props, ['className', 'fill', 'style']);
 

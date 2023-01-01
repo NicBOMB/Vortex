@@ -8,8 +8,6 @@ import LoadOrderPage from './views/LoadOrderPage';
 
 import { ICollection } from './types/collections';
 
-import { getSafe } from '../../util/storeHelper';
-
 import { generate, Interface, parser } from './collections/loadOrder';
 
 import { addGameEntry, findGameEntry } from './gameSupport';
@@ -44,8 +42,7 @@ export default function init(context: IExtensionContext) {
     (gameId: string, includedMods: string[]) => {
       const state = context.api.getState();
       const stagingPath = installPathForGame(state, gameId);
-      const mods: { [modId: string]: IMod } =
-        getSafe(state, ['persistent', 'mods', gameId], {});
+      const mods: { [modId: string]: IMod } = state?.persistent?.mods?.[gameId] ?? {};
       return generate(context.api, state, gameId, stagingPath, includedMods, mods);
     },
     (gameId: string, collection: ICollection) => parser(context.api, gameId, collection),

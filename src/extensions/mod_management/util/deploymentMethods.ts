@@ -1,6 +1,4 @@
 import { IState } from '../../../types/IState';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 import { getGame } from '../../gamemode_management/util/getGame';
 import { activeGameId } from '../../profile_management/selectors';
 
@@ -41,7 +39,7 @@ export function getSupportedActivators(state: IState): IDeploymentMethod[] {
   }
   const modPaths = game.getModPaths(discovery.path);
   const modTypes = Object.keys(modPaths)
-    .filter(typeId => truthy(modPaths[typeId]));
+    .filter(typeId => !!modPaths[typeId]);
   return activators.filter(
     act => allTypesSupported(act, state, gameId, modTypes).errors.length === 0);
 }
@@ -59,8 +57,7 @@ export function getCurrentActivator(state: IState,
                                     allowDefault: boolean): IDeploymentMethod {
   let activator: IDeploymentMethod = getSelectedActivator(state, gameId);
 
-  const gameDiscovery =
-    getSafe(state, ['settings', 'gameMode', 'discovered', gameId], undefined);
+  const gameDiscovery = state?.settings?.gameMode?.discovered?.[gameId];
   if (gameDiscovery?.path === undefined) {
     // activator for a game that's not discovered doesn't really make sense
     return undefined;
@@ -73,7 +70,7 @@ export function getCurrentActivator(state: IState,
   }
   const modPaths = game.getModPaths(gameDiscovery.path);
   const types = Object.keys(modPaths)
-    .filter(typeId => truthy(modPaths[typeId]));
+    .filter(typeId => !!modPaths[typeId]);
 
   // if no activator has been selected for the game, allow using a default
   if (allowDefault && (activator === undefined)) {

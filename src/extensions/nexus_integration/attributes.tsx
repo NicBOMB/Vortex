@@ -2,10 +2,7 @@ import { setModAttribute } from '../../actions';
 import { IExtensionApi, IMod, IState, ITableAttribute } from '../../types/api';
 import { laterT } from '../../util/i18n';
 import { activeGameId, currentGame, downloadPathForGame, gameById, knownGames } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
-import { truthy } from '../../util/util';
 import { IModWithState } from '../mod_management/types/IModProps';
-import NXMUrl from './NXMUrl';
 import { nexusGames } from './util';
 import { checkModVersion } from './util/checkModsVersion';
 import { convertGameIdReverse, nexusGameId } from './util/convertGameId';
@@ -93,7 +90,7 @@ function createEndorsedIcon(store: Redux.Store<any>,
                             t: TFunction) {
   const nexusModId: string = mod.attributes?.modId ?? mod.attributes?.collectionId;
   const version: string = mod.attributes?.version;
-  const state: string = getSafe(mod, ['state'], undefined);
+  const state: string = mod?.state;
 
   // TODO: this is not a reliable way to determine if the mod is from nexus
   const isNexusMod: boolean = (nexusModId !== undefined)
@@ -107,7 +104,7 @@ function createEndorsedIcon(store: Redux.Store<any>,
     return null;
   }
 
-  const allowRating: boolean = getSafe(mod.attributes, ['allowRating'], true);
+  const allowRating: boolean = mod.attributes?.allowRating ?? true;
   if (!allowRating) {
     endorsed = 'Disabled';
   }
@@ -117,13 +114,11 @@ function createEndorsedIcon(store: Redux.Store<any>,
     endorsed = 'Undecided';
   }
 
-  if (getSafe(mod.attributes, ['author'], undefined)
-      === getSafe(store.getState(), ['persistent', 'nexus', 'userInfo', 'name'], undefined)) {
+  if (mod.attributes?.author === store.getState()?.persistent?.nexus?.userInfo?.name){
     endorsed = undefined;
   }
 
-  const gameId = getSafe(mod.attributes, ['downloadGame'], undefined)
-               || activeGameId(store.getState());
+  const gameId = mod.attributes?.downloadGame ?? activeGameId(store.getState());
   if (endorsed !== undefined) {
     return (
       <EndorseModButton
@@ -147,13 +142,14 @@ export function genEndorsedAttribute(api: IExtensionApi,
     description: laterT('Endorsement state on Nexus'),
     icon: 'star',
     customRenderer: (mod: IMod, detail: boolean, t: TFunction) =>
-      getSafe(mod.attributes, ['source'], undefined) === 'nexus'
-        ? createEndorsedIcon(api.store, mod, onEndorseMod, t)
-        : null,
+      mod.attributes?.source === 'nexus' ?
+      createEndorsedIcon(api.store, mod, onEndorseMod, t) :
+      null
+    ,
     calc: (mod: IMod) =>
-      getSafe(mod.attributes, ['source'], undefined) === 'nexus'
-        ? getSafe(mod.attributes, ['endorsed'], null)
-        : undefined,
+      mod.attributes?.source === 'nexus' ?
+      mod.attributes?.endorsed : null
+    ,
     placement: 'table',
     isToggleable: true,
     edit: {},
@@ -216,10 +212,10 @@ export function genGameAttribute(api: IExtensionApi): ITableAttribute<IMod> {
     name: laterT('Game Section'),
     description: laterT('NexusMods Game Section'),
     calc: mod => {
-      if (getSafe(mod.attributes, ['source'], undefined) !== 'nexus') {
+      if (mod.attributes?.source !== 'nexus'){
         return undefined;
       }
-      let downloadGame: string | string[] = getSafe(mod.attributes, ['downloadGame'], undefined);
+      let downloadGame: string | string[] = mod.attributes?.downloadGame;
       if (Array.isArray(downloadGame)) {
         downloadGame = downloadGame[0];
       }

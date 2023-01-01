@@ -7,7 +7,6 @@ import { IDownload, IState } from '../../../types/IState';
 import { getApplication } from '../../../util/application';
 import { ProcessCanceled, UserCanceled } from '../../../util/CustomErrors';
 import * as fs from '../../../util/fs';
-import { truthy } from '../../../util/util';
 import { setDownloadPath } from '../actions/settings';
 import { removeDownload } from '../actions/state';
 import getDownloadPath from './getDownloadPath';
@@ -199,7 +198,7 @@ export function ensureDownloadsDirectory(api: IExtensionApi): Promise<void> {
             defaultPath: currentDownloadPath,
             title: api.translate('Select downloads folder'),
           }).then((selectedPath) => {
-            if (!truthy(selectedPath)) {
+            if (!selectedPath){
               return Promise.reject(new UserCanceled());
             }
             return validateDownloadsTag(api, path.join(selectedPath, DOWNLOADS_DIR_TAG))

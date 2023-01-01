@@ -13,7 +13,7 @@ import {
 } from './util/getGameVersion';
 import isVersionProvider from './util/validation';
 
-// oh boy
+// FIXME: oh boy
 const $ = local<{
   gameVersionManager: GameVersionManager,
 }>('gameversion-manager', {
@@ -52,7 +52,7 @@ function init(context: IExtensionContext): boolean {
     1000, () => Promise.resolve(true), () => Promise.resolve('0.0.0'));
 
   context.once(() => {
-    $.gameVersionManager = new GameVersionManager(context.api, gameVersionProviders);
+    $.gameVersionManager = new GameVersionManager(gameVersionProviders);
   });
 
   return true;

@@ -1,27 +1,32 @@
 {
     "compileOnSave": true,
     "compilerOptions": {
-        "target": "esnext",
+        "target": "es2021",
         "module": "commonjs",
         "moduleResolution": "node",
         "allowJs": true,
+        "noFallthroughCasesInSwitch": true,
         "noImplicitAny": false,
+        "noImplicitThis": true,
+        "noImplicitOverride": true,
+        "noUnusedLocals": true,
         "removeComments": true,
         "preserveConstEnums": true,
         "rootDir": "./src",
         "outDir": "./out",
+        "jsx":"react",
         "inlineSourceMap": true,
         "inlineSources": true,
         "skipLibCheck": true,
-        "esModuleInterop": true,
-        "jsx":"react"
+        "strictNullChecks": true,
+        "esModuleInterop": true
     },
     "files": [
-      "typings.custom/index.d.ts",
-      "src/main.ts",
-      "src/index.ts",
-      "src/renderer.tsx",
-      "src/splash.ts",
-      "src/extensions/index.ts"
+      "typings.custom/index.d.ts"
+    ],
+    "include": [
+      "src/**/*.js",
+      "src/**/*.ts",
+      "src/**/*.tsx"
     ]
 }

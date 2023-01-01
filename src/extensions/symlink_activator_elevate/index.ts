@@ -1,15 +1,14 @@
 import { clearUIBlocker, setUIBlocker } from '../../actions';
-import {IExtensionApi, IExtensionContext} from '../../types/IExtensionContext';
+import { IExtensionApi, IExtensionContext } from '../../types/IExtensionContext';
 import { IGame } from '../../types/IGame';
 import { IState } from '../../types/IState';
-import {ProcessCanceled, TemporaryError, UserCanceled} from '../../util/CustomErrors';
+import { ProcessCanceled, UserCanceled } from '../../util/CustomErrors';
 import * as fs from '../../util/fs';
 import { Normalize } from '../../util/getNormalizeFunc';
 import getVortexPath from '../../util/getVortexPath';
 import { log } from '../../util/log';
 import makeReactive from '../../util/makeReactive';
 import { activeGameId, gameName } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
 
 import { getGame } from '../gamemode_management/util/getGame';
 import LinkingDeployment from '../mod_management/LinkingDeployment';
@@ -93,7 +92,7 @@ function startIPCServer(ipcPath: string, onMessage: OnMessageCB): net.Server {
 class DeploymentMethod extends LinkingDeployment {
   public compatible: string[] = ['symlink_activator'];
 
-  public priority: number = 20;
+  public override priority: number = 20;
 
   private mElevatedClient: any;
   private mQuitTimer: NodeJS.Timer;
@@ -153,7 +152,7 @@ class DeploymentMethod extends LinkingDeployment {
     }
   }
 
-  public detailedDescription(t: TFunction): string {
+  public override detailedDescription(t: TFunction): string {
     return t(
       'Symbolic links are special files containing a reference to another file. '
       + 'They are supported directly by the low-level API of the operating system '
@@ -172,7 +171,7 @@ class DeploymentMethod extends LinkingDeployment {
       + 'your regular account has write access to source and destination.');
   }
 
-  public userGate(): Promise<void> {
+  public override userGate(): Promise<void> {
     const state: IState = this.api.store.getState();
 
     return state.settings.workarounds.userSymlinks
@@ -180,14 +179,14 @@ class DeploymentMethod extends LinkingDeployment {
       : this.mWaitForUser();
   }
 
-  public prepare(dataPath: string, clean: boolean, lastActivation: IDeployedFile[],
+  public override prepare(dataPath: string, clean: boolean, lastActivation: IDeployedFile[],
                  normalize: Normalize): Promise<void> {
     this.mCounter = 0;
     this.mOpenRequests = {};
     return super.prepare(dataPath, clean, lastActivation, normalize);
   }
 
-  public finalize(gameId: string, dataPath: string,
+  public override finalize(gameId: string, dataPath: string,
                   installationPath: string): Promise<IDeployedFile[]> {
     Object.keys(this.mOpenRequests).forEach(num => {
       this.mOpenRequests[num].reject(new ProcessCanceled('unfinished'));
@@ -441,7 +440,7 @@ class DeploymentMethod extends LinkingDeployment {
             this.finish();
           }
         } else if (message === 'log') {
-          // tslint:disable-next-line:no-shadowed-variable
+
           const { level, message, meta } = payload;
           log(level, message, meta);
         } else if (message === 'report') {
@@ -593,19 +592,19 @@ export interface IExtensionContextEx extends IExtensionContext {
   registerDeploymentMethod: (deployment: IDeploymentMethod) => void;
 }
 
-// tslint:disable-next-line:variable-name
+
 const __req = undefined; // dummy
 
 // copy&pasted from elevatedMain
 function baseFunc(moduleRoot: string, ipcPath: string,
                   main: (ipc, req: NodeRequireFunction) => void | Promise<void>) {
   const handleError = (error: any) => {
-    // tslint:disable-next-line:no-console
+
     console.error('Elevated code failed', error.stack);
   };
   process.on('uncaughtException', handleError);
   process.on('unhandledRejection', handleError);
-  // tslint:disable-next-line:no-shadowed-variable
+
   (module as any).paths.push(moduleRoot);
   const imp = {
     net: __req('net'),
@@ -636,7 +635,7 @@ function baseFunc(moduleRoot: string, ipcPath: string,
     .on('error', err => {
       if (err.code !== 'EPIPE') {
         // will anyone ever see this?
-        // tslint:disable-next-line:no-console
+
         console.error('Connection failed', err.message);
       }
     });
@@ -963,12 +962,11 @@ function init(context: IExtensionContextEx): boolean {
       const privileges: winapi.Privilege[] = winapi.CheckYourPrivilege();
       localState.symlinkRight = privileges.includes('SeCreateSymbolicLinkPrivilege');
 
-      const userSymlinksPath = ['settings', 'workarounds', 'userSymlinks'];
-      context.api.onStateChange(userSymlinksPath, (prev, current) => {
+      context.api.onStateChange(['settings', 'workarounds', 'userSymlinks'], (prev, current) => {
         ensureTask(context.api, current, false);
       });
       const state = context.api.store.getState();
-      const userSymlinks = getSafe(state, userSymlinksPath, false);
+      const userSymlinks = state?.settings?.workarounds?.userSymlinks ?? false;
       return ensureTask(context.api, userSymlinks, true);
     }
   });

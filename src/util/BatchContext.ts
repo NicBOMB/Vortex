@@ -1,5 +1,3 @@
-import { setdefault } from './util';
-
 /**
  * Provide context during batch operations
  * This is a generic system that allows operations to find out if they are run in a batch
@@ -42,13 +40,11 @@ export interface IBatchContext {
 
 class BatchContext implements IBatchContext {
   private mCloseCBs: Array<(context: BatchContext) => void> = [];
-  private mId: string;
   private mKeys: string[];
   private mValues: { [name: string]: any } = {};
   private mCompletion: Promise<void>;
 
   constructor(id: string, keys: string[]) {
-    this.mId = id;
     this.mKeys = keys;
     this.mCompletion = new Promise<void>(resolve => {
       this.onClose(() => resolve());
@@ -121,7 +117,8 @@ export async function withBatchContext<T>(operation: string,
   const fullKeys = keys.map(key => makeKey(operation, key));
 
   for (const key of fullKeys) {
-    setdefault(contexts, key, []).push(context);
+    contexts[key] ??= [];
+    contexts[key].push(context);
   }
 
   // ensure we're not processing another batch of the same operation including this key

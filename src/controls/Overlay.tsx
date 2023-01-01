@@ -1,7 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react';
 import {Overlay} from 'react-bootstrap';
-import * as ReactDOM from 'react-dom';
 
 export interface IBaseProps {
   triggerRef?: (ref: HTMLElement) => void;
@@ -38,7 +37,7 @@ class MyOverlay extends React.Component<IProps, { placement: string }> {
     };
   }
 
-  public render() {
+  public override render() {
     const { placement } = this.state;
     const relayProps: any =
       _.omit(this.props, ['getBounds', 'placement', 'onEnter', 'triggerRef']);

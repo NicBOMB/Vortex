@@ -6,7 +6,6 @@ import { IState } from '../../../types/IState';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 import getVortexPath from '../../../util/getVortexPath';
 import opn from '../../../util/opn';
-import { truthy } from '../../../util/util';
 
 import { setUserAPIKey } from '../actions/account';
 import { IValidateKeyData } from '../types/IValidateKeyData';
@@ -41,7 +40,7 @@ type IProps = IBaseProps & IConnectedProps & IActionProps;
 const START_TIME = Date.now();
 
 class LoginIcon extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, networkConnected } = this.props;
     if (!networkConnected) {
       return (
@@ -90,7 +89,7 @@ class LoginIcon extends ComponentEx<IProps, {}> {
     const fallback =
       pathToFileURL(path.join(getVortexPath('assets'), '..', FALLBACK_AVATAR)).href;
 
-    const profileIcon = truthy(userInfo?.profileUrl)
+    const profileIcon = !!userInfo?.profileUrl
       ? `${userInfo.profileUrl}?r_${START_TIME}`
       : fallback;
 
@@ -127,10 +126,6 @@ class LoginIcon extends ComponentEx<IProps, {}> {
   private isLoggedIn() {
     const { APIKey, userInfo } = this.props;
     return (APIKey !== undefined) && (userInfo !== undefined) && (userInfo !== null);
-  }
-
-  private hideLoginLayer = () => {
-    this.setDialogVisible(false);
   }
 
   private setDialogVisible(visible: boolean): void {

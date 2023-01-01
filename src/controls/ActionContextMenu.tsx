@@ -10,7 +10,7 @@ export type ExportType =
 
 class ActionContextMenu extends React.Component<ExportType> {
   private static ACTION_PROPS = ['filter', 'group', 'instanceId', 'staticElements'];
-  public render() {
+  public override render() {
     const actionProps: IActionControlProps =
       _.pick(this.props, ActionContextMenu.ACTION_PROPS) as IActionControlProps;
     const menuProps: IContextMenuProps =

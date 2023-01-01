@@ -22,7 +22,7 @@ interface IToolbarDropdownItemProps {
 }
 
 class ToolbarDropdownItem extends React.PureComponent<IToolbarDropdownItemProps, {}> {
-  public render() {
+  public override render() {
     const { t, icon } = this.props;
     return (
       <MenuItem onSelect={this.invoke}>
@@ -48,7 +48,7 @@ export interface IToolbarDropdownProps {
 }
 
 class ToolbarDropdown extends React.PureComponent<IToolbarDropdownProps, {}> {
-  public render(): JSX.Element {
+  public override render() {
     const { t, className, icons, id, instanceId } = this.props;
     let classes = ['toolbar-dropdown'];
     if (className !== undefined) {

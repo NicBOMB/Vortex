@@ -1,4 +1,4 @@
-import i18next, { TFunction } from 'i18next';
+import { TFunction } from 'i18next';
 import * as React from 'react';
 import { Button } from 'react-bootstrap';
 

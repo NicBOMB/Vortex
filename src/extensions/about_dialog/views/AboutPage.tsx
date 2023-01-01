@@ -63,7 +63,7 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
     this.mVersion = getApplication().version;
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mMounted = true;
 
     if (this.mVersion === '0.0.1') {
@@ -93,11 +93,11 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.mMounted = false;
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t } = this.props;
     const { changelog, ownLicense, tag, releaseDate } = this.state;
 

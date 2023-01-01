@@ -18,8 +18,6 @@ import { log } from '../../../util/log';
 import { showError } from '../../../util/message';
 import opn from '../../../util/opn';
 import * as selectors from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 import MainPage from '../../../views/MainPage';
 
 import { IGameStored } from '../../gamemode_management/types/IGameStored';
@@ -177,7 +175,7 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
     this.mTableActions = [];
   }
 
-  public shouldComponentUpdate(nextProps: IDownloadViewProps, nextState: IComponentState) {
+  public override shouldComponentUpdate(nextProps: IDownloadViewProps, nextState: IComponentState) {
     if (!this.mHeaderRendered) {
       // bit of a hack. The toolbar doesn't get rendered until the reference for the
       // portal target is initialized, until then we can't make the update dependent on just
@@ -195,7 +193,7 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
     ;
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, downloads, gameMode, maxBandwidth, secondary, showGraph } = this.props;
     const { viewAll } = this.state;
 
@@ -203,7 +201,7 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
       this.mColumns = this.props.columns(() => this.props);
     }
 
-    let content = null;
+    let content: JSX.Element;
 
     let filteredIds = Object.keys(downloads);
 
@@ -608,7 +606,7 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
         onShowDialog('error', 'Download failed', {
           htmlFile: download.failCause.htmlFile,
         }, actions);
-      } else if ((download.failCause !== undefined) && truthy(download.failCause.message)) {
+      } else if ((download.failCause !== undefined) && !!download.failCause.message){
         onShowDialog('error', 'Download failed', {
           text: download.failCause.message,
         }, actions);
@@ -634,17 +632,14 @@ class DownloadView extends ComponentEx<IDownloadViewProps, IComponentState> {
   }
 
   private extractIds(download: IDownload) {
-    if (download === undefined) {
-      return undefined;
-    }
     const isValid = (ids) => (ids?.fileId !== undefined
                            && ids?.gameId !== undefined
                            && ids?.modId !== undefined);
-    let ids = getSafe(download.modInfo, ['nexus', 'ids'], undefined);
+    let ids = download.modInfo.nexus.ids;
     if (isValid(ids)) {
       return ids;
     }
-    const meta = getSafe(download.modInfo, ['meta', 'details'], undefined);
+    const meta = download.modInfo.meta.details;
     if (meta?.fileId !== undefined) {
       ids = { fileId: meta.fileId, modId: meta.modId, gameId: download.game[0] };
       if (isValid(ids)) {

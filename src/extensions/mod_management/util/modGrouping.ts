@@ -1,13 +1,10 @@
-import { log } from '../../../util/log';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 import { IModWithState } from '../types/IModProps';
 
 import { coerce, compare, valid } from 'semver';
 
 function byModId(input: IModWithState[]): IModWithState[][] {
   const grouped = input.reduce((prev: { [modId: string]: IModWithState[] }, value) => {
-    const modId = getSafe(value, ['attributes', 'modId'], undefined);
+    const modId = value?.attributes?.modId;
     if (prev[modId] === undefined) {
       prev[modId] = [];
     }
@@ -30,12 +27,12 @@ function fileMatch(lhs: IModWithState, rhs: IModWithState): boolean {
     return false;
   }
 
-  if (truthy(lhs.attributes.newestFileId)
+  if (!!lhs.attributes.newestFileId
       && (lhs.attributes.newestFileId === rhs.attributes.newestFileId)) {
     return true;
   }
 
-  if (truthy(lhs.attributes.logicalFileName)
+  if (!!lhs.attributes.logicalFileName
       && (logicalName(lhs.attributes) === logicalName(rhs.attributes))) {
     return true;
   }
@@ -64,8 +61,8 @@ function newestFirst(lhs: IModWithState, rhs: IModWithState): number {
   if (lhs.enabled !== rhs.enabled) {
     return rhs.enabled ? 1 : -1;
   }
-  const lVersion = getSafe(lhs, ['attributes', 'version'], '0.0.0') || '0.0.0';
-  const rVersion = getSafe(rhs, ['attributes', 'version'], '0.0.0') || '0.0.0';
+  const lVersion = lhs?.attributes?.version ?? '0.0.0';
+  const rVersion = rhs?.attributes?.version ?? '0.0.0';
   if (valid(coerce(lVersion)) && valid(coerce(rVersion))) {
     return compare(coerce(rVersion), coerce(lVersion));
   } else {

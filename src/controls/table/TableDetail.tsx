@@ -2,7 +2,6 @@ import {IEditChoice, ITableAttribute, ValidationState} from '../../types/ITableA
 import {ComponentEx} from '../../util/ComponentEx';
 import { preT, TFunction } from '../../util/i18n';
 import { log } from '../../util/log';
-import { getSafe } from '../../util/storeHelper';
 
 import ExtensionGate from '../ExtensionGate';
 import FormInput from '../FormInput';
@@ -38,7 +37,7 @@ function ValueComponent(props: any) {
 }
 
 class DetailCell extends React.Component<ICellProps, {}> {
-  public shouldComponentUpdate(nextProps: ICellProps) {
+  public override shouldComponentUpdate(nextProps: ICellProps) {
     if (this.props.language !== nextProps.language) {
       return true;
     }
@@ -59,7 +58,7 @@ class DetailCell extends React.Component<ICellProps, {}> {
     return false;
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, attribute, rawData, rowData, rowIds } = this.props;
 
     let content: JSX.Element = null;
@@ -96,7 +95,7 @@ class DetailCell extends React.Component<ICellProps, {}> {
         .map(id => rowData[id][attribute.id]);
 
       if (attribute.edit.onChangeValue !== undefined) {
-        const readOnlyFunc = getSafe(attribute, ['edit', 'readOnly'], (val: any) => false);
+        const readOnlyFunc = attribute?.edit?.readOnly ?? (() => false);
         const readOnly = (rawData[rowIds[0]] !== undefined) && readOnlyFunc(rawData[rowIds[0]]);
 
         content = (attribute.edit.choices !== undefined)
@@ -283,7 +282,7 @@ class DetailBox extends ComponentEx<IDetailProps, { hovered: boolean }> {
     this.initState({ hovered: false });
   }
 
-  public shouldComponentUpdate(nextProps: IDetailProps, nextState: { hovered: boolean }) {
+  public override shouldComponentUpdate(nextProps: IDetailProps, nextState: { hovered: boolean }) {
     // TODO: when data changes it will almost always cause an update in rawData and
     //   then a delayed update to rowData, so this component gets updated twice for
     //   one change in row data
@@ -296,7 +295,7 @@ class DetailBox extends ComponentEx<IDetailProps, { hovered: boolean }> {
       || !_.isEqual(this.props.attributes, nextProps.attributes);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, attributes, onToggleShow, rowData, rowIds, show } = this.props;
 
     if (rowData[rowIds[0]] === undefined) {

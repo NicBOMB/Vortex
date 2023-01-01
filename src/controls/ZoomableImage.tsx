@@ -40,7 +40,7 @@ class ZoomableImage extends React.Component<IZoomableImageProps, { showOverlay: 
     };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { className, container, overlayClass, url } = this.props;
     const { showOverlay } = this.state;
 

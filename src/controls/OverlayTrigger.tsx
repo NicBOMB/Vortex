@@ -40,11 +40,11 @@ class MyOverlayTrigger extends React.Component<IProps, { placement: string }> {
     };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mNode = ReactDOM.findDOMNode(this) as Element;
   }
 
-  public render() {
+  public override render() {
     const { placement } = this.state;
     const relayProps: any =
       _.omit(this.props, ['getBounds', 'placement', 'onEnter', 'triggerRef']);

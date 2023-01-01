@@ -1,28 +1,21 @@
-import {IExtensionApi} from '../../../types/IExtensionContext';
-import {log} from '../../../util/log';
-import {getSafe} from '../../../util/storeHelper';
-import {isNullOrWhitespace} from '../../../util/util';
+import { IExtensionApi } from '../../../types/IExtensionContext';
+import { log } from '../../../util/log';
 
-import {IGameStored} from '../../gamemode_management/types/IGameStored';
+import { IGameStored } from '../../gamemode_management/types/IGameStored';
 
 import { getIniFilePath } from '../util/gameSupport';
 
 import DelegateBase from './DelegateBase';
 
 import * as path from 'path';
-import { inspect } from 'util';
 import IniParser, { IniFile, WinapiFormat } from 'vortex-parse-ini';
 
 class Ini extends DelegateBase {
-  private gameId: string;
   private gameInfo: IGameStored;
   private parser: IniParser;
   constructor(api: IExtensionApi, gameId: string) {
     super(api);
-    this.gameId = gameId;
-    this.gameInfo =
-        getSafe(api.store.getState(), ['session', 'gameMode', 'known'], [])
-            .find((game) => game.id === gameId);
+    this.gameInfo = api.store.getState().session.gameMode.known.find((game) => game.id === gameId);
     this.parser = new IniParser(new WinapiFormat());
   }
 
@@ -33,7 +26,7 @@ class Ini extends DelegateBase {
         let iniValue: string;
         let baseIniFile = getIniFilePath(this.gameInfo.id);
 
-        if (!isNullOrWhitespace(selectedFile)) {
+        if (selectedFile.trim().length !== 0) {
           baseIniFile = path.join(path.dirname(baseIniFile), selectedFile);
         }
 
@@ -61,7 +54,7 @@ class Ini extends DelegateBase {
     let iniValue: number;
     let baseIniFile = getIniFilePath(this.gameInfo.id);
 
-    if (!isNullOrWhitespace(selectedFile)) {
+    if (selectedFile.trim().length !== 0) {
       baseIniFile = path.join(path.dirname(baseIniFile), selectedFile);
     }
 

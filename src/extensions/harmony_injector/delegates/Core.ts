@@ -1,6 +1,5 @@
 import {IExtensionApi} from '../../../types/IExtensionContext';
 import Context from './Context';
-import UI from './UI';
 
 export class Core {
   public context: Context;

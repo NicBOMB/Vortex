@@ -1,9 +1,9 @@
-import { DataInvalid, HTTPError, ProcessCanceled,
+import { HTTPError, ProcessCanceled,
          StalledError, UserCanceled } from '../../util/CustomErrors';
 import makeRemoteCall from '../../util/electronRemote';
 import * as fs from '../../util/fs';
 import { log } from '../../util/log';
-import { countIf, INVALID_FILENAME_RE, truthy } from '../../util/util';
+import { INVALID_FILENAME_RE } from '../../util/util';
 import { IChunk } from './types/IChunk';
 import { IDownloadOptions } from './types/IDownload';
 import { IDownloadJob } from './types/IDownloadJob';
@@ -198,7 +198,7 @@ class DownloadWorker {
           // to use it now
           job.received = job.size;
           job.size = 0;
-          const [ignore, fileName] = jobUrl.split('|');
+          const [_, fileName] = jobUrl.split('|');
           finishCB(false, fileName);
         } else {
           this.assignJob(job, jobUrl);
@@ -577,7 +577,7 @@ class DownloadWorker {
         }
         try {
           const disposition = contentDisposition.parse(cd);
-          if (truthy(disposition.parameters['filename'])) {
+          if (!!disposition.parameters['filename']){
             fileName = disposition.parameters['filename'];
           }
           log('debug', 'got file name', fileName);
@@ -968,7 +968,7 @@ class DownloadManager {
       return Promise.resolve({ urls: cache.urls, meta: cache.meta });
     }
     const protocol = url.parse(input).protocol;
-    if (!truthy(protocol)) {
+    if (!protocol){
       return Promise.resolve({ urls: [], meta: {} });
     }
     const handler = this.mProtocolHandlers[protocol.slice(0, protocol.length - 1)];
@@ -1070,7 +1070,9 @@ class DownloadManager {
     let idx = 0;
     log('info', 'tick dl queue', { freeSpots, queue: this.mQueue.length });
     while ((freeSpots > 0) && (idx < this.mQueue.length)) {
-      let unstartedChunks = countIf(this.mQueue[idx].chunks, value => value.state === 'init');
+      let unstartedChunks = this.mQueue[idx].chunks.reduce((p: number, e): number => {
+        return p + (e.state === 'init' ? 1 : 0);
+      }, 0);
       while ((freeSpots > 0) && (unstartedChunks > 0)) {
         --unstartedChunks;
         const queueItem = this.mQueue[idx];
@@ -1483,7 +1485,6 @@ class DownloadManager {
       fileName = 'unnamed';
     }
     return new Promise<string>((resolve, reject) => {
-      let fd = null;
       let counter = 0;
       const ext = path.extname(fileName);
       const base = path.basename(fileName, ext);
@@ -1493,7 +1494,6 @@ class DownloadManager {
       const loop = () => {
         fs.openAsync(fullPath, 'wx')
           .then((newFd) => {
-            fd = newFd;
             return fs.closeAsync(newFd)
               .catch((err) => {
                 // EBADF may be a non-issue. If it isn't we will notice when

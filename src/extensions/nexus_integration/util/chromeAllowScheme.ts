@@ -1,6 +1,6 @@
 import * as fs from '../../../util/fs';
 import { log } from '../../../util/log';
-import { getSafe, setSafe } from '../../../util/storeHelper';
+import { setSafe } from '../../../util/storeHelper';
 import { deBOM } from '../../../util/util';
 
 import chromePath from './chromePath';
@@ -19,7 +19,7 @@ function chromeAllowScheme(scheme: string): Promise<boolean> {
     .then((content: string) => {
       let state = JSON.parse(deBOM(content));
       log('info', 'protocol handler', state.protocol_handler);
-      const currentState = getSafe(state, ['protocol_handler', 'excluded_schemes', scheme], true);
+      const currentState = state?.protocol_handler?.excluded_schemes?.[scheme] ?? true;
       log('info', 'current state', currentState);
       if (currentState) {
         state = setSafe(state, ['protocol_handler', 'excluded_schemes', scheme], false);

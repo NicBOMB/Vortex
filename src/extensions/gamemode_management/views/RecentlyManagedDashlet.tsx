@@ -2,7 +2,6 @@ import Dashlet from '../../../controls/Dashlet';
 import Placeholder from '../../../controls/EmptyPlaceholder';
 import { IProfile, IState } from '../../../types/IState';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
-import { getSafe } from '../../../util/storeHelper';
 
 import { activeGameId } from '../../profile_management/selectors';
 
@@ -31,16 +30,15 @@ interface IActionProps {
 type IProps = IBaseProps & IConnectedProps & IActionProps;
 
 class RecentlyManaged extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, discoveredGames, gameMode, lastActiveProfile, knownGames, profiles } = this.props;
 
-    const lastManaged = (id: string) => getSafe(profiles,
-      [getSafe(lastActiveProfile, [id], undefined), 'lastActivated'], 0);
+    const lastManaged = (id: string) => profiles?.[lastActiveProfile?.[id]]?.lastActivated ?? 0;
 
     const games: IGameStored[] = knownGames
       .filter(game => (game.id !== gameMode)
         && (lastManaged(game.id) !== 0)
-        && (getSafe(discoveredGames, [game.id, 'path'], undefined) !== undefined))
+        && (discoveredGames?.[game.id]?.path !== undefined))
       .sort((lhs, rhs) => lastManaged(rhs.id) - lastManaged(lhs.id))
       .slice(0, 3);
 

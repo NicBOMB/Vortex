@@ -8,8 +8,7 @@ import getVortexPath from '../util/getVortexPath';
 import { log } from '../util/log';
 import opn from '../util/opn';
 import { downloadPath } from '../util/selectors';
-import * as storeHelperT from '../util/storeHelper';
-import { parseBool, truthy } from '../util/util';
+import { parseBool } from '../util/util';
 import { closeAllViews } from '../util/webview';
 
 import Promise from 'bluebird';
@@ -59,9 +58,7 @@ function reactArea(input: IRect): number {
 }
 
 class MainWindow {
-  private mWindow: Electron.BrowserWindow = null;
-  // timers used to prevent window resize/move from constantly causeing writes to the
-  // store
+  private mWindow: Electron.BrowserWindow;
   private mResizeDebouncer: Debouncer;
   private mMoveDebouncer: Debouncer;
   private mShown: boolean;
@@ -89,10 +86,6 @@ class MainWindow {
   }
 
   public create(store: ThunkStore<IState>): Promise<Electron.WebContents> {
-    if (this.mWindow !== null) {
-      return Promise.resolve(undefined);
-    }
-
     const BrowserWindow: typeof Electron.BrowserWindow = require('electron').BrowserWindow;
 
     this.mWindow = new BrowserWindow(this.getWindowSettings(store.getState().settings.window));
@@ -104,7 +97,7 @@ class MainWindow {
 
     // opening the devtools automatically can be very useful if the renderer has
     // trouble loading the page
-    if (this.mInspector || parseBool(process.env.START_DEVTOOLS)) {
+    if (this.mInspector || parseBool(process.env.START_DEVTOOLS ?? '')) {
       // You can set START_DEVTOOLS to true, by creating a .env file in the root of the project
       this.mWindow.webContents.openDevTools();
     }
@@ -122,8 +115,15 @@ class MainWindow {
           // this isn't ideal as we don't have a stack trace of the error message here
           cancelTimer = setTimeout(() => {
             if (!this.mShown) {
-              terminate({ message: 'Vortex failed to start', details: message },
-                        {}, true, 'renderer');
+              terminate(
+                {
+                  message: 'Vortex failed to start',
+                  details: message
+                },
+                {} as IState,
+                true,
+                'renderer'
+              );
             }
           }, 15000);
         }
@@ -154,7 +154,7 @@ class MainWindow {
     });
 
     const signalUrl = (item: Electron.DownloadItem) => {
-      if (truthy(this.mWindow) && !this.mWindow.isDestroyed()) {
+      if (!!this.mWindow && !this.mWindow.isDestroyed()) {
         try {
           this.mWindow.webContents.send('received-url', item.getURL(), item.getFilename());
         } catch (err) {
@@ -201,7 +201,6 @@ class MainWindow {
       this.mWindow.once('ready-to-show', () => {
         if ((resolve !== undefined) && (this.mWindow !== null)) {
           resolve(this.mWindow.webContents);
-          resolve = undefined;
         }
       });
       // if the show-window event is triggered before ready-to-show,
@@ -209,7 +208,6 @@ class MainWindow {
       ipcMain.on('show-window', () => {
         if ((resolve !== undefined) && (this.mWindow !== null)) {
           resolve(this.mWindow.webContents);
-          resolve = undefined;
         }
       });
       ipcMain.on('webview-dom-ready', (evt, id) => {
@@ -228,7 +226,7 @@ class MainWindow {
 
   public show(maximized: boolean, startMinimized: boolean) {
     this.mShown = true;
-    if (truthy(this.mWindow)) {
+    if (!!this.mWindow){
       this.mWindow.show();
       if (maximized) {
         this.mWindow.maximize();
@@ -277,22 +275,19 @@ class MainWindow {
   }
 
   private getWindowSettings(windowMetrics: IWindow): Electron.BrowserWindowConstructorOptions {
-    const {getSafe} = require('../util/storeHelper') as typeof storeHelperT;
     const screenArea = screen.getPrimaryDisplay().workAreaSize;
-    const width = Math.max(1024, getSafe(windowMetrics, ['size', 'width'],
-                                         Math.floor(screenArea.width * 0.8)));
-    const height = Math.max(MIN_HEIGHT, getSafe(windowMetrics, ['size', 'height'],
-                                                Math.floor(screenArea.height * 0.8)));
+    const width = Math.max(1024, windowMetrics?.size?.width ?? Math.floor(screenArea.width * 0.8));
+    const height = Math.max(MIN_HEIGHT, windowMetrics?.size?.height ?? Math.floor(screenArea.height * 0.8));
     return {
       width,
       height,
       minWidth: 1024,
       minHeight: MIN_HEIGHT,
-      x: getSafe(windowMetrics, ['position', 'x'], undefined),
-      y: getSafe(windowMetrics, ['position', 'y'], undefined),
+      x: windowMetrics?.position?.x ?? undefined,
+      y: windowMetrics?.position?.y ?? undefined,
       backgroundColor: '#fff',
       autoHideMenuBar: true,
-      frame: !getSafe(windowMetrics, ['customTitlebar'], true),
+      frame: !windowMetrics?.customTitlebar ?? true,
       show: false,
       title: 'Vortex',
       titleBarStyle: windowMetrics?.customTitlebar === true ? 'hidden' : 'default',
@@ -310,7 +305,6 @@ class MainWindow {
     this.mWindow.on('close', () => {
       closeAllViews(this.mWindow);
     });
-    this.mWindow.on('closed', () => { this.mWindow = null; });
     this.mWindow.on('maximize', () => store.dispatch(setMaximized(true)));
     this.mWindow.on('unmaximize', () => store.dispatch(setMaximized(false)));
     this.mWindow.on('resize', () => this.mResizeDebouncer.schedule());

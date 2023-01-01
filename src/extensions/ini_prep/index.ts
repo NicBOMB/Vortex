@@ -1,4 +1,4 @@
-import {IExtensionApi, IExtensionContext} from '../../types/IExtensionContext';
+import { IExtensionApi, IExtensionContext } from '../../types/IExtensionContext';
 import { IProfile, IState } from '../../types/IState';
 import { ITestResult } from '../../types/ITestResult';
 import { UserCanceled } from '../../util/CustomErrors';
@@ -6,19 +6,18 @@ import deepMerge from '../../util/deepMerge';
 import { disableErrorReport } from '../../util/errorHandling';
 import * as fs from '../../util/fs';
 import getVortexPath from '../../util/getVortexPath';
-import {log} from '../../util/log';
+import { log } from '../../util/log';
 import { installPathForGame } from '../../util/selectors';
-import {getSafe} from '../../util/storeHelper';
-import {objDiff, setdefault} from '../../util/util';
+import { objDiff } from '../../util/util';
 
 import { IDiscoveryResult } from '../gamemode_management/types/IDiscoveryResult';
-import {INI_TWEAKS_PATH} from '../mod_management/InstallManager';
-import {IMod} from '../mod_management/types/IMod';
-import {IModWithState} from '../mod_management/types/IModProps';
+import { INI_TWEAKS_PATH } from '../mod_management/InstallManager';
+import { IMod } from '../mod_management/types/IMod';
+import { IModWithState } from '../mod_management/types/IModProps';
 import { NEXUS_DOMAIN } from '../nexus_integration/constants';
-import {activeGameId} from '../profile_management/selectors';
+import { activeGameId } from '../profile_management/selectors';
 
-import {iniFiles, iniFormat} from './gameSupport';
+import { iniFiles, iniFormat } from './gameSupport';
 import renderINITweaks from './TweakList';
 
 import Promise from 'bluebird';
@@ -165,19 +164,19 @@ function bakeSettings(t: TFunction,
       return Promise.resolve();
     }
     const tweaksPath = path.join(modsPath, mod.installationPath, INI_TWEAKS_PATH);
-    const modTweaks = getSafe(mod, ['enabledINITweaks'], []).map(name => name.toLowerCase());
+    const modTweaks = (mod?.enabledINITweaks ?? []).map(name => name.toLowerCase());
     return fs.readdirAsync(tweaksPath)
         .then(files => {
           files.map(file => file.toLowerCase())
               .filter(file => baseFileNames.indexOf(file) !== -1 ||
                               modTweaks.indexOf(file) !== -1)
               .forEach(file => {
-                setdefault(enabledTweaks, getBaseFile(file), [])
-                    .push(path.join(tweaksPath, file));
+                enabledTweaks[getBaseFile(file)] ??= [];
+                enabledTweaks[getBaseFile(file)].push(path.join(tweaksPath, file));
               });
         })
         .catch(err => undefined);
-  }).then(() => Promise.mapSeries(baseFiles, iniFileName => {
+  }).then(() => Promise.mapSeries(baseFiles, (iniFileName) => {
     // starting with the .base file for each ini, re-bake the file by applying
     // the ini tweaks
     const baseName = path.basename(iniFileName).toLowerCase();
@@ -235,14 +234,14 @@ function testProtectedFolderAccess(): Promise<ITestResult> {
     // Technically this try/catch block shouldn't be necessary but some users
     //  seem to encounter a crash (Windows only) when attempting to retrieve
     //  the documents path. This may be related to:
-    // tslint:disable-next-line:max-line-length
+
     // https://forums.asp.net/t/1889407.aspx?GetFolderPath+Environment+GetFolderPath+Environment+SpecialFolder+MyDocuments+returning+blank+when+hosted+on+IIS
     writablePath = getVortexPath('documents');
   } catch (err) {
     // We can't retrieve the documents path, but for the purpose of completing this
     //  test, we can simply query a different folder which is also guaranteed to trigger
     //  folder protection functionality.
-    // tslint:disable-next-line
+
     log('error', 'Unable to get path to my documents folder - user environment is misconfigured!', err);
     writablePath = getVortexPath('home');
   }

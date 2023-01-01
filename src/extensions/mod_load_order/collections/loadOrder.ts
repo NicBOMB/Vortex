@@ -1,6 +1,5 @@
 import React = require('react');
 import * as types from '../../../types/api';
-import * as util from '../../../util/api';
 import * as selectors from '../../../util/selectors';
 
 import { setLoadOrder } from '../../../actions/loadOrder';
@@ -9,7 +8,6 @@ import {
   CollectionGenerateError, CollectionParseError,
   ICollection, ICollectionLoadOrder, IGameSpecificInterfaceProps
 } from '../types/collections';
-import { ILoadOrder } from '../types/types';
 
 import { genCollectionLoadOrder } from '../util';
 
@@ -27,8 +25,7 @@ export async function generate(api: types.IExtensionApi,
     return Promise.reject(new CollectionGenerateError('Invalid profile id'));
   }
 
-  const loadOrder: ILoadOrder = util.getSafe(state,
-    ['persistent', 'loadOrder', profileId], undefined);
+  const loadOrder = state?.persistent?.loadOrder?.[profileId];
   if (loadOrder === undefined) {
     // This is theoretically "fine" - the user may have simply
     //  downloaded the mods and immediately created the collection
@@ -39,14 +36,17 @@ export async function generate(api: types.IExtensionApi,
     return Promise.resolve(undefined);
   }
 
-  const includedMods = modIds.reduce((accum, iter) => {
-    if (mods[iter] !== undefined) {
-      accum[iter] = mods[iter];
-    }
-    return accum;
-  }, {});
-  const filteredLO: ILoadOrder = genCollectionLoadOrder(loadOrder, includedMods);
-  return Promise.resolve({ loadOrder: filteredLO });
+  return Promise.resolve({
+    loadOrder: genCollectionLoadOrder(
+      loadOrder,
+      modIds.reduce((accum, iter) => {
+        if (mods[iter] !== undefined) {
+          accum[iter] = mods[iter];
+        }
+        return accum;
+      }, {})
+    )
+  });
 }
 
 export async function parser(api: types.IExtensionApi,

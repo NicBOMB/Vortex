@@ -1,9 +1,8 @@
 import { SITE_ID } from '../../extensions/gamemode_management/constants';
 import { IGameStored } from '../../extensions/gamemode_management/types/IGameStored';
 import { IDiscoveryResult, IState } from '../../types/IState';
-import {IFilterProps, ITableFilter} from '../../types/ITableAttribute';
+import { IFilterProps, ITableFilter } from '../../types/ITableAttribute';
 import { activeGameId } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
 import { SITE_GAME_NAME } from '../constants';
 
 import * as React from 'react';
@@ -19,8 +18,8 @@ export type IProps = IFilterProps & IConnectedProps;
 
 function compare(lhs: IGameStored, rhs: IGameStored,
                  discovered: { [id: string]: IDiscoveryResult }) {
-  const lPath = getSafe(discovered, [lhs.id, 'path'], undefined);
-  const rPath = getSafe(discovered, [rhs.id, 'path'], undefined);
+  const lPath = discovered?.[lhs.id]?.path;
+  const rPath = discovered?.[rhs.id]?.path;
 
   if ((lPath === undefined) === (rPath === undefined)) {
     return (lhs.shortName || lhs.name).localeCompare(rhs.shortName || rhs.name);
@@ -30,7 +29,7 @@ function compare(lhs: IGameStored, rhs: IGameStored,
 }
 
 export class GameFilterComponent extends React.Component<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, discovered, filter, games } = this.props;
 
     const translate = (gameName: string) =>

@@ -19,7 +19,7 @@ interface IActionProps {
 type IProps = IActionProps & IConnectedProps;
 
 class SettingsAnalytics extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, analytics, userInfo } = this.props;
     return (
       <form>

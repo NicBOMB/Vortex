@@ -1,6 +1,5 @@
-import { IDiscoveryState, IState } from '../../../types/IState';
+import { IState } from '../../../types/IState';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
-import { getSafe } from '../../../util/storeHelper';
 
 import { IDiscoveryResult } from '../types/IDiscoveryResult';
 import { IGameStored } from '../types/IGameStored';
@@ -39,16 +38,15 @@ class Dashlet extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.refreshMore();
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, discoveredGames, knownGames } = this.props;
     const { more } = this.state;
 
-    const games: IGameStored[] = knownGames.filter(game =>
-      getSafe(discoveredGames, [game.id, 'path'], undefined) !== undefined);
+    const games: IGameStored[] = knownGames.filter(game => discoveredGames?.[game.id]?.path !== undefined);
 
     return (
       <div>
@@ -132,4 +130,5 @@ function mapDispatchToProps(dispatch): IActionProps {
 
 export default
   translate(['common'])(
-    connect(mapStateToProps, mapDispatchToProps)(Dashlet)) as React.ComponentClass<{}>;
+    connect(mapStateToProps, mapDispatchToProps)(Dashlet)
+  ) as React.ComponentClass<{}>;

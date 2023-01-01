@@ -7,7 +7,7 @@ import * as React from 'react';
  */
 class DNDContainer extends React.Component<{ style?: React.CSSProperties }, {}> {
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {children, style} = this.props;
 
     const childCount = React.Children.count(children);

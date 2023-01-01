@@ -1,6 +1,6 @@
 import * as types from '../../types/api';
 import * as util from '../../util/api';
-import { ILoadOrder, ILoadOrderEntry } from './types/types';
+import { ILoadOrder } from './types/types';
 
 export function isModInCollection(collection: types.IMod, mod: types.IMod) {
   if (collection.rules === undefined) {
@@ -15,8 +15,8 @@ export function isValidMod(mod: types.IMod) {
   return (mod !== undefined) && (mod.type !== 'collection');
 }
 
-export function genCollectionLoadOrder(loadOrder: { [modId: string]: ILoadOrderEntry },
-                                       mods: { [modId: string]: types.IMod },
+export function genCollectionLoadOrder(loadOrder: ILoadOrder,
+                                       mods: types.IMod,
                                        collection?: types.IMod): ILoadOrder {
   const sortedMods = Object.keys(loadOrder)
     .filter(id => {

@@ -11,7 +11,7 @@ import { log } from './log';
 const startupPath = () =>
   path.join(getVortexPath('appData'), getApplication().name, 'startup.json');
 
-function read(): IParameters {
+function read(): IParameters|{} {
   try {
     return JSON.parse(fs.readFileSync(startupPath(), { encoding: 'utf-8' }));
   } catch (err) {
@@ -29,14 +29,12 @@ const updateDebouncer = new Debouncer(() => {
     });
 }, 100);
 
-const settings: IParameters = read();
+const settings = read();
 
-const proxy = new Proxy<IParameters>(settings, {
+export default new Proxy<IParameters>(settings, {
   set: (target: IParameters, key: string, value: any) => {
     target[key] = value;
     updateDebouncer.schedule();
     return true;
   },
 });
-
-export default proxy;

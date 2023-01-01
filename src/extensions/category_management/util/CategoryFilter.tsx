@@ -1,8 +1,6 @@
 import { IDownload, IState } from '../../../types/IState';
 import { IFilterProps, ITableFilter } from '../../../types/ITableAttribute';
 import { connect } from '../../../util/ComponentEx';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 
 import { ICategoryDictionary } from '../../category_management/types/ICategoryDictionary';
 import getDownloadGames from '../../download_management/util/getDownloadGames';
@@ -47,11 +45,11 @@ class CategoryFilterComponent extends React.Component<IProps, IComponentState> {
     };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.updateState([], this.props, true);
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (this.props.downloads !== newProps.downloads) {
 
       const before = Object.keys(this.props.downloads)
@@ -62,7 +60,7 @@ class CategoryFilterComponent extends React.Component<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, filter, categories, mods } = this.props;
     const { archiveCategories } = this.state;
 
@@ -70,7 +68,7 @@ class CategoryFilterComponent extends React.Component<IProps, IComponentState> {
     const modCategories = new Set<string>();
     Object.keys(mods || {}).forEach(modId => {
       const mod = mods[modId];
-      let category = getSafe(mod.attributes, ['category'], undefined);
+      let category = mod.attributes?.category;
       const visited = [];
 
       while ((category !== undefined) && (!visited.includes(category))) {
@@ -94,10 +92,10 @@ class CategoryFilterComponent extends React.Component<IProps, IComponentState> {
     });
 
     const options = Array.from(modCategories)
-      .filter(id => getSafe(categories, [id], undefined) !== undefined)
-      .map(id => ({
+      .filter((id) => categories?.[id] !== undefined)
+      .map((id) => ({
         value: id.toString(),
-        label: getSafe(categories, [id, 'name'], ''),
+        label: categories?.[id]?.name ?? '',
       })).sort((lhs, rhs) => lhs.label.localeCompare(rhs.label));
     options.unshift({ value: UNASSIGNED_ID, label: `<${t('Unassigned')}>` });
     if (this.state.customOption !== undefined) {
@@ -217,7 +215,7 @@ class CategoryFilter implements ITableFilter {
     }
 
     const filtList = new Set<string>(filter.filter(f => !f.startsWith('*')));
-    const allCategories = truthy(value)
+    const allCategories = !!value
       ? this.categoryChain(value.toString(), state)
       : [UNASSIGNED_ID];
 
@@ -248,7 +246,7 @@ class CategoryFilter implements ITableFilter {
     const categories = state.persistent.categories[gameId] || {};
     const result: string[] = [];
     let iter = category;
-    while (truthy(iter) && (categories[iter] !== undefined) && (!result.includes(iter))) {
+    while (!!iter && (categories[iter] !== undefined) && (!result.includes(iter))) {
       result.push(iter);
       iter = categories[iter].parentCategory;
     }

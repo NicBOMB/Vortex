@@ -1,7 +1,7 @@
 import { setDownloadModInfo } from '../../actions';
 import { IExtensionApi, StateChangeCallback } from '../../types/IExtensionContext';
 import { IDownload, IModTable, IState } from '../../types/IState';
-import { ArgumentInvalid, DataInvalid, ProcessCanceled, UserCanceled } from '../../util/CustomErrors';
+import { DataInvalid, ProcessCanceled, UserCanceled } from '../../util/CustomErrors';
 import Debouncer from '../../util/Debouncer';
 import * as fs from '../../util/fs';
 import { log } from '../../util/log';
@@ -9,13 +9,12 @@ import { calcDuration, showError } from '../../util/message';
 import { upload } from '../../util/network';
 import opn from '../../util/opn';
 import { activeGameId, currentGame, downloadPathForGame, gameById } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
-import { toPromise, truthy } from '../../util/util';
+import { toPromise } from '../../util/util';
 
 import { resolveCategoryName } from '../category_management';
 import { AlreadyDownloaded, DownloadIsHTML } from '../download_management/DownloadManager';
 import { SITE_ID } from '../gamemode_management/constants';
-import {IGameStored} from '../gamemode_management/types/IGameStored';
+import { IGameStored } from '../gamemode_management/types/IGameStored';
 import { setUpdatingMods } from '../mod_management/actions/session';
 import { IModListItem } from '../news_dashlet/types';
 
@@ -47,14 +46,13 @@ export function onChangeDownloads(api: IExtensionApi, nexus: Nexus) {
   const updateDebouncer: Debouncer = new Debouncer(
     (newDownloadTable: { [id: string]: IDownload }) => {
       if (lastDownloadTable !== newDownloadTable) {
-        const idsPath = ['modInfo', 'nexus', 'ids'];
         return Promise.map(Object.keys(newDownloadTable), dlId => {
           const download = newDownloadTable[dlId];
-          const oldModId = getSafe(lastDownloadTable, [dlId, ...idsPath, 'modId'], undefined);
-          const oldFileId = getSafe(lastDownloadTable, [dlId, ...idsPath, 'fileId'], undefined);
-          const modId = getSafe(download, [...idsPath, 'modId'], undefined);
-          const fileId = getSafe(download, [...idsPath, 'fileId'], undefined);
-          let gameId = getSafe(download, [...idsPath, 'gameId'], undefined);
+          const oldModId = lastDownloadTable?.[dlId]?.modInfo?.nexus?.ids?.modId;
+          const oldFileId = lastDownloadTable?.[dlId]?.modInfo?.nexus?.ids?.fileId;
+          const modId = download?.modInfo?.nexus?.ids?.modId;
+          const fileId = download?.modInfo?.nexus?.ids?.fileId;
+          let gameId = download?.modInfo?.nexus?.ids?.gameId;
           if (gameId === undefined) {
             gameId = Array.isArray(download.game)
               ? download.game[0]
@@ -124,18 +122,15 @@ export function onChangeMods(api: IExtensionApi, nexus: Nexus) {
       // for any mod where modid or download section have been changed,
       // retrieve the new mod info
       return Promise.map(Object.keys(newModTable[gameMode]), modId => {
-        const modSource =
-          getSafe(newModTable, [gameMode, modId, 'attributes', 'source'], undefined);
+        const modSource = newModTable?.[gameMode]?.[modId]?.attributes?.source;
         if (modSource !== 'nexus') {
           return Promise.resolve();
         }
 
-        const idPath = [gameMode, modId, 'attributes', 'modId'];
-        const dlGamePath = [gameMode, modId, 'attributes', 'downloadGame'];
-        if ((getSafe(lastModTable, idPath, undefined)
-              !== getSafe(newModTable, idPath, undefined))
-            || (getSafe(lastModTable, dlGamePath, undefined)
-              !== getSafe(newModTable, dlGamePath, undefined))) {
+        if (lastModTable?.[gameMode]?.[modId]?.attributes?.modId
+          !== newModTable?.[gameMode]?.[modId]?.attributes?.modId
+          || lastModTable?.[gameMode]?.[modId]?.attributes?.downloadGame
+          !== newModTable?.[gameMode]?.[modId]?.attributes?.downloadGame){
           return retrieveModInfo(nexus, api,
             gameMode, newModTable[gameMode][modId], api.translate)
             .then(() => {
@@ -209,11 +204,11 @@ export function onRequestOwnIssues(nexus: Nexus) {
 }
 
 function getFileId(download: IDownload): number {
-  const res = getSafe(download, ['modInfo', 'nexus', 'ids', 'fileId'], undefined);
+  const res = download?.modInfo?.nexus?.ids?.fileId;
 
   if ((res === undefined)
-      && (getSafe(download, ['modInfo', 'source'], undefined) === 'nexus')) {
-    return getSafe(download, ['modInfo', 'ids', 'fileId'], undefined);
+      && (download?.modInfo?.source === 'nexus')) {
+    return download?.modInfo?.ids?.fileId;
   } else {
     return res;
   }
@@ -223,10 +218,10 @@ function downloadFile(api: IExtensionApi, nexus: Nexus,
                       game: IGameStored, modId: number, fileId: number,
                       fileName?: string,
                       allowInstall?: boolean): Promise<string> {
-    const state: IState = api.getState();
+    const state: IState = api.store.getState();
     const gameId = game !== null ? game.id : SITE_ID;
     if ((game !== null)
-        && !getSafe(state, ['persistent', 'nexus', 'userInfo', 'isPremium'], false)) {
+        && (!state?.persistent?.nexus?.userInfo?.isPremium ?? false)){
       // nexusmods can't let users download files directly from client, without
       // showing ads
       return Promise.reject(new ProcessCanceled('Only available to premium users'));
@@ -268,7 +263,7 @@ export function onModUpdate(api: IExtensionApi, nexus: Nexus) {
 
     if (game === undefined) {
       log('warn', 'mod update requested for unknown game id', gameId);
-      game = currentGame(api.getState());
+      game = currentGame(api.store.getState());
     }
 
     if (source !== 'nexus') {
@@ -278,17 +273,17 @@ export function onModUpdate(api: IExtensionApi, nexus: Nexus) {
 
     downloadFile(api, nexus, game, modId, fileId, undefined, false)
       .catch(AlreadyDownloaded, err => {
-        const state = api.getState();
+        const state = api.store.getState();
         const downloads = state.persistent.downloads.files;
         const dlId = Object.keys(downloads).find(iter =>
           downloads[iter].localPath === err.fileName);
         return dlId;
       })
-      .then(downloadId => {
+      .then((downloadId) => {
         const state = api.getState();
         const downloads = state.persistent.downloads.files;
 
-        if (!truthy(downloadId)) {
+        if (!downloadId){
           // nop
         } else if (downloads[downloadId]?.state !== 'finished') {
           api.store.dispatch(setDownloadModInfo(downloadId, 'startedAsUpdate', true));
@@ -347,7 +342,7 @@ export function onNexusDownload(api: IExtensionApi,
 export function onGetMyCollections(api: IExtensionApi, nexus: Nexus)
     : (gameId: string, count?: number, offset?: number) => Promise<IRevision[]> {
   return (gameId: string, count?: number, offset?: number): Promise<IRevision[]> => {
-    if (api.getState().persistent['nexus']?.userInfo?.userId === undefined) {
+    if (api.store.getState().persistent.nexus?.userInfo?.userId === undefined) {
       return Promise.resolve([]);
     }
     const game = gameById(api.getState(), gameId);
@@ -671,8 +666,7 @@ export function onSubmitCollection(nexus: Nexus) {
 
 export function onEndorseMod(api: IExtensionApi, nexus: Nexus) {
   return (gameId: string, modId: string, endorsedStatus: EndorsedStatus) => {
-    const APIKEY = getSafe(api.store.getState(),
-                           ['confidential', 'account', 'nexus', 'APIKey'], '');
+    const APIKEY = api.store.getState()?.confidential?.account?.nexus?.APIKey ?? '';
     if (APIKEY === '') {
       api.showErrorNotification('An error occurred endorsing a mod',
                                 'You are not logged in to Nexus Mods!',
@@ -708,7 +702,7 @@ function extractLatestModInfo(state: IState, gameId: string, input: IModInfo): I
 
 export function onGetLatestMods(api: IExtensionApi, nexus: Nexus) {
   return (gameId: string): Promise<{ id: string, encoding: string, mods: IModListItem[] }> => {
-    const state = api.getState();
+    const state = api.store.getState();
     const gameDomain = nexusGameId(gameById(state, gameId), gameId);
     return Promise.resolve(nexus.getLatestAdded(gameDomain))
       .then(mods => ({
@@ -748,9 +742,7 @@ export function onAPIKeyChanged(api: IExtensionApi, nexus: Nexus): StateChangeCa
 export function onCheckModsVersion(api: IExtensionApi,
                                    nexus: Nexus): (...args: any[]) => Promise<string[]> {
   return (gameId, mods, forceFull) => {
-    const APIKEY = getSafe(api.store.getState(),
-                           ['confidential', 'account', 'nexus', 'APIKey'],
-                           '');
+    const APIKEY = api.store.getState()?.confidential?.account?.nexus?.APIKey ?? '';
     if (APIKEY === '') {
       api.showErrorNotification('An error occurred checking for mod updates',
                                 'You are not logged in to Nexus Mods!',

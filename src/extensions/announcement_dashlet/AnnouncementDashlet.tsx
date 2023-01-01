@@ -29,7 +29,7 @@ class AnnouncementDashlet extends ComponentEx<IProps, {}> {
     this.mAppVersion = getApplication().version;
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, announcements, gameMode } = this.props;
 
     // Filter announcements by gamemode and version.
@@ -127,7 +127,6 @@ class AnnouncementDashlet extends ComponentEx<IProps, {}> {
   }
 
   private generateDescription = (announcement: IAnnouncement): JSX.Element => {
-    const { t } = this.props;
     return (
       <FlexLayout type='row' className='announcement-description'>
         {this.renderIcon(announcement)}
@@ -155,7 +154,6 @@ class AnnouncementDashlet extends ComponentEx<IProps, {}> {
   }
 }
 
-const empty = {};
 function mapStateToProps(state: any): IConnectedProps {
   return {
     gameMode: selectors.activeGameId(state) || undefined,

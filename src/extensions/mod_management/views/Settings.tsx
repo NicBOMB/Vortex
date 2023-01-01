@@ -20,7 +20,6 @@ import { log } from '../../../util/log';
 import { showError } from '../../../util/message';
 import opn from '../../../util/opn';
 import * as selectors from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
 import { cleanFailedTransfer, testPathTransfer, transferPath } from '../../../util/transferPath';
 import { ciEqual, isChildPath, isPathValid, isReservedDirectory } from '../../../util/util';
 import { currentGame, currentGameDiscovery } from '../../gamemode_management/selectors';
@@ -51,7 +50,6 @@ import {
 import * as Redux from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
 import * as winapi from 'winapi-bindings';
-import { ProvidePlugin } from 'webpack';
 
 interface IBaseProps {
   activators: IDeploymentMethod[];
@@ -115,7 +113,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     const activators = this.supportedActivators();
     this.nextState.supportedActivators = activators;
     if (activators.find(act => act.id === this.state.currentActivator) === undefined) {
@@ -128,13 +126,13 @@ class Settings extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (this.props.installPath !== newProps.installPath) {
       this.nextState.installPath = newProps.installPath;
     }
   }
 
-  public componentDidUpdate(prevProps: IProps, prevState: IComponentState) {
+  public override componentDidUpdate(prevProps: IProps, prevState: IComponentState) {
     if ((this.props.gameMode !== prevProps.gameMode)
         || (this.props.installPath !== prevProps.installPath)) {
       this.nextState.supportedActivators = this.supportedActivators();
@@ -142,7 +140,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, discovery, game, installPathMode, suggestInstallPathDirectory } = this.props;
     const { currentActivator, progress, progressFile, supportedActivators } = this.state;
 
@@ -175,7 +173,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
 
     if ((game !== undefined)
         && (discovery?.path !== undefined)) {
-      let gameName = getSafe(discovery, ['name'], getSafe(game, ['name'], undefined));
+      let gameName = discovery?.name ?? game?.name;
       if (gameName !== undefined) {
         gameName = gameName.split('\t').map(part => t(part)).join(' ');
       }
@@ -264,7 +262,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
   }
 
   private transferPath() {
-    const { t, gameMode, onSetTransfer, onShowDialog } = this.props;
+    const { gameMode, onSetTransfer, onShowDialog } = this.props;
     const oldPath = getInstallPath(this.props.installPath, gameMode);
     const newPath = getInstallPath(this.state.installPath, gameMode);
 
@@ -511,9 +509,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
         //  Check if we still have the transfer state populated,
         //  if it is - that means that the user has cancelled the transfer,
         //  we need to cleanup.
-        const pendingTransfer: string[] = ['persistent', 'transactions', 'transfer', gameMode];
-        if ((getSafe(state, pendingTransfer, undefined) !== undefined)
-            && deleteOldDestination) {
+        if (state?.persistent?.transactions?.transfer?.[gameMode] !== undefined && deleteOldDestination){
           return cleanFailedTransfer(newInstallPath)
             .then(() => {
               onSetTransfer(gameMode, undefined);
@@ -951,13 +947,11 @@ class Settings extends ComponentEx<IProps, IComponentState> {
   }
 }
 
-const emptyArray = [];
-
 function mapStateToProps(state: IState): IConnectedProps {
   const discovery = currentGameDiscovery(state);
   const game = currentGame(state);
 
-  const gameMode = getSafe(discovery, ['id'], getSafe(game, ['id'], undefined));
+  const gameMode = discovery?.id ?? game?.id;
   const downloadsPath = selectors.downloadPath(state);
 
   return {
@@ -966,8 +960,8 @@ function mapStateToProps(state: IState): IConnectedProps {
     gameMode,
     installPath: state.settings.mods.installPath[gameMode],
     downloadsPath,
-    currentActivator: getSafe(state, ['settings', 'mods', 'activator', gameMode], undefined),
-    modActivity: getSafe(state, ['session', 'base', 'activity', 'mods'], emptyArray),
+    currentActivator: state?.settings?.mods?.activator?.[gameMode],
+    modActivity: state?.session?.base?.activity?.mods ?? [],
     modPaths: modPathsForGame(state, gameMode),
     instanceId: state.app.instanceId,
     installPathMode: state.settings.mods.installPathMode,

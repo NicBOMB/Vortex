@@ -12,7 +12,7 @@ const settingsReducer: IReducerSpec = {
     [setAnalytics as any]: (state, payload) => update(state, { enabled: { $set: payload } }),
   },
   defaults: {
-    enabled: undefined, // TODO, set me to false
+    enabled: false,
   },
 };
 

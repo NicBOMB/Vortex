@@ -1,24 +1,21 @@
-import {IDeployedFile, IExtensionApi} from '../../types/IExtensionContext';
-import {IGame} from '../../types/IGame';
+import { IDeployedFile, IExtensionApi } from '../../types/IExtensionContext';
+import { IGame } from '../../types/IGame';
 import * as fs from '../../util/fs';
 import getFileList, { IFileEntry } from '../../util/getFileList';
 import getNormalizeFunc, { Normalize } from '../../util/getNormalizeFunc';
 import { log } from '../../util/log';
-import {setdefault, truthy} from '../../util/util';
 import walk from '../../util/walk';
 
-import {IMod} from './types/IMod';
-import {IResolvedMerger} from './types/IResolvedMerger';
+import { IMod } from './types/IMod';
+import { IResolvedMerger } from './types/IResolvedMerger';
 
-import {BACKUP_TAG} from './LinkingDeployment';
+import { BACKUP_TAG } from './LinkingDeployment';
 
 import Promise from 'bluebird';
 import * as crypto from 'crypto';
 import * as path from 'path';
 
 export const MERGED_PATH = '__merged';
-
-type FileLists = Array<{modId: string, basePath: string, files: IFileEntry[]}>;
 
 function calcHashImpl(filePath: string): Promise<string> {
   return new Promise<string>((resolve, reject) => {
@@ -168,13 +165,14 @@ function mergeMods(api: IExtensionApi,
         if ((game.mergeArchive !== undefined) && game.mergeArchive(fileEntry.filePath)) {
           const relPath = path.relative(modPath, fileEntry.filePath);
           res.usedInMerge.push(relPath);
-          setdefault(archiveMerges, relPath, []).push({ path: modPath, id: mod.id });
+          archiveMerges[relPath] ??= [];
+          archiveMerges[relPath].push({ path: modPath, id: mod.id });
         } else {
           // for every file merger (registerMerger) that applies to this file, initialize
           // the merge if necessary
           const merger = mergers.find(iter => iter.match.filter(fileEntry.filePath));
           if (merger !== undefined) {
-            const realDest = truthy(merger.modType)
+            const realDest = !!merger.modType
               ? mergeDest + '.' + merger.modType
               : mergeDest;
             const relPath = path.relative(modPath, fileEntry.filePath);
@@ -186,8 +184,8 @@ function mergeMods(api: IExtensionApi,
               .then(() => fs.ensureDirAsync(realDest))
               .then(() => Promise.mapSeries(merger.match.baseFiles(deployedFiles), file => {
                 const norm = normalize(file.out);
-                setdefault(res.mergeInfluences, norm, { modType: merger.modType, sources: [] })
-                  .sources.push(mod.id);
+                res.mergeInfluences[norm] ??= { modType: merger.modType, sources: [] };
+                res.mergeInfluences[norm].sources.push(mod.id);
 
                 if (res.mergeInfluences[norm].sources.length !== 1) {
                   // This isn't the first merge for this file, don't re-initialize the merge
@@ -257,9 +255,11 @@ function mergeMods(api: IExtensionApi,
       mergeArchive(api, game, relPath, destinationPath,
                    archiveMerges[relPath].map(iter => iter.path), mergeDest)
       .then(() => getNormalizeFunc(destinationPath))
-      .then(normalize => {
-        setdefault(res.mergeInfluences, normalize(relPath),
-                   { modType: '', sources: archiveMerges[relPath].map(iter => iter.id) });
+      .then((normalize) => {
+        res.mergeInfluences[normalize(relPath)] ??= {
+          modType: '',
+          sources: archiveMerges[relPath].map(iter => iter.id)
+        };
       })))
     .then(() => res);
 }

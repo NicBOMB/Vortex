@@ -59,7 +59,7 @@ class Settings extends ComponentEx<IProps, {}> {
     this.mStartupSettings = makeReactive(startupSettings);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { settingsPage, objects } = this.props;
 
     const combined = objects.reduce((prev: ICombinedSettingsPage[], current: ISettingsPage) => {
@@ -82,7 +82,7 @@ class Settings extends ComponentEx<IProps, {}> {
     return (
       <MainPage>
         <MainPage.Body>
-          <Tabs id='settings-tab' activeKey={page} onSelect={this.setCurrentPage}>
+          <Tabs id='settings-tab' activeKey={page} onSelect={ () => (this.setCurrentPage) }>
             {combined.sort(this.sortByPriority).map(this.renderTab)}
           </Tabs>
         </MainPage.Body>
@@ -105,13 +105,13 @@ class Settings extends ComponentEx<IProps, {}> {
       ) : (
         <EmptyPlaceholder
           icon='settings'
-          text={t('Nothing to configure.')}
-          subtext={t('Other games may require settings here.')}
+          text={t?.('Nothing to configure.') ?? ''}
+          subtext={t?.('Other games may require settings here.')}
         />
       );
 
     return (
-      <Tab key={page.title} eventKey={page.title} title={t(page.title)}>
+      <Tab key={page.title} eventKey={page.title} title={t?.(page.title)}>
         <div>
           {content}
         </div>
@@ -139,7 +139,7 @@ class Settings extends ComponentEx<IProps, {}> {
     return lhs.priority - rhs.priority;
   }
 
-  private setCurrentPage = (page) => {
+  private setCurrentPage = (page: string) => {
     this.props.onSetPage(page);
   }
 
@@ -148,8 +148,7 @@ class Settings extends ComponentEx<IProps, {}> {
   }
 }
 
-function registerSettings(instanceGroup: undefined,
-                          title: string,
+function registerSettings(title: string,
                           component: React.ComponentClass<any>,
                           props: PropsCallback,
                           visible: () => boolean,
@@ -159,7 +158,7 @@ function registerSettings(instanceGroup: undefined,
 
 function mapStateToProps(state: IState): IConnectedProps {
   return {
-    settingsPage: state.session.base.settingsPage || undefined,
+    settingsPage: state.session.base.settingsPage,
   };
 }
 

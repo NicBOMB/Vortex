@@ -2,7 +2,6 @@ import { ipcMain, ipcRenderer } from 'electron';
 import * as libxmljsT from 'libxmljs';
 import * as _ from 'lodash';
 import { generate as shortid } from 'shortid';
-import { isFunction } from './util';
 
 /// Proxy all calls to libxmljs from the renderer process to the main (aka browser) process, every
 /// result that isn't a plain old datatype will be Proxy-ed so that all access to their
@@ -81,7 +80,7 @@ function packProperty(res) {
 
   return {
     proxy: id,
-    props: Object.getOwnPropertyNames(res).filter(key => !isFunction(res[key])),
+    props: Object.getOwnPropertyNames(res).filter(key => !(typeof res[key] === "function")),
   };
 }
 
@@ -97,7 +96,7 @@ function serializeResult(res) {
 if (process['type'] === 'renderer') {
   module.exports = new Proxy({ proxy: undefined }, new XMLProxy());
 } else {
-  // tslint:disable-next-line:no-var-requires
+
   const libxmljs: typeof libxmljsT = require('libxmljs');
 
   // function invocation to a libxmljs object
@@ -136,6 +135,6 @@ if (process['type'] === 'renderer') {
     delete knownObjects[objId];
   });
 
-  // tslint:disable-next-line:no-var-requires
+
   module.exports = require('libxmljs');
 }

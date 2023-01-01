@@ -3,7 +3,7 @@ import { addNotification, showDialog } from '../../actions/notifications';
 import { IDiscoveredTool } from '../../types/IDiscoveredTool';
 import { ThunkStore } from '../../types/IExtensionContext';
 import { IGame } from '../../types/IGame';
-import { GameEntryNotFound, IGameStore } from '../../types/IGameStore';
+import { IGameStore } from '../../types/IGameStore';
 import { IState } from '../../types/IState';
 import { ITool } from '../../types/ITool';
 import { getNormalizeFunc } from '../../util/api';
@@ -14,8 +14,7 @@ import GameStoreHelper from '../../util/GameStoreHelper';
 import { log } from '../../util/log';
 import { activeProfile, discoveryByGame } from '../../util/selectors';
 import Steam from '../../util/Steam';
-import { getSafe } from '../../util/storeHelper';
-import { batchDispatch, truthy } from '../../util/util';
+import { batchDispatch } from '../../util/util';
 
 import { IExtensionDownloadInfo } from '../extension_manager/types';
 import { setPrimaryTool } from '../starter_dashlet/actions';
@@ -29,7 +28,6 @@ import {clearGameDisabled, setGameDisabled, setKnownGames} from './actions/sessi
 import { addDiscoveredGame, addDiscoveredTool, clearDiscoveredGame } from './actions/settings';
 import { IDiscoveryResult } from './types/IDiscoveryResult';
 import { IGameStored } from './types/IGameStored';
-import { IToolStored } from './types/IToolStored';
 import {
   assertToolDir,
   discoverRelativeTools,
@@ -71,7 +69,7 @@ class GameModeManager {
     this.mGameStubs = gameStubs;
     this.mKnownGameStores = [
       Steam,
-      EpicGamesLauncher, 
+      EpicGamesLauncher,
       ...gameStoreExtensions,
     ];
     this.mActiveSearch = null;
@@ -140,10 +138,9 @@ class GameModeManager {
           log('info', 'changed game mode', {oldMode, newMode});
           this.mOnGameModeActivated(newMode);
           const { gameId } = currentProfile;
-          if (getSafe(state, ['settings', 'interface', 'primaryTool', gameId],
-                      undefined) === undefined) {
+          if (state?.settings?.interface?.primaryTool?.[gameId] === undefined) {
             const discovery = discoveryByGame(state, gameId);
-            if (truthy(discovery.tools)) {
+            if (!!discovery.tools){
               const defaultPrimary = Object.keys(discovery.tools)
                 .find(toolId => discovery.tools[toolId].defaultPrimary === true);
               if (defaultPrimary !== undefined) {
@@ -384,28 +381,18 @@ class GameModeManager {
     };
   }
 
-  private storeTool(tool: ITool): IToolStored {
-    const SKIPPED_TOOL_ATTRIBUTES = [
-      'id', 'name', 'logo',
-      'executable', 'queryPath', 'parameters', 'requiredFiles',
-      'relative',
-    ];
-
-    return {
-      ..._.omit(tool, SKIPPED_TOOL_ATTRIBUTES),
-      id: tool.id || 'MISSING_ID',
-      name: tool.name || 'MISSING_NAME',
-      logo: tool.logo || 'MISSING_LOGO',
-      parameters: tool.parameters || [],
-      environment: tool.environment || {},
-      executable: tool.executable(),
-    };
-  }
+  private storeTool = (tool: ITool): IDiscoveredTool => ({
+    ...tool,
+    id: tool.id ?? 'MISSING_ID',
+    name: tool.name ?? 'MISSING_NAME',
+    logo: tool.logo ?? 'MISSING_LOGO',
+    parameters: tool.parameters ?? [],
+    environment: tool.environment ?? {},
+    executable: tool.executable,
+  });
 
   private onDiscoveredTool = (gameId: string, result: IDiscoveredTool) => {
-    const existing = getSafe(this.mStore.getState(),
-                             ['settings', 'gameMode', 'discovered', gameId, 'tools', result.id],
-                             undefined);
+    const existing = this.mStore.getState()?.settings?.gameMode?.discovered?.[gameId]?.tools?.[result.id];
     // don't overwrite customised tools
     if ((existing === undefined) || !existing.custom) {
       delete result.executable;

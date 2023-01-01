@@ -1,11 +1,11 @@
 import minimatch from 'minimatch';
 import * as semver from 'semver';
-import { getSafe } from '../../util/storeHelper';
+import { ISurveyInstance, IAnnouncement } from './types';
 
-export function matchesGameMode<T>(entry: T,
+export function matchesGameMode (entry: IAnnouncement|ISurveyInstance,
                                    gameMode: string,
                                    forceMatch: boolean = false): boolean {
-  const entryGameMode = getSafe(entry, ['gamemode'], undefined);
+  const entryGameMode = entry?.gamemode;
   if ((gameMode === undefined)
     && ((entryGameMode === undefined) || (entryGameMode === '*'))) {
     return true;
@@ -21,8 +21,8 @@ export function matchesGameMode<T>(entry: T,
     : forceMatch;
 }
 
-export function matchesVersion<T>(entry: T, appVersion: string): boolean {
-  const entryVersion = getSafe(entry, ['version'], undefined);
+export function matchesVersion (entry: IAnnouncement|ISurveyInstance, appVersion: string): boolean {
+  const entryVersion = entry?.version;
   return (entryVersion !== undefined)
     ? semver.satisfies(appVersion, entryVersion)
     : true;

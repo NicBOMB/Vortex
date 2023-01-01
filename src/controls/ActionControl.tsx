@@ -50,7 +50,7 @@ class ActionControl extends React.Component<IProps, { actions: IActionDefinition
     };
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     // TODO: since we can't know how the condition callback is implemented,
     //   there is no way to determine, based on props, whether the actions
     //   to be shown need to be updated.
@@ -61,7 +61,7 @@ class ActionControl extends React.Component<IProps, { actions: IActionDefinition
     }
   }
 
-  public render() {
+  public override render() {
     const { children, instanceId } = this.props;
     const child = React.Children.only(children);
     if (React.isValidElement(child)) {

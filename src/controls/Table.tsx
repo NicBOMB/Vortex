@@ -1,18 +1,18 @@
-import {collapseGroup, setAttributeFilter, setAttributeSort,
-        setAttributeVisible, setCollapsedGroups, setGroupingAttribute} from '../actions/tables';
-import {IActionDefinition} from '../types/IActionDefinition';
-import {IAttributeState} from '../types/IAttributeState';
-import {IExtensibleProps} from '../types/IExtensionProvider';
+import { collapseGroup, setAttributeFilter, setAttributeSort,
+        setAttributeVisible, setCollapsedGroups, setGroupingAttribute } from '../actions/tables';
+import { IActionDefinition } from '../types/IActionDefinition';
+import { IAttributeState } from '../types/IAttributeState';
+import { IExtensibleProps } from '../types/IExtensionProvider';
 import { II18NProps } from '../types/II18NProps';
-import {IRowState, IState, ITableState} from '../types/IState';
-import {ITableAttribute} from '../types/ITableAttribute';
-import {SortDirection} from '../types/SortDirection';
-import {ComponentEx, connect, extend, translate} from '../util/ComponentEx';
+import { IRowState, IState, ITableState } from '../types/IState';
+import { ITableAttribute } from '../types/ITableAttribute';
+import { SortDirection } from '../types/SortDirection';
+import { ComponentEx, connect, extend, translate } from '../util/ComponentEx';
 import Debouncer from '../util/Debouncer';
 import { log } from '../util/log';
 import smoothScroll from '../util/smoothScroll';
-import { getSafe, setSafe } from '../util/storeHelper';
-import {makeUnique, sanitizeCSSId, truthy} from '../util/util';
+import { setSafe } from '../util/storeHelper';
+import { sanitizeCSSId } from '../util/util';
 
 import IconBar from './IconBar';
 import GroupingRow, { EMPTY_ID } from './table/GroupingRow';
@@ -86,7 +86,7 @@ export interface ILookupCalculated {
 interface IComponentState {
   lastSelected?: { rowId: string, groupId: string };
   selectionStart?: { rowId: string, groupId: string };
-  calculatedValues?: ILookupCalculated;
+  calculatedValues: ILookupCalculated;
   rowState: { [id: string]: IRowState };
   sortedRows: string[];
   groupedRows: Array<{ id: string, name: string, count: number, rows: string[] }>;
@@ -186,7 +186,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     }, 200, true);
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.updateSelection(this.props);
     const { api } = this.context;
     api.events.on(this.props.tableId + '-scroll-to', this.scrollTo);
@@ -202,13 +202,13 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     window.addEventListener('resize', this.onResize);
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.context.api.events.removeAllListeners(this.props.tableId + '-scroll-to');
     window.removeEventListener('resize', this.onResize);
     this.mMounted = false;
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if ((newProps.attributeState !== this.props.attributeState)
         || (newProps.objects !== this.props.objects)) {
       const { attributeState, objects } = newProps;
@@ -262,11 +262,11 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public componentDidUpdate() {
+  public override componentDidUpdate() {
     this.mHeaderUpdateDebouncer.schedule();
   }
 
-  public shouldComponentUpdate(newProps: IProps, newState: IComponentState) {
+  public override shouldComponentUpdate(newProps: IProps, newState: IComponentState) {
     return (
       (newState !== this.state)
       || (newProps.dataId !== this.props.dataId)
@@ -283,7 +283,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     );
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { showHeader, showDetails, tableId } = this.props;
     const { detailsOpen } = this.state;
 
@@ -468,8 +468,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     const { groupBy, onSetCollapsedGroups, tableId } = this.props;
     const { calculatedValues, sortedRows } = this.state;
 
-    const groupOptions = makeUnique(
-      sortedRows.map(rowId => calculatedValues[rowId][groupBy]));
+    const groupOptions = Array.from(new Set(sortedRows.map(rowId => calculatedValues[rowId][groupBy])));
     onSetCollapsedGroups(tableId, groupOptions);
   }
 
@@ -517,7 +516,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
 
     let compare: (lhs: any, rhs: any) => number;
 
-    const groupOptions = makeUnique(
+    const groupOptions = Array.from(new Set(
       sortedRows.reduce((prev, rowId) => {
         if (data[rowId] === undefined) {
           return prev;
@@ -530,7 +529,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
           prev.push(value);
         }
         return prev;
-      }, [])).sort((lhs: any, rhs: any) => {
+      }, []))).sort((lhs: any, rhs: any) => {
         if (compare === undefined) {
           const desc = (sortAttribute !== undefined)
                     && (sortAttribute.id === groupAttribute.id)
@@ -583,7 +582,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   }
 
   private renderDetails = () => {
-    const {t, data, detailsTitle, language, objects} = this.props;
+    const { t, data, detailsTitle, language } = this.props;
     const {calculatedValues, detailsOpen, rowIdsDelayed} = this.state;
 
     if ((rowIdsDelayed === undefined)
@@ -609,13 +608,13 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   }
 
   private columnToggles(props: IProps): ITableRowAction[] {
-    const { t, columnBlacklist, objects } = props;
+    const { columnBlacklist, objects } = props;
 
     const result: ITableRowAction[] = [];
 
     const blacklist: Set<string> = new Set(columnBlacklist || []);
 
-    const { columns, inlines, disabled } = objects.reduce((prev, attr) => {
+    const { columns, inlines } = objects.reduce((prev, attr) => {
       if (attr.isToggleable && !blacklist.has(attr.id)) {
         const visible = attr.condition?.() ?? true;
         const attributeState = this.getAttributeState(attr, props.attributeState);
@@ -686,7 +685,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   }
 
   private renderRow(rowId: string, sortAttribute: ITableAttribute, groupId?: string): JSX.Element {
-    const { t, attributeState, data, language, hasActions, objects, tableId } = this.props;
+    const { t, attributeState, data, language, hasActions, tableId } = this.props;
     const { calculatedValues, rowState, rowVisibility, singleRowActions } = this.state;
 
     if ((calculatedValues[rowId] === undefined) || (data[rowId] === undefined)) {
@@ -698,7 +697,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     const extraClasses = this.props.objects
       .map(attr => attr.cssClass?.(data[rowId],
                                    this.getAttributeState(attr, attributeState).enabled))
-      .filter(cls => truthy(cls));
+      .filter(cls => !!cls);
 
     extraClasses.push(sanitizeCSSId(rowId));
 
@@ -721,8 +720,8 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
         hasActions={hasActions !== undefined ? hasActions : true}
         language={language}
         onClick={this.selectRow}
-        selected={getSafe(rowState, [rowId, 'selected'], false)}
-        highlighted={getSafe(rowState, [rowId, 'highlighted'], false)}
+        selected={rowState?.[rowId]?.selected ?? false}
+        highlighted={rowState?.[rowId]?.highlighted ?? false}
         domRef={this.setRowRef}
         container={this.mScrollRef}
         visible={rowVisibility[tableRowId] === true}
@@ -734,8 +733,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   }
 
   private filterSet(filt: any) {
-    return truthy(filt)
-        && (!Array.isArray(filt) || filt.length !== 0);
+    return !!filt && (!Array.isArray(filt) || filt.length !== 0);
   }
 
   private renderHeaderField = (attribute: ITableAttribute, proxy: boolean): JSX.Element => {
@@ -980,7 +978,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   }
 
   private updateColumnWidth() {
-    if (!truthy(this.mProxyHeaderRef) || !truthy(this.mVisibleHeaderRef)) {
+    if (!this.mProxyHeaderRef || !this.mVisibleHeaderRef){
       return;
     }
 
@@ -1092,16 +1090,16 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
     const ele: Element = event.target;
 
     const atTop = ele.scrollTop === 0;
-    if (((ele.scrollLeft !== this.mLastScrollLeft) && truthy(this.mHeaderRef))
-        || ((atTop !== this.mLastOnTop) && truthy(this.mPinnedRef))) {
+    if (((ele.scrollLeft !== this.mLastScrollLeft) && !!this.mHeaderRef)
+        || ((atTop !== this.mLastOnTop) && !!this.mPinnedRef)) {
       this.mLastOnTop = atTop;
       this.mLastScrollLeft = ele.scrollLeft;
 
       window.requestAnimationFrame(() => {
-        if (truthy(this.mPinnedRef)) {
+        if (!!this.mPinnedRef){
           this.mPinnedRef.className = atTop ? 'table-pinned' : 'table-pinned-hidden';
         }
-        if (truthy(this.mHeaderRef)) {
+        if (!!this.mHeaderRef){
           this.mHeaderRef.style.left = `-${ele.scrollLeft}px`;
         }
       });
@@ -1165,7 +1163,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
         }
         return Promise.resolve(attribute.calc(data[rowId], t))
           .then(newValue => {
-            if (!_.isEqual(newValue, getSafe(newValues, [rowId, attribute.id], undefined))) {
+            if (!_.isEqual(newValue, newValues?.[rowId]?.[attribute.id])){
               changedColumns.add(attribute.id);
               delta[attribute.id] = newValue;
             }
@@ -1510,7 +1508,7 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   }
 
   private selectToggle(rowId: string, groupId: string) {
-    const wasSelected = getSafe(this.state.rowState, [rowId, 'selected'], undefined);
+    const wasSelected = this.state.rowState?.[rowId]?.selected;
     if (!wasSelected) {
       const rowState = wasSelected === undefined
             ? { $set: { selected: true } }
@@ -1721,9 +1719,6 @@ class SuperTable extends ComponentEx<IProps, IComponentState> {
   }
 }
 
-const emptyObj = {};
-const emptyList = [];
-
 function mapStateToProps(state: IState, ownProps: any): IConnectedProps {
   let groupBy = state.settings.tables[ownProps.tableId]?.groupBy;
   if ((ownProps.columnBlacklist ?? []).includes(groupBy)) {
@@ -1731,13 +1726,10 @@ function mapStateToProps(state: IState, ownProps: any): IConnectedProps {
   }
   return {
     language: state.settings.interface.language,
-    attributeState:
-      getSafe(state, ['settings', 'tables', ownProps.tableId, 'attributes'], emptyObj),
+    attributeState: state?.settings?.tables?.[ownProps.tableId]?.attributes ?? {},
     filter: state.settings.tables[ownProps.tableId]?.filter,
     groupBy,
-    collapsedGroups: getSafe(state,
-                             ['settings', 'tables', ownProps.tableId, 'collapsedGroups'],
-                             emptyList),
+    collapsedGroups: state?.settings?.tables?.[ownProps.tableId]?.collapsedGroups ?? [],
   };
 }
 

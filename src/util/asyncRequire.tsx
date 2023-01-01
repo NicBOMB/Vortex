@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as React from 'react';
 import reqResolve = require('resolve');
 
-// tslint:disable-next-line
+
 const Module = require('module');
 
 /**
@@ -43,7 +43,7 @@ export default function(id: string, basedir?: string): Promise<any> {
 }
 
 export class Placeholder extends React.Component<any, {}> {
-  public render() {
+  public override render() {
     return null;
   }
 }

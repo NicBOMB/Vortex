@@ -75,15 +75,10 @@ const makeUnknown: (t: TFunction, url: NXMUrl) => RecursivePartial<IModFile> =
       };
 };
 
-function nop() {
-  // nop
-}
-
 function FreeUserDLDialog(props: IFreeUserDLDialogProps) {
   const { t, nexus, onCancel, onDownload, onSkip, onUpdated } = props;
 
-  const urls: string[] = useSelector<IState, string[]>(state =>
-    state.session['nexus'].freeUserDLQueue);
+  const urls = useSelector<IState, string[]>((state) => state.session?.nexus?.freeUserDLQueue);
 
   // const [fileInfo, setFileInfo] = React.useState<Partial<IModFile>>(null);
   const [fileInfo, setFileInfo] = React.useState<any>(null);
@@ -140,7 +135,7 @@ function FreeUserDLDialog(props: IFreeUserDLDialogProps) {
   }, [fileInfo]);
 
   return (
-    <Modal show={urls.length > 0} onHide={nop}>
+    <Modal show={urls.length > 0} onHide={()=>{}}>
       <Modal.Header>
         <Modal.Title>
           {t('Download "{{modName}}"', { replace: {

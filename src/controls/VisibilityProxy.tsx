@@ -67,7 +67,7 @@ class VisibilityProxy extends React.PureComponent<any, {}> {
   private mLastVisible: boolean = false;
   private mVisibleTime: number = 0;
 
-  public componentDidMount() {
+  public override componentDidMount() {
     const node = ReactDOM.findDOMNode(this) as HTMLElement;
     VisibilityProxy.observe(this.props.container, node, (visible: boolean) => {
       const now = Date.now();
@@ -87,11 +87,11 @@ class VisibilityProxy extends React.PureComponent<any, {}> {
     });
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     VisibilityProxy.unobserve(this.props.container, ReactDOM.findDOMNode(this) as HTMLElement);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { componentClass: Component } = this.props;
     const props = _.omit(this.props, ['container', 'placeholder', 'content', 'visible',
       'setVisible', 'componentClass']);

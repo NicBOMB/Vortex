@@ -4,19 +4,15 @@ import FormInput from '../../../controls/FormInput';
 import Icon from '../../../controls/Icon';
 import IconBar from '../../../controls/IconBar';
 import { ToggleButton } from '../../../controls/TooltipControls';
-import { IActionDefinition } from '../../../types/IActionDefinition';
 import { IComponentContext } from '../../../types/IComponentContext';
 import { IState } from '../../../types/IState';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 import getAttr from '../../../util/getAttr';
 import opn from '../../../util/opn';
 import { activeGameId } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 import MainPage from '../../../views/MainPage';
 
 import { IAvailableExtension, IExtension } from '../../extension_manager/types';
-import { NEXUS_DOMAIN } from '../../nexus_integration/constants';
 import { nexusGameId } from '../../nexus_integration/util/convertGameId';
 import { IProfile } from '../../profile_management/types/IProfile';
 
@@ -106,7 +102,6 @@ class GamePicker extends ComponentEx<IProps, IComponentState> {
   public static SIMILARITY_RATIO: number = 90;
   public declare context: IComponentContext;
 
-  private buttons: IActionDefinition[];
   private mRef: HTMLElement;
   private mScrollRef: HTMLElement;
 
@@ -129,17 +124,9 @@ class GamePicker extends ComponentEx<IProps, IComponentState> {
       expandManaged: true,
       expandUnmanaged: true,
     });
-
-    this.buttons = [
-      {
-        component: ShowHiddenButton,
-        props: () =>
-          ({ t: this.props.t, showHidden: this.state.showHidden, toggleHidden: this.toggleHidden }),
-      },
-    ];
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, discoveredGames, extensions, extensionsInstalled, knownGames,
             pickerLayout, profiles, sortManaged, sortUnmanaged } = this.props;
     const { showHidden, currentFilterValue, expandManaged, expandUnmanaged } = this.state;
@@ -177,7 +164,7 @@ class GamePicker extends ComponentEx<IProps, IComponentState> {
     const supportedGameList: IGameStored[] = [];
 
     displayedGames.forEach((game: IGameStored) => {
-      if (getSafe(discoveredGames, [game.id, 'path'], undefined) !== undefined) {
+      if (discoveredGames?.[game.id]?.path !== undefined) {
         if (profileGames.has(game.id)) {
           managedGameList.push(game);
         } else {
@@ -377,13 +364,13 @@ class GamePicker extends ComponentEx<IProps, IComponentState> {
   }
 
   private setSortManaged = (value: { value: string, label: string }) => {
-    if (truthy(value)) {
+    if (!!value){
       this.props.onSetSortManaged(value.value);
     }
   }
 
   private setSortUnmanaged = (value: { value: string, label: string }) => {
-    if (truthy(value)) {
+    if (!!value){
       this.props.onSetSortUnmanaged(value.value);
     }
   }
@@ -508,7 +495,7 @@ class GamePicker extends ComponentEx<IProps, IComponentState> {
     const { currentFilterValue } = this.state;
 
     if (games.length === 0) {
-      if (truthy(currentFilterValue)) {
+      if (!!currentFilterValue){
         return null;
       } else if (type === 'managed') {
         return (
@@ -556,7 +543,7 @@ class GamePicker extends ComponentEx<IProps, IComponentState> {
     const { t, discoveredGames, onRefreshGameInfo } = this.props;
 
     const isDiscovered = (gameId: string) =>
-      getSafe(discoveredGames, [gameId, 'path'], undefined) !== undefined;
+      discoveredGames?.[gameId]?.path !== undefined;
 
     return (
       <div>

@@ -12,7 +12,7 @@ export interface IToggleProps {
 export type IProps = React.HTMLAttributes<HTMLDivElement> & IToggleProps;
 
 class Toggle extends React.PureComponent<IProps, {}> {
-  public render(): JSX.Element {
+  public override render() {
     const { children, checked, disabled } = this.props;
 
     const classes = ['toggle-container'];

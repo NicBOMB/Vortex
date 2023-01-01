@@ -3,7 +3,6 @@ import ToolbarDropdown from '../../../controls/ToolbarDropdown';
 import ToolbarIcon from '../../../controls/ToolbarIcon';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 import { activeGameId } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
 
 import { IProfileMod } from '../../profile_management/types/IProfile';
 
@@ -26,7 +25,7 @@ interface IConnectedProps {
 type IProps = IBaseProps & IConnectedProps;
 
 class CheckVersionsButton extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, updateRunning } = this.props;
 
     if (updateRunning) {
@@ -100,14 +99,12 @@ class CheckVersionsButton extends ComponentEx<IProps, {}> {
   }
 }
 
-const emptyObject = {};
-
 function mapStateToProps(state: any): IConnectedProps {
   const gameMode = activeGameId(state);
   return {
-    mods: getSafe(state, ['persistent', 'mods', gameMode], emptyObject),
+    mods: state?.persistent?.mods?.[gameMode] ?? {},
     gameMode,
-    updateRunning: getSafe(state, ['session', 'mods', 'updatingMods', gameMode], false),
+    updateRunning: state?.session?.mods?.updatingMods?.[gameMode] ?? false
   };
 }
 

@@ -4,7 +4,6 @@ import { IDeploymentMethod, IExtensionApi } from '../../../types/IExtensionConte
 import { ProcessCanceled, UserCanceled } from '../../../util/CustomErrors';
 import * as fs from '../../../util/fs';
 import { log } from '../../../util/log';
-import { getSafe } from '../../../util/storeHelper';
 import { toPromise } from '../../../util/util';
 import { onAddMod } from '../eventHandlers';
 import { installPathForGame } from '../selectors';
@@ -27,7 +26,7 @@ async function combineMods(api: IExtensionApi, gameId: string, modIds: string[])
     ]);
   }
 
-  const activatorId: string = getSafe(state, ['settings', 'mods', 'activator', gameId], undefined);
+  const activatorId = state?.settings?.mods?.activator?.[gameId];
   const activators = getAllActivators();
   const modTypes = new Set(modIds.map(modId => mods[modId]?.type));
 
@@ -84,11 +83,10 @@ async function combineMods(api: IExtensionApi, gameId: string, modIds: string[])
 
     const keys = Object.keys(result.input);
     const targetId = keys.find(id => result.input[id]);
-    const targetIdx = sorted.findIndex(mod => mod.id === targetId);
     const target = mods[targetId];
     const sourceIds = Object.keys(result.input).filter(id => !result.input[id]);
 
-    await toPromise<void>(cb => onAddMod(api, gameId, {
+    await toPromise<void>((cb) => onAddMod(api, gameId, {
       id: tempName,
       state: 'installed',
       attributes: {

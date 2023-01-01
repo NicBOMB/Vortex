@@ -8,7 +8,7 @@ import { enableUserSymlinks } from './actions';
 
 import Promise from 'bluebird';
 import * as React from 'react';
-import { Alert, ControlLabel, FormGroup, HelpBlock } from 'react-bootstrap';
+import { Alert, ControlLabel, FormGroup } from 'react-bootstrap';
 import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import * as Redux from 'redux';
@@ -34,16 +34,16 @@ type IProps = IBaseProps & IActionProps & IConnectedProps;
 
 class Settings extends ComponentEx<IProps, {}> {
   private mInitialSymlinkPrivilege: boolean;
-  public componentDidMount() {
+  public override componentDidMount() {
     this.props.localState['attach']?.(this);
     this.mInitialSymlinkPrivilege = this.props.localState.symlinkRight;
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.props.localState['detach']?.(this);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, supported, localState, userSymlinks } = this.props;
 
     return (

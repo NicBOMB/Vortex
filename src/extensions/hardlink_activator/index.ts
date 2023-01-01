@@ -26,7 +26,7 @@ export class FileFound extends Error {
 }
 
 class DeploymentMethod extends LinkingDeployment {
-  public priority: number = 5;
+  public override priority: number = 5;
 
   private mInstallationFiles: Set<number>;
 
@@ -38,7 +38,7 @@ class DeploymentMethod extends LinkingDeployment {
         api);
   }
 
-  public detailedDescription(t: TFunction): string {
+  public override detailedDescription(t: TFunction): string {
     return t(
       'File Systems store files in two parts: \n'
       + ' - an index entry that contains the file name, '
@@ -176,14 +176,14 @@ class DeploymentMethod extends LinkingDeployment {
     return res;
   }
 
-  public finalize(gameId: string,
+  public override finalize(gameId: string,
                   dataPath: string,
                   installationPath: string,
                   progressCB?: (files: number, total: number) => void): Promise<IDeployedFile[]> {
     return super.finalize(gameId, dataPath, installationPath, progressCB);
   }
 
-  public postPurge(): Promise<void> {
+  public override postPurge(): Promise<void> {
     delete this.mInstallationFiles;
     this.mInstallationFiles = undefined;
     return Promise.resolve();

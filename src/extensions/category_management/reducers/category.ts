@@ -1,5 +1,5 @@
 import { IReducerSpec } from '../../../types/IExtensionContext';
-import {deleteOrNop, getSafe, setOrNop, setSafe} from '../../../util/storeHelper';
+import { deleteOrNop, setOrNop, setSafe } from '../../../util/storeHelper';
 
 import * as actions from '../actions/category';
 
@@ -22,7 +22,7 @@ export const categoryReducer: IReducerSpec = {
       const { gameId, categoryIds }: { gameId: string, categoryIds: string[] } = payload;
       let newState = state;
       categoryIds.forEach((id, idx) => {
-        const oldOrder = getSafe(newState, [gameId, id, 'order'], undefined);
+        const oldOrder = newState?.[gameId]?.[id]?.order;
         if ((oldOrder !== undefined) && (oldOrder !== idx)) {
           newState = setSafe(newState, [gameId, id, 'order'], idx);
         }

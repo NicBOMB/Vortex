@@ -2,9 +2,7 @@
  * wrapper for logging functionality
  */
 
-/** dummy */
 import * as path from 'path';
-import * as util from 'util';
 import * as winstonT from 'winston';
 
 export function valueReplacer() {
@@ -26,48 +24,47 @@ export function valueReplacer() {
   };
 }
 
-function IPCTransport(options: winstonT.TransportOptions) {
-  this.name = 'IPCTransport';
-  this.level = 'debug';
+class IPCTransport extends winstonT.Transport {
+  public renderer: Electron.IpcRenderer;
+  constructor(){
+    super();
+    this.name = 'IPCTransport';
+    this.level = 'debug';
+    const { ipcRenderer } = require('electron');
+    this.renderer = ipcRenderer;
+  }
+  public log (level: string, message: string, meta: any[], callback: winstonT.LogCallback) {
+      this.renderer.send(
+        'log-message',
+        level,
+        message,
+        meta ?? false ? JSON.stringify(meta, valueReplacer()) : undefined
+      );
+      callback(null);
+  }
 }
 
-let logger: typeof winstonT = null;
+let logger: typeof winstonT;
 
 // magic: when we're in the main process, this uses the logger from winston
 // (which appears to be a singleton). In the renderer processes we connect
 // to the main-process logger through ipc
-if ((process as any).type === 'renderer') {
-  // tslint:disable-next-line:no-var-requires
-  const { ipcRenderer } = require('electron');
-  IPCTransport.prototype.log =
-    (level: string, message: string, meta: any[], callback: winstonT.LogCallback) => {
-      ipcRenderer.send('log-message', level, message,
-                       meta !== undefined ? JSON.stringify(meta, valueReplacer()) : undefined);
-      callback(null);
-  };
-
-  // tslint:disable-next-line:no-var-requires
-  logger = require('winston');
-  util.inherits(IPCTransport, logger.Transport);
+if (process.type === 'renderer'){
+  logger = require("winston");
   logger.configure({
     transports: [
-      new IPCTransport({}),
+      new IPCTransport(),
     ],
   });
 } else {
   // when being required from extensions, don't re-require the winston module
   // because the "singleton" is implemented abusing the require-cache
-  if ((global as any).logger === undefined) {
-    // tslint:disable-next-line:no-var-requires
-    logger = require('winston');
-    (global as any).logger = logger;
-  } else {
-    logger = (global as any).logger;
-  }
-  // tslint:disable-next-line:no-var-requires
+  global.logger ??= require('winston');
+  logger = global.logger;
   const { ipcMain } = require('electron');
-  if (ipcMain !== undefined) {
-    ipcMain.on('log-message',
+  if (ipcMain ?? false){
+    ipcMain.on(
+      'log-message',
       (event, level: LogLevel, message: string, metadataSer?: string) => {
         try {
           const metadata = (metadataSer !== undefined)
@@ -77,11 +74,11 @@ if ((process as any).type === 'renderer') {
         } catch (e) {
           // failed to log, what am I supposed to do now?
         }
-      });
+      }
+    );
   } // otherwise we're not in electron
   // TODO: very weird issue, getting an EPIPE error if log is called before setupLogging
   //   unless we do a console.log first.
-  // tslint:disable-next-line:no-console
   console.log('logging started');
 }
 
@@ -146,7 +143,7 @@ export function log(level: LogLevel, message: string, metadata?: any) {
       logger.log(level, message, metadata);
     }
   } catch (err) {
-    // tslint:disable-next-line:no-console
+
     console.log('failed to log to file', { level, message, metadata });
   }
 }

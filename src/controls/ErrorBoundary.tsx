@@ -57,7 +57,7 @@ class ErrorBoundary extends ComponentEx<IErrorBoundaryProps, IErrorBoundaryState
     };
   }
 
-  public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  public override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     if (this.props.canDisplayError === false) {
       this.context.api.sendNotification({
         type: 'error',
@@ -86,7 +86,7 @@ class ErrorBoundary extends ComponentEx<IErrorBoundaryProps, IErrorBoundaryState
     this.setState({ error, errorInfo });
   }
 
-  public render(): React.ReactNode {
+  public override render(): React.ReactNode {
     const { t, className, canDisplayError, onHide, visible } = this.props;
     const { error } = this.state;
 
@@ -167,7 +167,7 @@ export default translate(['common'])(ErrorBoundary);
 export function safeCallbacks<T, S>(
   ComponentToWrap: React.ComponentType<React.PropsWithChildren<T>>,
 ): React.ComponentType<Omit<T, keyof IErrorContext>> {
-  // tslint:disable-next-line:class-name
+
   // return class __SafeCallbackComponent extends React.Component<T, S> {
   const cache: { [key: string]: { cb: CBFunction, depList: any[] } } = {};
 

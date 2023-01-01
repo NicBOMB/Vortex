@@ -1,23 +1,15 @@
 import Promise from 'bluebird';
 import _ from 'lodash';
-import Debouncer from '../../util/Debouncer';
-import { nativeImage } from 'electron';
-import * as fs from '../../util/fs';
 import path from 'path';
+import { nativeImage } from 'electron';
+import { IEditStarterInfo } from './types';
+import { IDiscoveredTool } from '../../types/IDiscoveredTool';
+import Debouncer from '../../util/Debouncer';
+import * as fs from '../../util/fs';
 import extractExeIcon from '../../util/exeIcon';
 import { ProcessCanceled } from '../../util/CustomErrors';
-
-import { IDiscoveredTool } from '../../types/IDiscoveredTool';
-import { IEditStarterInfo } from './types';
-
 import StarterInfo, { IStarterInfo } from '../../util/StarterInfo';
-
-import { truthy } from '../../util/util';
-
-import lazyRequire from '../../util/lazyRequire';
-import * as remoteT from '@electron/remote';
 import { makeRemoteCallSync } from '../../util/electronRemote';
-const remote: typeof remoteT = lazyRequire(() => require('@electron/remote'));
 
 export const propOf = <T>(name: keyof T) => name;
 
@@ -81,7 +73,7 @@ export function updateJumpList(starters: IStarterInfo[]) {
 
   const userTasks: Electron.JumpListItem[] = starters
     .filter(starter =>
-      (truthy(starter.exePath))
+      (!!starter.exePath)
       && (Object.keys(starter.environment || {}).length === 0))
     .map(starter => {
       const task: Electron.Task = {

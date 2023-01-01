@@ -32,8 +32,6 @@ import { showError } from '../../util/message';
 import onceCB from '../../util/onceCB';
 import presetManager from '../../util/PresetManager';
 import { discoveryByGame, gameById, installPathForGame, needToDeployForGame } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
-import { truthy } from '../../util/util';
 
 import { IExtension } from '../extension_manager/types';
 import { readExtensions } from '../extension_manager/util';
@@ -60,7 +58,6 @@ import { syncFromProfile, syncToProfile } from './sync';
 
 import Promise from 'bluebird';
 import * as path from 'path';
-import * as Redux from 'redux';
 import { generate as shortid } from 'shortid';
 
 const profileFiles: { [gameId: string]: Array<string | (() => PromiseLike<string[]>)> } = {};
@@ -71,14 +68,14 @@ function profilePath(profile: IProfile): string {
   return path.join(getVortexPath('userData'), profile.gameId, 'profiles', profile.id);
 }
 
-function checkProfile(store: Redux.Store<any>, currentProfile: IProfile): Promise<void> {
+function checkProfile(store: IExtensionApi["store"], currentProfile: IProfile): Promise<void> {
   return fs.ensureDirAsync(profilePath(currentProfile));
 }
 
-function sanitizeProfile(store: Redux.Store<any>, profile: IProfile): void {
+function sanitizeProfile(store: IExtensionApi["store"], profile: IProfile): void {
   const state: IState = store.getState();
   Object.keys(profile.modState || {}).forEach(modId => {
-    if (getSafe(state.persistent.mods, [profile.gameId, modId], undefined) === undefined) {
+    if (state.persistent.mods?.[profile.gameId]?.[modId] === undefined) {
       log('debug', 'removing info of missing mod from profile', {
         profile: profile.id,
         game: profile.gameId,
@@ -88,7 +85,7 @@ function sanitizeProfile(store: Redux.Store<any>, profile: IProfile): void {
   });
 }
 
-function refreshProfile(store: Redux.Store<any>, profile: IProfile,
+function refreshProfile(store: IExtensionApi["store"], profile: IProfile,
                         direction: 'import' | 'export'): Promise<void> {
   log('debug', 'refresh profile', { profile, direction });
   if (profile === undefined || profile?.pendingRemove === true) {
@@ -148,8 +145,7 @@ function refreshProfile(store: Redux.Store<any>, profile: IProfile,
 function activateGame(store: ThunkStore<IState>, gameId: string): Promise<void> {
   log('info', 'activating game', { gameId });
   const state: IState = store.getState();
-  if (getSafe(state, ['settings', 'gameMode', 'discovered', gameId, 'path'], undefined)
-      === undefined) {
+  if (state?.settings?.gameMode?.discovered[gameId]?.path === undefined) {
     store.dispatch(addNotification({
       type: 'warning',
       title: '{{gameId}} not enabled',
@@ -163,11 +159,10 @@ function activateGame(store: ThunkStore<IState>, gameId: string): Promise<void> 
     return Promise.resolve();
   }
 
-  const profileId = getSafe(state, ['settings', 'profiles', 'lastActiveProfile', gameId],
-                            undefined);
-  const profile = getSafe(state, ['persistent', 'profiles', profileId], undefined);
+  const profileId = state?.settings?.profiles?.lastActiveProfile?.[gameId];
+  const profile = state?.persistent?.profiles?.[profileId];
   if ((profileId === undefined) || (profile === undefined)) {
-    const profiles = getSafe(state, ['persistent', 'profiles'], []);
+    const profiles = state?.persistent?.profiles ?? [];
     const gameProfiles: IProfile[] = Object.keys(profiles)
       .filter((id: string) => profiles[id].gameId === gameId)
       .map((id: string) => profiles[id]);
@@ -212,7 +207,7 @@ function deploy(api: IExtensionApi, profileId: string): Promise<void> {
   }
 
   const gameDiscovery =
-    getSafe(state, ['settings', 'gameMode', 'discovered', profile.gameId], undefined);
+    state?.settings?.gameMode?.discovered?.[profile.gameId];
   if (gameDiscovery?.path === undefined) {
     // can't deploy a game that hasn't been discovered
     return Promise.resolve();
@@ -541,7 +536,7 @@ function manageGame(api: IExtensionApi, gameId: string): Promise<void> {
   const discoveredGames = state.settings.gameMode?.discovered || {};
   const profiles = state.persistent.profiles || {};
 
-  if (getSafe(discoveredGames, [gameId, 'path'], undefined) !== undefined) {
+  if (discoveredGames[gameId]?.path !== undefined) {
     const profile = Object.values(profiles).find(prof => prof.gameId === gameId);
     if (profile !== undefined) {
       return activateGame(api.store, gameId);
@@ -555,7 +550,7 @@ function manageGame(api: IExtensionApi, gameId: string): Promise<void> {
 
 function removeProfileImpl(api: IExtensionApi, profileId: string) {
   const { store } = api;
-  const state = api.getState();
+  const state = store.getState();
   const { profiles } = state.persistent;
   log('info', 'user removing profile', { id: profileId });
 
@@ -572,7 +567,7 @@ function removeProfileImpl(api: IExtensionApi, profileId: string) {
   }
 
   return fs.removeAsync(profilePath(profiles[profileId]))
-    .catch(err => (err.code === 'ENOENT')
+    .catch((err) => (err.code === 'ENOENT')
       ? Promise.resolve()
       : Promise.reject(err))
     .then(() => {
@@ -583,9 +578,12 @@ function removeProfileImpl(api: IExtensionApi, profileId: string) {
       }
       store.dispatch(removeProfile(profileId));
     })
-    .catch(err => {
-      this.context.api.showErrorNotification('Failed to remove profile',
-        err, { allowReport: err.code !== 'EPERM' });
+    .catch((err) => {
+      api.showErrorNotification(
+        'Failed to remove profile',
+        err,
+        { allowReport: err.code !== 'EPERM' }
+      );
     });
 }
 
@@ -602,7 +600,7 @@ function removeMod(api: IExtensionApi, gameId: string, modId: string): Promise<v
 }
 
 function unmanageGame(api: IExtensionApi, gameId: string, gameName?: string): Promise<void> {
-  const state = api.getState();
+  const state = api.store.getState();
   const game = getGame(gameId);
   const { mods, profiles } = state.persistent;
   const profileIds = Object.keys(profiles)
@@ -792,9 +790,7 @@ function init(context: IExtensionContext): boolean {
       return 'Tried to activate unknown profile';
     }
 
-    if (getSafe(state,
-                ['settings', 'gameMode', 'discovered', profile.gameId, 'path'],
-                undefined) === undefined) {
+    if (state?.settings?.gameMode?.discovered?.[profile.gameId]?.path === undefined) {
       return 'Can\'t enable profile because game wasn\'t discovered';
     }
 
@@ -842,8 +838,7 @@ function init(context: IExtensionContext): boolean {
         const state: IState = store.getState();
         const { commandLine } = state.session.base;
         if (commandLine.profile !== undefined) {
-          const profile: IProfile = getSafe(state,
-            ['persistent', 'profiles', commandLine.profile], undefined);
+          const profile: IProfile = state?.persistent?.profiles?.[commandLine.profile];
 
           if (profile !== undefined) {
             context.api.store.dispatch(setNextProfile(profile.id));
@@ -891,15 +886,15 @@ function init(context: IExtensionContext): boolean {
 
           const profile = current[profileId];
 
-          const prevState = getSafe(prev, [profileId, 'modState'], {});
-          const currentState = getSafe(current, [profileId, 'modState'], {});
+          const prevState = prev?.[profileId]?.modState ?? {};
+          const currentState = current?.[profileId]?.modState ?? {};
 
           if (prevState !== currentState) {
             const mods = context.api.getState().persistent.mods[profile.gameId];
             Object.keys(currentState)
               .forEach(modId => {
-                const isEnabled = getSafe(currentState, [modId, 'enabled'], false);
-                const wasEnabled = getSafe(prevState, [modId, 'enabled'], false);
+                const isEnabled = currentState?.[modId]?.enabled ?? false;
+                const wasEnabled = prevState?.[modId]?.enabled ?? false;
 
                 if ((isEnabled !== wasEnabled) && (mods[modId] !== undefined)) {
                   context.api.events.emit(
@@ -942,8 +937,7 @@ function init(context: IExtensionContext): boolean {
 
         // ensure the new profile is valid and the corresponding game is
         // discovered
-        if (truthy(activeProfileId)
-          && (state.persistent.profiles[activeProfileId] !== undefined)) {
+        if ((!!activeProfileId) && (state.persistent.profiles[activeProfileId] !== undefined)) {
           const profile = state.persistent.profiles[activeProfileId];
           const discovery = discoveryByGame(state, profile.gameId);
           if (discovery?.path !== undefined) {
@@ -958,7 +952,7 @@ function init(context: IExtensionContext): boolean {
 
       // it's important we stop managing a game if it's no longer discovered
       // because that can cause problems all over the application
-      if (truthy(activeProfileId)) {
+      if (!!activeProfileId) {
         const profile = state.persistent.profiles[activeProfileId];
         if (profile === undefined) {
           return;
@@ -970,7 +964,7 @@ function init(context: IExtensionContext): boolean {
         }
       }
     }
-  
+
     presetManager.on('setgame', (step: IPresetStep): Promise<void> => {
       return manageGame(context.api, (step as IPresetStepSetGame).game)
         .then(() => context.api.ext.awaitProfileSwitch?.())

@@ -24,7 +24,7 @@ export interface IFormItemProps {
 }
 
 export class FormTextItem extends React.Component<IFormItemProps, {}> {
-  public render() {
+  public override render() {
     const { controlId, label, maxLength, placeholder, readOnly, style, value } = this.props;
 
     const validation = value !== undefined ? this.validationState() : undefined;
@@ -73,7 +73,7 @@ export class FormTextItem extends React.Component<IFormItemProps, {}> {
 }
 
 export class FormCheckboxItem extends React.Component<IFormItemProps, {}> {
-  public render() {
+  public override render() {
     const { label, style, value } = this.props;
     return (
       <Checkbox value={value} onChange={this.onChangeValue} style={style}>
@@ -95,7 +95,7 @@ export interface IFormPathProps extends IFormItemProps {
 }
 
 export class FormPathItem extends ComponentEx<IFormPathProps, {}> {
-  public render(): JSX.Element {
+  public override render() {
     const { t, controlId, label, placeholder, readOnly, style, value } = this.props;
 
     const validation = value !== undefined ? this.validationState() : undefined;

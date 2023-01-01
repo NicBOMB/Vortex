@@ -1,13 +1,9 @@
-import { setdefault } from './util';
-
 import * as Redux from 'redux';
 
 export class StateError extends Error {
-  private mAction: Redux.Action;
   constructor(action: Redux.Action, message: string) {
     super(message);
     this.name = this.constructor.name;
-    this.mAction = action;
   }
 }
 
@@ -37,5 +33,6 @@ export function reduxSanity(callback: (err: StateError) => void) {
 }
 
 export function registerSanityCheck(type: string, check: SanityCheck) {
-  setdefault(sanityChecks, type, []).push(check);
+  sanityChecks[type] ??= [];
+  sanityChecks[type].push(check);
 }

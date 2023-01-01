@@ -29,7 +29,7 @@ process.chdir(getVortexPath('application'));
 if (!process.argv.includes('--relaunched')
   && (path.normalize(process.cwd()).toLowerCase()
     !== path.normalize(getVortexPath('application')).toLowerCase())) {
-  // tslint:disable-next-line:no-var-requires
+
   const cp: typeof child_processT = require('child_process');
   const args = [].concat(['--relaunched'], process.argv.slice(1));
   const proc = cp.spawn(process.execPath, args, {
@@ -57,7 +57,7 @@ function setEnv(key: string, value: string, force?: boolean) {
 if (process.env.NODE_ENV !== 'development') {
   setEnv('NODE_ENV', 'production', true);
 } else {
-  // tslint:disable-next-line:no-var-requires
+
   const rebuildRequire = require('./util/requireRebuild').default;
   rebuildRequire();
 }
@@ -97,7 +97,7 @@ if ((process.platform === 'win32') && (process.env.NODE_ENV !== 'development')) 
 import * as winapiT from 'winapi-bindings';
 
 try {
-  // tslint:disable-next-line:no-var-requires
+
   const winapi: typeof winapiT = require('winapi-bindings');
   winapi?.SetProcessPreferredUILanguages?.(['en-US']);
 } catch (err) {
@@ -126,14 +126,12 @@ import presetManager from './util/PresetManager';
 
 process.env.Path = process.env.Path + path.delimiter + __dirname;
 
-let application: Application;
-
 const handleError = (error: any) => {
   if (Application.shouldIgnoreError(error)) {
     return;
   }
 
-  terminate(toError(error), {});
+  terminate(toError(error));
 };
 
 async function firstTimeInit() {
@@ -206,7 +204,7 @@ async function main(): Promise<void> {
     app.commandLine.appendSwitch('remote-debugging-port', DEBUG_PORT);
   }
 
-  // tslint:disable-next-line:no-submodule-imports
+
   require('@electron/remote/main').initialize();
 
   let fixedT = require('i18next').getFixedT('en');
@@ -244,7 +242,7 @@ async function main(): Promise<void> {
     app.commandLine.appendSwitch('force-device-scale-factor', '1');
   }
   */
-  application = new Application(mainArgs);
+  new Application(mainArgs);
 }
 
 main();

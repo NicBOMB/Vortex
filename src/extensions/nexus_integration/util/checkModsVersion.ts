@@ -1,7 +1,6 @@
-import { IExtensionApi } from '../../../types/IExtensionContext';
+import { IExtensionApi, IState } from '../../../types/api';
 import { log } from '../../../util/log';
-import { getSafe } from '../../../util/storeHelper';
-import { batchDispatch, truthy } from '../../../util/util';
+import { batchDispatch } from '../../../util/util';
 import { nexusGameId } from './convertGameId';
 
 import { gameById } from '../../gamemode_management/selectors';
@@ -14,7 +13,6 @@ import NexusT, { IFileInfo, IFileUpdate, IModFiles, IModInfo,
                  IUpdateEntry, NexusError, RateLimitError } from '@nexusmods/nexus-api';
 import Promise from 'bluebird';
 import { TFunction } from 'i18next';
-import * as path from 'path';
 import * as Redux from 'redux';
 import * as semver from 'semver';
 
@@ -33,24 +31,23 @@ const UPDATE_CHECK_TIMEOUT = 5 * ONE_MINUTE;
  * @param {number} minAge timestamp of the least recently updated mod we're interested in
  * @returns {Promise<IUpdateEntry[]>}
  */
-export function fetchRecentUpdates(store: Redux.Store<any>,
+export function fetchRecentUpdates(store: Redux.Store<IState>,
                                    nexus: NexusT,
                                    gameId: string,
                                    minAge: number): Promise<IUpdateEntry[]> {
   const state = store.getState();
   const now = Date.now();
-  const lastUpdate = getSafe(state, ['session', 'nexus', 'lastUpdate', gameId], {
+  const lastUpdate = state.session?.nexus?.lastUpdate[gameId] ?? {
     time: 0,
     range: 0,
     updateList: [],
-  });
+  };
 
   const timeSinceUpdate = now - lastUpdate.time;
 
   if ((timeSinceUpdate < UPDATE_CHECK_TIMEOUT) && ((now - minAge) < lastUpdate.range)) {
     // don't fetch same or smaller range again within 5 minutes
-    return Promise.resolve(
-      getSafe(state, ['session', 'nexus', 'lastUpdate', gameId, 'updateList'], []));
+    return Promise.resolve(state.session?.nexus?.lastUpdate?.[gameId]?.updateList ?? []);
   } else {
     log('debug', '[update check] lru', (new Date(minAge)).toISOString());
 
@@ -92,16 +89,16 @@ export function fetchRecentUpdates(store: Redux.Store<any>,
  * @return {Promise<IFileInfo>}
  *
  */
-export function checkModVersion(store: Redux.Store<any>, nexus: NexusT,
+export function checkModVersion(store: Redux.Store<IState>, nexus: NexusT,
                                 gameMode: string, mod: IMod): Promise<void> {
   const nexusModId: number =
-      parseInt(getSafe(mod.attributes, ['modId'], undefined), 10);
+      parseInt(mod.attributes?.modId ?? '', 10);
 
   if (isNaN(nexusModId)) {
     return Promise.resolve();
   }
 
-  const gameId = getSafe(mod.attributes, ['downloadGame'], undefined) || gameMode;
+  const gameId = mod.attributes?.downloadGame ?? gameMode;
   const game = gameById(store.getState(), gameId);
   const fallBackGameId = gameId === 'site'
     ? 'site' : undefined;
@@ -154,7 +151,7 @@ function updateModAttributes(dispatch: Redux.Dispatch<any>,
     update(disp, gameId, mod, 'endorsed', modInfo.endorsement.endorse_status);
   }
   update(disp, gameId, mod, 'allowRating', (modInfo as any).allow_rating);
-  if (getSafe(mod.attributes, ['category'], undefined) === undefined) {
+  if (mod.attributes?.category === undefined) {
     update(disp, gameId, mod, 'category', modInfo.category_id);
   }
   update(disp, gameId, mod, 'shortDescription', modInfo.summary);
@@ -171,7 +168,7 @@ function updateLatestFileAttributes(dispatch: Redux.Dispatch<any>,
                                     file: IFileInfo) {
   update(dispatch, gameId, mod, 'newestVersion', file.version);
 
-  if (['OLD_VERSION', 'ARCHIVED'].includes(file.category_name) || !truthy(file.category_name)) {
+  if (['OLD_VERSION', 'ARCHIVED'].includes(file.category_name) || !file.category_name) {
     // file was removed from mod or is old, either way there should be a new version available
     // but we have no way of determining which it is.
     update(dispatch, gameId, mod, 'newestFileId', 'unknown');
@@ -186,10 +183,6 @@ function setNoUpdateAttributes(dispatch: Redux.Dispatch<any>,
   update(dispatch, gameId, mod, 'newestVersion', undefined);
   update(dispatch, gameId, mod, 'newestFileId', undefined);
   update(dispatch, gameId, mod, 'lastUpdateTime', undefined);
-}
-
-function basename(input: string): string {
-  return path.basename(input, path.extname(input));
 }
 
 function noExt(input: string): string {
@@ -215,7 +208,7 @@ function updateFileAttributes(dispatch: Redux.Dispatch<any>,
       : (noExt(fileInfo.file_name) === noExt(mod.attributes?.name)));
     if (candidate !== undefined) {
       dispatch(setModAttribute(gameId, mod.id, 'fileId', candidate.file_id));
-      if (getSafe(mod.attributes, ['version'], undefined) === undefined) {
+      if (mod.attributes?.version === undefined){
         dispatch(setModAttribute(gameId, mod.id, 'version', candidate.version));
       }
     }
@@ -246,7 +239,7 @@ function updateFileAttributes(dispatch: Redux.Dispatch<any>,
     if ((notOld.length === 1) && (notOld[0].file_id !== fileId)) {
       fileUpdates = [{
         old_file_id: fileId,
-        old_file_name: getSafe(mod.attributes, ['logicalFileName'], undefined),
+        old_file_name: mod.attributes?.logicalFileName,
         new_file_id: notOld[0].file_id,
         new_file_name: notOld[0].file_name,
         uploaded_time: notOld[0].uploaded_time,
@@ -273,7 +266,7 @@ function updateFileAttributes(dispatch: Redux.Dispatch<any>,
   let updatedFile = fileUpdates.length > 0
     ? files.files.find(file => file.file_id === fileUpdates[fileUpdates.length - 1].new_file_id)
     : files.files.find(file => file.file_id === fileId);
-  if ((updatedFile === undefined) && truthy(mod.attributes.version)) {
+  if ((updatedFile === undefined) && !!mod.attributes.version) {
     try {
       updatedFile = files.files.find(file =>
         semver.eq(semver.coerce(file.mod_version), semver.coerce(mod.attributes.version)));
@@ -305,11 +298,11 @@ export function retrieveModInfo(
     mod: IMod,
     t: TFunction): Promise<void> {
   const store = api.store;
-  const nexusModId: string = getSafe(mod.attributes, ['modId'], undefined);
+  const nexusModId: string = mod.attributes?.modId;
   if ((nexusModId === undefined) || (nexusModId.length === 0)) {
     return Promise.resolve();
   }
-  const gameId = getSafe(mod.attributes, ['downloadGame'], gameMode);
+  const gameId = mod.attributes?.downloadGame ?? gameMode;
   const nexusIdNum = parseInt(nexusModId, 10);
   // if the endorsement state is unknown, request it
   return Promise.resolve(nexus.getModInfo(nexusIdNum,

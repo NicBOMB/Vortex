@@ -12,7 +12,7 @@ class DefaultInfoPanel extends ComponentEx<IProps, {}> {
     this.initState({});
   }
 
-  public render() {
+  public override render() {
     const { t, infoText } = this.props;
     return (
       <div id='loadorderinfo'>

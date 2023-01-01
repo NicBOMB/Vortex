@@ -54,15 +54,15 @@ class Icon extends React.Component<IIconProps, {}> {
   private static sCache: { [id: string]: { width: number, height: number } } = {};
   private mCurrentSize: { width: number, height: number };
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.setIcon(this.props);
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IIconProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IIconProps) {
     this.setIcon(newProps);
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { name, style, svgStyle } = this.props;
 
     let classes = ['icon', `icon-${name}`];
@@ -132,17 +132,6 @@ class Icon extends React.Component<IIconProps, {}> {
     );
   }
 
-  private setRef = (ref: Element) => {
-    if (ref !== null) {
-      const { width, height } = ref.getBoundingClientRect();
-      this.mCurrentSize = { width, height };
-      this.forceUpdate();
-      if (this.props.rotateId !== undefined) {
-        Icon.sCache[this.props.rotateId] = this.mCurrentSize;
-      }
-    }
-  }
-
   private setIcon(props: IIconProps) {
     const set = props.set || 'icons';
     props.getSet(set)
@@ -151,7 +140,7 @@ class Icon extends React.Component<IIconProps, {}> {
           && (requiredSet !== null)
           && !requiredSet.has('icon-' + props.name)
           && !debugReported.has(props.name)) {
-        // tslint:disable-next-line:no-console
+
         console.trace('icon missing', props.name);
         debugReported.add(props.name);
       }

@@ -28,7 +28,7 @@ class GlobalOverlay extends ComponentEx<IProps, {}> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     return (
       <div className='global-overlay'>
         <IconBar

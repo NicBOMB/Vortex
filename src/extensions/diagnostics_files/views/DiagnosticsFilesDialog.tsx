@@ -67,7 +67,7 @@ class DiagnosticsFilesDialog extends ComponentEx<IProps, IComponentState> {
     };
   }
 
-  public UNSAFE_componentWillReceiveProps(nextProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: IProps) {
     if (!this.props.visible && nextProps.visible) {
       this.setState(update(this.state, {
         sessionIdx: { $set: -1 },
@@ -83,7 +83,7 @@ class DiagnosticsFilesDialog extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, visible } = this.props;
     const { logSessions } = this.state;
 

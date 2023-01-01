@@ -1,5 +1,4 @@
 import makeRemoteCall from './electronRemote';
-import { setdefault } from './util';
 
 import { BrowserView, BrowserWindow } from 'electron';
 import { generate as shortid } from 'shortid';
@@ -17,7 +16,8 @@ export const makeBrowserView = makeRemoteCall('make-browser-view',
   const viewId = shortid();
   const window = BrowserWindow.fromWebContents(content);
   const view = new mainElectron.BrowserView(options);
-  setdefault(extraWebViews, content.id, {})[viewId] = view;
+  extraWebViews[content.id] ??= {};
+  extraWebViews[content.id][viewId] = view;
 
   view.setAutoResize({
     horizontal: true,

@@ -3,7 +3,7 @@ import { ITestResult } from '../../types/ITestResult';
 import { ProcessCanceled, SetupError, UserCanceled } from '../../util/CustomErrors';
 import getVortexPath from '../../util/getVortexPath';
 import { log } from '../../util/log';
-import { delayed, toPromise, truthy } from '../../util/util';
+import { delayed, toPromise } from '../../util/util';
 
 import { getGame } from '../gamemode_management/util/getGame';
 
@@ -16,14 +16,12 @@ import Bluebird from 'bluebird';
 import { ChildProcess } from 'child_process';
 import { createIPC } from 'harmony-patcher';
 import * as net from 'net';
-import path from 'path';
 
 import * as semver from 'semver';
 import { generate as shortid } from 'shortid';
 import * as util from 'util';
 import { IPatchConfig } from './types/injector';
 
-import { fs } from '../..';
 import { IGameStored } from '../gamemode_management/types/IGameStored';
 
 function transformError(err: any): Error {
@@ -146,12 +144,12 @@ function jsonReplace(key: string, value: any) {
 
 function makeJsonRevive(invoke: (data: any) => Promise<void>, getId: () => string) {
   return (key: string, value: any) => {
-    if (truthy(value) && (typeof (value) === 'object')) {
+    if (!!value && (typeof (value) === 'object')) {
       if (value.type === 'Buffer') {
         return Buffer.from(value.data, 'base64');
       }
       Object.keys(value).forEach(subKey => {
-        if (truthy(value[subKey])
+        if (!!value[subKey]
           && (typeof (value[subKey]) === 'object')
           && (value[subKey].__callback !== undefined)) {
           const callbackId = value[subKey].__callback;
@@ -459,7 +457,7 @@ class ConnectionIPC {
       if (data.error !== null) {
         const err = new Error(data.error.message);
         err.stack = data.error.stack;
-        if (truthy(data.error.name)) {
+        if (!!data.error.name){
           err.name = data.error.name;
         }
         this.mAwaitedReplies[data.id].reject(err);
@@ -523,7 +521,7 @@ async function resolveGameId(api: IExtensionApi, patchConfig: IPatchConfig) {
   }
 
   try {
-    // tslint:disable-next-line: max-line-length
+
     const knownGames: IGameStored[] = state.session.gameMode.known;
     const match = knownGames.find(game => game.extensionPath === patchConfig.ExtensionPath);
     return match !== undefined ? match.id : gameId;

@@ -1,10 +1,13 @@
 import { IAttributeState } from './IAttributeState';
 import { IDialog } from './IDialog';
 import { INotification } from './INotification';
-
+import { ISurveyInstance } from '../extensions/announcement_dashlet/types';
+import { LoadOrder, ILoadOrderEntry } from '../extensions/file_based_loadorder/types/types';
+import { IItemRendererOptions } from '../extensions/mod_load_order/types/types';
 import { ICategoryDictionary } from '../extensions/category_management/types/ICategoryDictionary';
 import { IDownload } from '../extensions/download_management/types/IDownload';
 import { IAvailableExtension, IExtension } from '../extensions/extension_manager/types';
+import { IInstallerState } from '../extensions/installer_fomod/types/interface';
 import { IDiscoveryResult } from '../extensions/gamemode_management/types/IDiscoveryResult';
 import { IGameStored } from '../extensions/gamemode_management/types/IGameStored';
 import { IHistoryPersistent, IHistoryState } from '../extensions/history_management/reducers';
@@ -12,38 +15,25 @@ import { IMod } from '../extensions/mod_management/types/IMod';
 import { IProfile } from '../extensions/profile_management/types/IProfile';
 import { IParameters } from '../util/commandLine';
 import VortexInstallType from './VortexInstallType';
+import { EndorsedStatus } from '@nexusmods/nexus-api';
+import { IServer } from 'modmeta-db';
 
 // re-export these to keep the imports from extensions local
-export { IDownload, IDiscoveryResult, IGameStored, IMod, IProfile };
+export { IDownload, IDiscoveryResult, IGameStored, IMod, IProfile, LoadOrder, ILoadOrderEntry };
 
-/**
- * interface to represent a position on the screen
- *
- * @export
- * @interface IPosition
- */
+/** interface to represent a position on the screen */
 export interface IPosition {
   x: number;
   y: number;
 }
 
-/**
- * interface to represent pixel-dimensions on the screen
- *
- * @export
- * @interface IDimensions
- */
+/** interface to represent pixel-dimensions on the screen */
 export interface IDimensions {
   height: number;
   width: number;
 }
 
-/**
- * interface for window state
- *
- * @export
- * @interface IWindow
- */
+/** interface for window state */
 export interface IWindow {
   maximized: boolean;
   position?: IPosition;
@@ -53,12 +43,7 @@ export interface IWindow {
   minimizeToTray: boolean;
 }
 
-/**
- * state regarding all manner of user interaction
- *
- * @export
- * @interface INotificationState
- */
+/** state regarding all manner of user interaction */
 export interface INotificationState {
   notifications: INotification[];
   dialogs: IDialog[];
@@ -89,9 +74,6 @@ export interface IUIBlocker {
 /**
  * "ephemeral" session state.
  * This state is generated at startup and forgotten at application exit
- *
- * @export
- * @interface ISession
  */
 export interface ISession {
   displayGroups: { [id: string]: string };
@@ -99,7 +81,7 @@ export interface ISession {
   visibleDialog: string;
   mainPage: string;
   secondaryPage: string;
-  activity: { [id: string]: string };
+  activity: { mods: string[] };
   progress: { [group: string]: { [id: string]: IProgress } };
   settingsPage: string;
   extLoadFailures: { [extId: string]: IExtensionLoadFailure[] };
@@ -119,18 +101,17 @@ export interface ITableState {
   rows: { [id: string]: IRowState };
   groupBy?: string;
   filter?: { [id: string]: any };
+  collapsedGroups?: string[];
 }
 
 export interface IExtensionState {
   enabled: boolean | 'failed';
   version: string;
   remove: boolean;
-  endorsed: string;
+  endorsed: EndorsedStatus;
 }
 
-/**
- * settings relating to the vortex application itself
- */
+/** settings relating to the vortex application itself */
 export interface IApp {
   instanceId: string;
   version: string;
@@ -144,9 +125,6 @@ export interface IApp {
 /**
  * settings relating to the user (os account) personally
  * even in a multi-user environment
- *
- * @export
- * @interface IUser
  */
 export interface IUser {
   multiUser: boolean;
@@ -166,6 +144,7 @@ export interface IDashletSettings {
   enabled: boolean;
   width: number;
   height: number;
+  fixed: boolean;
 }
 
 export interface ISettingsInterface {
@@ -179,6 +158,8 @@ export interface ISettingsInterface {
   foregroundDL: boolean;
   dashletSettings: { [dashletId: string]: IDashletSettings };
   usage: { [usageId: string]: boolean };
+  primaryTool: { [gameMode: string]: '' };
+  tools:{ order: { [gamemode: string]: string[]}; };
 }
 
 export interface ISettingsAutomation {
@@ -234,6 +215,10 @@ export interface ISettingsMods {
   installerSandbox: boolean;
 }
 
+export interface IMetaServer {
+  servers: {[key: string]: IServer}
+}
+
 export interface ISettingsNotification {
   suppress: { [notificationId: string]: boolean };
 }
@@ -253,13 +238,23 @@ export interface ISettingsWorkarounds {
 }
 
 export interface ISettings {
+  analytics: {
+      enabled: boolean
+  }
   interface: ISettingsInterface;
   automation: ISettingsAutomation;
   gameMode: ISettingsGameMode;
   profiles: ISettingsProfiles;
   window: IWindow;
   downloads: ISettingsDownloads;
+  loadOrder: {
+    rendererOptions: IItemRendererOptions
+  };
   mods: ISettingsMods;
+  metaserver: IMetaServer;
+  nexus: {
+    associateNXM: boolean;
+  }
   notifications: ISettingsNotification;
   tables: ITableStates;
   update: ISettingsUpdate;
@@ -267,7 +262,9 @@ export interface ISettings {
 }
 
 export interface IStateTransactions {
-  transfer: {};
+  transfer: {
+    downloads: string;
+  };
 }
 
 export interface ISessionGameMode {
@@ -326,44 +323,85 @@ export interface IOverlaysState {
   overlays: { [key: string]: IOverlay };
 }
 
-/**
- * interface for the top-level state object
- * this should precisely mirror the reducer structure
- *
- * @export
- * @interface IState
- */
+export interface ISurveys {
+  available: [ISurveyInstance];
+}
+
+export interface IExtensionsState {
+  available: IAvailableExtension[],
+  installed: { [extId: string]: IExtension },
+  updateTime: number,
+}
+
+export interface ISessionState {
+  base: ISession;
+  gameMode: ISessionGameMode;
+  discovery: IDiscoveryState;
+  notifications: INotificationState;
+  browser: IBrowserState;
+  history: IHistoryState;
+  overlays: IOverlaysState;
+  surveys: ISurveys;
+  extensions: IExtensionsState;
+  nexus: INexusInfo;
+  fomod: {
+    installer: {
+      dialog:{
+        state: IInstallerState
+      }
+    }
+  },
+  plugins: {
+    pluginList: { [key: string]: string }
+  }
+}
+
+export interface INexusUser {
+  email: string;
+  isPremium: boolean; //''|'Premium';
+  isSupporter: boolean; //'Supporter'|'Member';
+  name: string;
+  profileUrl: string;
+  userId: number;
+}
+
+export interface INexusInfo {
+  freeUserDLQueue: string[];
+  newestVersion: string;
+  userInfo: INexusUser;
+  lastUpdate: {};
+}
+
+export interface IPersistent {
+    profiles: { [profileId: string]: IProfile };
+    loadOrder: { [profileId: string]: LoadOrder };
+    mods: IModTable;
+    downloads: IStateDownloads;
+    categories: { [gameId: string]: ICategoryDictionary };
+    gameMode: IStateGameMode;
+    deployment: { needToDeploy: { [gameId: string]: boolean } };
+    transactions: IStateTransactions;
+    surveys: {
+      suppressed: { [id: string]: ISurveyInstance };
+    }
+    history: IHistoryPersistent;
+    nexus: INexusInfo;
+  }
+
+/** interface for the top-level state object */
 export interface IState {
   app: IApp;
   user: IUser;
   confidential: {
-    account: { },
+    account: {
+      nexus: {
+        APIKey: string,
+      }
+    },
   };
-  session: {
-    base: ISession,
-    gameMode: ISessionGameMode,
-    discovery: IDiscoveryState,
-    notifications: INotificationState;
-    browser: IBrowserState;
-    history: IHistoryState;
-    overlays: IOverlaysState;
-    extensions: {
-      available: IAvailableExtension[],
-      installed: { [extId: string]: IExtension },
-      updateTime: number,
-    };
-  };
+  session: ISessionState;
   settings: ISettings;
-  persistent: {
-    profiles: { [profileId: string]: IProfile },
-    mods: IModTable,
-    downloads: IStateDownloads,
-    categories: { [gameId: string]: ICategoryDictionary },
-    gameMode: IStateGameMode,
-    deployment: { needToDeploy: { [gameId: string]: boolean } },
-    transactions: IStateTransactions,
-    history: IHistoryPersistent;
-  };
+  persistent: IPersistent;
 }
 
 export interface IDiscoveryPhase {
@@ -371,22 +409,12 @@ export interface IDiscoveryPhase {
   directory: string;
 }
 
-/**
- * state of the (lengthy) gamemode discovery
- *
- * @export
- * @interface IDiscoveryState
- */
+/** the state of gamemode discovery */
 export interface IDiscoveryState {
   running: boolean;
   phases: { [id: number]: IDiscoveryPhase };
 }
 
-/**
- * gamemode-related application settings
- *
- * @export
- * @interface ISettings
- */
+/** gamemode-related application settings */
 export interface IGameModeSettings {
 }

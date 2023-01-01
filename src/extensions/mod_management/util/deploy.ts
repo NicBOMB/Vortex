@@ -1,16 +1,13 @@
 import { startActivity, stopActivity } from '../../../actions/session';
 import { IDeployedFile, IDeploymentMethod, IExtensionApi } from '../../../types/IExtensionContext';
 import { IGame } from '../../../types/IGame';
-import { INotification } from '../../../types/INotification';
 import { IProfile } from '../../../types/IState';
 import { ProcessCanceled, TemporaryError } from '../../../util/CustomErrors';
 import { log } from '../../../util/log';
 import { activeProfile, discoveryByGame, lastActiveProfileForGame, profileById } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 import { IModType } from '../../gamemode_management/types/IModType';
 import { getGame } from '../../gamemode_management/util/getGame';
-import { installPath, installPathForGame } from '../selectors';
+import { installPathForGame } from '../selectors';
 import { IMod } from '../types/IMod';
 import { fallbackPurgeType, getManifest, loadActivation, saveActivation, withActivationLock } from './activationStore';
 import { getActivator, getCurrentActivator } from './deploymentMethods';
@@ -61,7 +58,7 @@ export function loadAllManifests(api: IExtensionApi,
                                  gameId: string,
                                  modPaths: { [typeId: string]: string },
                                  stagingPath: string) {
-  const modTypes = Object.keys(modPaths).filter(typeId => truthy(modPaths[typeId]));
+  const modTypes = Object.keys(modPaths).filter(typeId => !!modPaths[typeId]);
 
   return Promise.reduce(modTypes, (prev, typeId) =>
         loadActivation(api, gameId, typeId, modPaths[typeId], stagingPath, deploymentMethod)
@@ -86,8 +83,7 @@ export function purgeMods(api: IExtensionApi,
     //  for the game as the game entry gets removed if all have been deleted.
     // Given that the user is attempting to unmanage his game, we do not want
     //  to block him from purging the mods. Any profile will do.
-    const profiles: { [profileId: string]: IProfile } =
-      getSafe(state, ['persistent', 'profiles'], {});
+    const profiles: { [profileId: string]: IProfile } = state?.persistent?.profiles ?? {};
 
     const profileId = Object.keys(profiles)
       .filter(id => profiles[id].gameId === gameId)
@@ -115,8 +111,7 @@ export function purgeMods(api: IExtensionApi,
             //  has uninstalled the game and is trying to "unmanage" the game.
             if (['ENOENT'].includes(err.code) && isUnmanaging) {
               const game = getGame(gameId);
-              const discovery = getSafe(state,
-                ['settings', 'gameMode', 'discovered', gameId], undefined);
+              const discovery = state?.settings?.gameMode?.discovered?.[gameId];
               if ((game === undefined) || (discovery?.path === undefined)) {
                 return Promise.reject(err);
               }
@@ -165,7 +160,7 @@ function purgeModsImpl(api: IExtensionApi, activator: IDeploymentMethod,
     return Promise.reject(new NoDeployment());
   }
 
-  if (Object.keys(getSafe(state, ['session', 'base', 'toolsRunning'], {})).length > 0) {
+  if (Object.keys(state?.session?.base?.toolsRunning ?? {}).length > 0){
     api.sendNotification({
       type: 'info',
       id: 'purge-not-possible',
@@ -192,7 +187,7 @@ function purgeModsImpl(api: IExtensionApi, activator: IDeploymentMethod,
   const game: IGame = getGame(gameId);
   const modPaths = game.getModPaths(gameDiscovery.path);
 
-  const modTypes = Object.keys(modPaths).filter(typeId => truthy(modPaths[typeId]));
+  const modTypes = Object.keys(modPaths).filter(typeId => !!modPaths[typeId]);
 
   return withActivationLock(() => {
     log('debug', 'purging mods', { activatorId: activator.id, stagingPath });
@@ -268,14 +263,13 @@ export function purgeModsInPath(api: IExtensionApi, gameId: string, typeId: stri
   }
   const stagingPath = installPathForGame(state, gameId);
 
-  const t = api.translate;
   const activator = getCurrentActivator(state, gameId, false);
 
   if (activator === undefined) {
     return Promise.reject(new NoDeployment());
   }
 
-  if (Object.keys(getSafe(state, ['session', 'base', 'toolsRunning'], {})).length > 0) {
+  if (Object.keys(state?.session?.base?.toolsRunning ?? {}).length > 0){
     api.sendNotification({
       type: 'info',
       id: 'purge-not-possible',

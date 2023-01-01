@@ -1,7 +1,6 @@
 import { displayGroup } from '../actions/session';
 import { IState } from '../types/IState';
 import { ComponentEx, connect, translate } from '../util/ComponentEx';
-import { getSafe } from '../util/storeHelper';
 
 import Icon from './Icon';
 import ToolbarIcon from './ToolbarIcon';
@@ -46,9 +45,9 @@ class InputButton extends ComponentEx<IProps, IComponentState> {
     };
   }
 
-  public render(): JSX.Element {
-    const { t, buttonType, displayGroups, groupId, icon, iconGroup, id, tooltip } = this.props;
-    if (getSafe(displayGroups, [ groupId ], undefined) !== id) {
+  public override render() {
+    const { t, displayGroups, groupId, icon, iconGroup, id, tooltip } = this.props;
+    if ((displayGroups?.[groupId] ?? '') !== id){
       return (
         <ToolbarIcon
           id={id}

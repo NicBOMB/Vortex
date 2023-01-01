@@ -6,11 +6,11 @@ function nop() {
 }
 
 class TooltipTag extends Tag {
-  public toHTML(): string[] {
+  public override toHTML(): string[] {
     return [this.getContent()];
   }
 
-  public toReact() {
+  public override toReact() {
     const { tooltip } = this.params;
     return <a onClick={nop} title={tooltip}>{this.getComponents()}</a>;
   }

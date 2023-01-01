@@ -21,7 +21,7 @@ export interface IToolbarIconProps {
 }
 
 class ToolbarIcon extends React.PureComponent<IToolbarIconProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { className, id, text, tooltip, icon, iconSet, pulse, spin,
             stroke, hollow, disabled} = this.props;
     const placement = this.props.placement || 'bottom';

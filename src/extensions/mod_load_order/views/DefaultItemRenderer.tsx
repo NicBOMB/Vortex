@@ -3,7 +3,7 @@ import { Checkbox, ListGroupItem } from 'react-bootstrap';
 import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import * as url from 'url';
-import { ComponentEx, translate } from '../../../util/ComponentEx';
+import { ComponentEx } from '../../../util/ComponentEx';
 
 import { IItemRendererOptions, ILoadOrder, ILoadOrderDisplayItem,
   ILoadOrderEntry } from '../types/types';
@@ -12,7 +12,6 @@ import { Icon } from '../../../controls/api';
 import { IProfile, IState } from '../../../types/api';
 
 import * as selectors from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
 
 import { setLoadOrderEntry } from '../actions/loadOrder';
 
@@ -42,7 +41,7 @@ class DefaultItemRenderer extends ComponentEx<IProps, {}> {
     this.initState({});
   }
 
-  public render() {
+  public override render() {
     const item = this.props.item;
     return (!!item.locked)
       ? this.renderLocked(item)
@@ -161,16 +160,14 @@ class DefaultItemRenderer extends ComponentEx<IProps, {}> {
   }
 }
 
-const empty = {};
 const defaultRendererOpts: IItemRendererOptions = { listViewType: 'full', displayCheckboxes: true };
 function mapStateToProps(state: IState, ownProps: IProps): IConnectedProps {
   const profile: IProfile = selectors.activeProfile(state);
   return {
     profile,
-    loadOrder: getSafe(state, ['persistent', 'loadOrder', profile.id], empty),
-    modState: getSafe(profile, ['modState'], empty),
-    itemRendererOptions: getSafe(state,
-      ['settings', 'loadOrder', 'rendererOptions', profile.gameId], defaultRendererOpts),
+    loadOrder: state?.persistent?.loadOrder?.[profile.id], // FIXME: convert LoadOrder to ILoadOrder
+    modState: profile?.modState ?? {},
+    itemRendererOptions: state?.settings?.loadOrder?.rendererOptions?.[profile.gameId] ?? defaultRendererOpts,
   };
 }
 

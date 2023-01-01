@@ -1,10 +1,9 @@
-import {IExtensionContext} from '../../types/IExtensionContext';
-import {IState} from '../../types/IState';
+import { IExtensionContext } from '../../types/IExtensionContext';
+import { IState } from '../../types/IState';
 import { TFunction } from '../../util/i18n';
-import {log} from '../../util/log';
+import { log } from '../../util/log';
 import { showError } from '../../util/message';
 import { activeGameId } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
 
 import { setDownloadModInfo } from '../download_management/actions/state';
 import { setModAttribute } from '../mod_management/actions/mods';
@@ -12,7 +11,7 @@ import { IModWithState } from '../mod_management/types/IModProps';
 
 import { loadCategories, updateCategories } from './actions/category';
 import { showCategoriesDialog } from './actions/session';
-import {categoryReducer} from './reducers/category';
+import { categoryReducer } from './reducers/category';
 import { sessionReducer } from './reducers/session';
 import { allCategories } from './selectors';
 import { ICategoryDictionary } from './types/ICategoryDictionary';
@@ -21,19 +20,17 @@ import CategoryFilter from './util/CategoryFilter';
 import { resolveCategoryName, resolveCategoryPath } from './util/retrieveCategoryPath';
 import CategoryDialog from './views/CategoryDialog';
 
-import i18next from 'i18next';
 import * as Redux from 'redux';
 
 // export for api
 export { resolveCategoryName, resolveCategoryPath };
 
 function getModCategory(mod: IModWithState) {
-  return getSafe(mod, ['attributes', 'category'], undefined);
+  return mod?.attributes?.category;
 }
 
 function getModName(mod: IModWithState) {
-  return (getSafe(mod, ['attributes', 'name'], undefined))
-      || (getSafe(mod, ['attributes', 'fileName'], undefined));
+  return mod?.attributes?.name ?? mod?.attributes?.fileName;
 }
 
 function getCategoryChoices(state: IState) {
@@ -139,11 +136,8 @@ function init(context: IExtensionContext): boolean {
     const store: Redux.Store<any> = context.api.store;
     context.api.onStateChange(['settings', 'tables', 'mods'],
       (oldState, newState) => {
-        const newSortDirection =
-          getSafe(newState, ['attributes', 'category', 'sortDirection'], 'none');
-
-        const oldSortDirection =
-          getSafe(oldState, ['attributes', 'category', 'sortDirection'], 'none');
+        const newSortDirection = newState?.attributes?.category?.sortDirection ?? 'none';
+        const oldSortDirection = oldState?.attributes?.category?.sortDirection ?? 'none';
 
         if (newSortDirection !== oldSortDirection) {
           sortDirection = newSortDirection;
@@ -159,10 +153,8 @@ function init(context: IExtensionContext): boolean {
       });
 
       context.api.events.on('gamemode-activated', (gameMode: string) => {
-        const categories: ICategoriesTree[] = getSafe(store.getState(),
-          ['persistent', 'categories', gameMode], undefined);
-        const APIKEY = getSafe(store.getState(),
-          ['confidential', 'account', 'nexus', 'APIKey'], undefined);
+        const categories: ICategoriesTree[] = store.getState()?.persistent?.categories?.[gameMode];
+        const APIKEY = store.getState()?.confidential?.account?.nexus?.APIKey;
         if (categories === undefined && APIKEY !== undefined) {
           context.api.events.emit('retrieve-category-list', false, {});
         } else if (categories !== undefined && categories.length === 0) {

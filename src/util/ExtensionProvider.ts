@@ -40,15 +40,15 @@ export function extend(registerFunc: (...args) => void, groupProp?: string, addE
 
   return <P extends IExtendedProps, S>(ComponentToWrap: React.ComponentType<P>)
         : React.ComponentType<Omit<P, keyof IExtendedProps>> => {
-    // tslint:disable-next-line:class-name
+
     type PropsT = Omit<P, keyof IExtendedProps> & IExtensibleProps;
-    // tslint:disable-next-line:class-name
+
     return class __ExtendedComponent extends React.Component<PropsT, S> {
-      public static contextType = ExtensionContext;
+      public static override contextType = ExtensionContext;
 
       private mObjects: any[];
 
-      public UNSAFE_componentWillReceiveProps(nextProps: any) {
+      public override UNSAFE_componentWillReceiveProps(nextProps: any) {
         if (this.props[groupProp] !== nextProps[groupProp]) {
           if (extensions[nextProps[groupProp]] === undefined) {
             updateExtensions(nextProps, this.context);
@@ -59,7 +59,7 @@ export function extend(registerFunc: (...args) => void, groupProp?: string, addE
         }
       }
 
-      public render(): JSX.Element {
+      public override render(): JSX.Element {
         const { children, staticElements } = this.props;
 
         if (extensions[this.props[groupProp]] === undefined) {

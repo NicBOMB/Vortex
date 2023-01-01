@@ -1,6 +1,5 @@
 import { IReducerSpec } from '../../../types/IExtensionContext';
-import { log } from '../../../util/log';
-import { deleteOrNop, getSafe, setSafe } from '../../../util/storeHelper';
+import { deleteOrNop, setSafe } from '../../../util/storeHelper';
 
 import * as actions from '../actions/profiles';
 import { IProfile } from '../types/IProfile';
@@ -12,7 +11,7 @@ export const profilesReducer: IReducerSpec = {
   reducers: {
     [actions.setProfile as any]: (state, payload: IProfile) =>
       setSafe(state, [payload.id], {
-        ...getSafe(state, [payload.id], {}),
+        ...(state?.[payload.id] ?? {}),
         ...payload,
       }),
     [actions.removeProfile as any]: (state, payload) =>

@@ -10,7 +10,6 @@ import { Icon, tooltip } from '../../../controls/api';
 import { IProfile, IState } from '../../../types/api';
 
 import * as selectors from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
 
 import { setFBLoadOrderEntry } from '../actions/loadOrder';
 
@@ -32,7 +31,7 @@ interface IBaseProps {
 type IProps = IBaseProps & IConnectedProps & IActionProps;
 
 class ItemRenderer extends ComponentEx<IProps, {}> {
-  public render() {
+  public override render() {
     const item = this.props.item.loEntry;
     const displayCheckboxes = this.props.item.displayCheckboxes;
     return this.renderDraggable(item, displayCheckboxes);
@@ -130,13 +129,12 @@ class ItemRenderer extends ComponentEx<IProps, {}> {
   }
 }
 
-const empty = {};
 function mapStateToProps(state: IState, ownProps: IProps): IConnectedProps {
   const profile: IProfile = selectors.activeProfile(state);
   return {
     profile,
-    loadOrder: getSafe(state, ['persistent', 'loadOrder', profile.id], []),
-    modState: getSafe(profile, ['modState'], empty),
+    loadOrder: state?.persistent?.loadOrder?.[profile.id] ?? [],
+    modState: profile?.modState ?? {},
   };
 }
 

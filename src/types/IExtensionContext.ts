@@ -1,4 +1,4 @@
-import { IExtension, IExtensionDownloadInfo } from '../extensions/extension_manager/types';
+import { IExtensionDownloadInfo } from '../extensions/extension_manager/types';
 import { ILoadOrderGameInfo } from '../extensions/file_based_loadorder/types/types';
 import {
   GameVersionProviderFunc, GameVersionProviderTest, IGameVersionProviderOptions,
@@ -56,7 +56,7 @@ export { TestSupported, IInstallResult, IInstruction, IDeployedFile, IDeployment
          IFileChange, ILookupResult, IModInfo, IQuery, InstructionType, IReference, InstallFunc,
          ISupportedResult, ProgressDelegate };
 
-// tslint:disable-next-line:interface-name
+
 export interface ThunkStore<S> extends Redux.Store<S> {
   dispatch: ThunkDispatch<S, null, Redux.Action>;
 }
@@ -417,7 +417,7 @@ export interface IExtensionApi {
   /**
    * name of the extension to use this api with
    */
-  extension?: IRegisteredExtension;
+  extension: IRegisteredExtension;
 
   /**
    * show a notification to the user.
@@ -428,42 +428,40 @@ export interface IExtensionApi {
    * @type {INotification}
    * @memberOf IExtensionApi
    */
-  sendNotification?: (notification: INotification) => string;
+  sendNotification: (notification: INotification) => string;
 
   /**
    * show an error message to the user.
    * This is a convenience wrapper for sendNotification.
    * This is not available in the call to registerReducer
-   *
-   * @memberOf IExtensionApi
    */
-  showErrorNotification?: (message: string, detail: string | Error | any,
+  showErrorNotification: (message: string, detail: string | Error | any,
                            options?: IErrorOptions) => void;
 
   /**
    * show a dialog
    */
-  showDialog?: (type: DialogType, title: string, content: IDialogContent,
+  showDialog: (type: DialogType, title: string, content: IDialogContent,
                 actions: DialogActions, id?: string) => Promise<IDialogResult>;
 
   /**
    * close a dialog
    */
-  closeDialog?: (id: string, actionKey?: string, input?: any) => void;
+  closeDialog: (id: string, actionKey?: string, input?: any) => void;
 
   /**
    * hides a notification by its id
    *
    * @memberOf IExtensionApi
    */
-  dismissNotification?: (id: string) => void;
+  dismissNotification: (id: string) => void;
 
   /**
    * hides a notification and don't show it again
    * if this is called with the second parameter set to false, it re-enables the notification
    * instead
    */
-  suppressNotification?: (id: string, suppress?: boolean) => void;
+  suppressNotification: (id: string, suppress?: boolean) => void;
 
   /**
    * show a system dialog to open a single file
@@ -496,10 +494,10 @@ export interface IExtensionApi {
    *   Thus you should *not* store/bind the state directly unless you
    *   actually want a "snapshot" of the state.
    *
-   * @type {Redux.Store<any>}
+   * @type {Redux.Store<IState>}
    * @memberOf IExtensionApi
    */
-  store?: ThunkStore<any>;
+  store: ThunkStore<IState>;
 
   /**
    * event emitter
@@ -554,10 +552,8 @@ export interface IExtensionApi {
    * @param {string[]} path path in the state-tree to watch for changes,
    *                   i.e. ['settings', 'interface', 'language'] would call the callback
    *                   for all changes to the interface language
-   *
-   * @memberOf IExtensionApi
    */
-  onStateChange?: <T = any>(path: string[], callback: StateChangeCallback<T>) => void;
+  onStateChange: <T = any>(path: string[], callback: StateChangeCallback<T>) => void;
 
   /**
    * registers an uri protocol to be handled by this application. If the "def"ault parameter
@@ -723,8 +719,9 @@ export interface IExtensionApi {
 
   /**
    * wrapper for api.store.getState() with the benefit that it automatically assigns a type
+   * @deprecated
    */
-  getState: <T extends IState = IState>() => T;
+  getState: <T extends IState>() => T;
 
   /**
    * get a list of extensions currently loaded into Vortex
@@ -866,16 +863,11 @@ export interface IModTypeOptions {
 export interface IExtensionContext {
   /**
    * register a settings page
-   *
-   * @type {IRegisterSettings}
-   * @memberOf IExtensionContext
    */
   registerSettings: RegisterSettings;
 
   /**
    * register a mod deployment method
-   *
-   * @memberof IExtensionContext
    */
   registerDeploymentMethod: (method: IDeploymentMethod) => void;
 
@@ -900,9 +892,6 @@ export interface IExtensionContext {
 
   /**
    * register an action (can be a button or a menu item)
-   *
-   * @type {IRegisterIcon}
-   * @memberOf IExtensionContext
    */
   registerAction: RegisterAction;
 
@@ -914,9 +903,6 @@ export interface IExtensionContext {
 
   /**
    * registers a page for the main content area
-   *
-   * @type {IRegisterMainPage}
-   * @memberOf IExtensionContext
    */
   registerMainPage: RegisterMainPage;
 
@@ -940,9 +926,6 @@ export interface IExtensionContext {
 
   /**
    * registers a element to be displayed in the footer
-   *
-   * @type {IRegisterFooter}
-   * @memberOf IExtensionContext
    */
   registerFooter: RegisterFooter;
 
@@ -1005,7 +988,6 @@ export interface IExtensionContext {
    * @param {IReducerSpec} spec a IReducerSpec object that contains reducer functions and defaults
    *        for the newly introduced settings
    *
-   * @memberOf IExtensionContext
    * @note If you have registerReducer calls you should call them first thing in the init function.
    *       Usually if your init call fails your extension shouldn't load at all but in case that
    *       doesn't work, registering any functionality that depends on state that never got loaded
@@ -1023,8 +1005,6 @@ export interface IExtensionContext {
    *
    * @param {PersistingType} type controls where the state is stored and when it is loaded
    * @param {string} hive the top-level key inside the state.
-   *
-   * @memberOf IExtensionContext
    */
   registerSettingsHive: (type: PersistingType, hive: string) => void;
 
@@ -1043,8 +1023,6 @@ export interface IExtensionContext {
    *                          be updated on disk. Higher values reduce load and disk activity
    *                          but more data could be lost in case of an application crash.
    *                          Defaults to 200 ms
-   *
-   * @memberOf IExtensionContext
    */
   registerPersistor: (hive: string, persistor: IPersistor, debounce?: number) => void;
 
@@ -1062,16 +1040,12 @@ export interface IExtensionContext {
    * add a check that will automatically be run on the specified event.
    * Such checks can be used by extensions to check the integrity of their own data, of the
    * application setup or that of the game and present them to the user in a common way.
-   *
-   * @memberOf IExtensionContext
    */
   registerTest: (id: string, event: string, check: CheckFunction) => void;
 
   /**
    * register a handler for archive types so the content of such archives is exposed to
    * the application (especially other extensions)
-   *
-   * @memberOf IExtensionContext
    */
   registerArchiveType: (extension: string, handler: ArchiveHandlerCreator) => void;
 
@@ -1376,8 +1350,6 @@ export interface IExtensionContext {
    * be initialized first, you should check if that happened already in your "once" call and react
    * to some sort of event that would indicate that other initialization to be finished (usually
    * a state change)
-   *
-   * @memberOf IExtensionContext
    */
   once: (callback: () => void | Promise<void>) => void;
 
@@ -1393,9 +1365,6 @@ export interface IExtensionContext {
   /**
    * contains various utility functions. It's valid to store this object inside
    * the extension for later use.
-   *
-   * @type {IExtensionApi}
-   * @memberOf IExtensionContext
    */
   api: IExtensionApi;
 

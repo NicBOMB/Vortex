@@ -5,11 +5,8 @@ import { log } from '../util/log';
 
 import GameStoreHelper from './GameStoreHelper';
 
-import { getSafe } from '../util/storeHelper';
-
 import { IDiscoveryResult } from '../extensions/gamemode_management/types/IDiscoveryResult';
 import { IGameStored } from '../extensions/gamemode_management/types/IGameStored';
-import { IToolStored } from '../extensions/gamemode_management/types/IToolStored';
 import { getGame } from '../extensions/gamemode_management/util/getGame';
 
 import { IExtensionApi } from '../types/IExtensionContext';
@@ -45,7 +42,7 @@ export interface IStarterInfo {
   detach: boolean;
   shell: boolean;
   store: string;
-  onStart?: 'hide' | 'hide_recover' | 'close';
+  onStart?: 'hide' | 'hide_recover' | 'close' | '';
   environment: { [key: string]: string };
   defaultPrimary?: boolean;
 
@@ -65,9 +62,9 @@ type OnShowErrorFunc =
  */
 class StarterInfo implements IStarterInfo {
   public static getGameIcon(game: IGameStored, gameDiscovery: IDiscoveryResult): string {
-    const extensionPath = gameDiscovery.extensionPath || game.extensionPath;
-    const logoName = gameDiscovery.logo || game.logo;
-    return StarterInfo.gameIcon(game.id, extensionPath, logoName);
+    const extensionPath = gameDiscovery.extensionPath ?? game.extensionPath ?? '';
+    const logoName = gameDiscovery.logo ?? game.logo ?? '';
+    return StarterInfo.gameIcon(game.id, extensionPath, logoName) ?? '';
   }
 
   public static toolIconRW(gameId: string, toolId: string) {
@@ -107,7 +104,7 @@ class StarterInfo implements IStarterInfo {
             // assuming that runThroughLauncher returns immediately on handing things off
             // to the launcher
             api.store.dispatch(setToolRunning(info.exePath, Date.now(), info.exclusive));
-            if (['hide', 'hide_recover'].includes(info.onStart)) {
+            if (['hide', 'hide_recover'].includes(info.onStart ?? '')) {
               getCurrentWindow().hide();
             } else if (info.onStart === 'close') {
               getApplication().quit();
@@ -115,7 +112,7 @@ class StarterInfo implements IStarterInfo {
           })
           .catch(UserCanceled, () => null)
           .catch(GameEntryNotFound, err => {
-            const errorMsg = [err.message, err.storeName, err.existingGames].join(' - ');
+            const errorMsg = [err.message, err.storeName].join(' - ');
             log('error', errorMsg);
             onShowError('Failed to start game through launcher', err, !game.contributed);
             return StarterInfo.runDirectly(info, api, onShowError, onSpawned);
@@ -151,7 +148,7 @@ class StarterInfo implements IStarterInfo {
                              ): Promise<void> {
     const spawned = () => {
       onSpawned();
-      if (['hide', 'hide_recover'].includes(info.onStart)) {
+      if (['hide', 'hide_recover'].includes(info.onStart ?? '')) {
         getCurrentWindow().hide();
       } else if (info.onStart === 'close') {
         getApplication().quit();
@@ -268,15 +265,12 @@ class StarterInfo implements IStarterInfo {
       fs.statSync(iconPath);
       return iconPath;
     } catch (err) {
-      if (toolLogo === undefined) {
-        return undefined;
-      }
       try {
         const iconPath = path.join(extensionPath, toolLogo);
         fs.statSync(iconPath);
         return iconPath;
       } catch (err) {
-        return undefined;
+        return '';
       }
     }
   }
@@ -294,7 +288,7 @@ class StarterInfo implements IStarterInfo {
   public details: { [key: string]: any } = {};
   public exclusive: boolean;
   public detach: boolean;
-  public onStart?: 'hide' | 'hide_recover' | 'close';
+  public onStart?: 'hide' | 'hide_recover' | 'close' | '';
   public defaultPrimary: boolean;
   public extensionPath: string;
   public logoName: string;
@@ -302,18 +296,18 @@ class StarterInfo implements IStarterInfo {
   public store: string;
 
   constructor(game: IGameStored, gameDiscovery: IDiscoveryResult,
-              tool?: IToolStored, toolDiscovery?: IDiscoveredTool) {
+              tool?: IDiscoveredTool, toolDiscovery?: IDiscoveredTool) {
     this.gameId = gameDiscovery.id || game.id;
-    this.extensionPath = gameDiscovery.extensionPath || game.extensionPath;
-    this.detach = getSafe(toolDiscovery, ['detach'], getSafe(tool, ['detach'], true));
-    this.onStart = getSafe(toolDiscovery, ['onStart'], getSafe(tool, ['onStart'], undefined));
+    this.extensionPath = gameDiscovery.extensionPath ?? game.extensionPath ?? '';
+    this.detach = toolDiscovery.detach ?? tool.detach ?? true;
+    this.onStart = toolDiscovery.onStart ?? tool.onStart ?? '';
 
     if ((tool === undefined) && (toolDiscovery === undefined)) {
       this.id = this.gameId;
       this.isGame = true;
       this.initFromGame(game, gameDiscovery);
     } else {
-      this.id = getSafe(toolDiscovery, ['id'], getSafe(tool, ['id'], undefined));
+      this.id = toolDiscovery.id ?? tool.id;
       this.isGame = false;
       this.initFromTool(this.gameId, tool, toolDiscovery);
     }
@@ -323,47 +317,46 @@ class StarterInfo implements IStarterInfo {
   }
 
   private initFromGame(game: IGameStored, gameDiscovery: IDiscoveryResult) {
-    this.name = gameDiscovery.name || game.name;
-    this.exePath = path.join(gameDiscovery.path, gameDiscovery.executable || game.executable);
-    this.commandLine = getSafe(gameDiscovery, ['parameters'], getSafe(game, ['parameters'], []));
+    this.name = gameDiscovery.name ?? game.name;
+    this.exePath = path.join(gameDiscovery.path ?? '.', gameDiscovery.executable || game.executable);
+    this.commandLine = gameDiscovery.parameters ?? game.parameters ?? [];
     this.workingDirectory = path.dirname(this.exePath);
-    this.originalEnvironment = getSafe(game, ['environment'], {});
-    this.environment = getSafe(gameDiscovery, ['envCustomized'], false)
-      ? getSafe(gameDiscovery, ['environment'], {})
+    this.originalEnvironment = game.environment ?? {};
+    this.environment = gameDiscovery.envCustomized
+      ? gameDiscovery.environment ?? {}
       : this.originalEnvironment;
     this.iconOutPath = StarterInfo.gameIconRW(this.gameId);
-    this.shell = gameDiscovery.shell || game.shell;
-    this.logoName = gameDiscovery.logo || game.logo;
-    this.details = game.details;
+    this.shell = gameDiscovery.shell ?? game.shell ?? false;
+    this.logoName = gameDiscovery.logo ?? game.logo ?? '';
+    this.details = game.details ?? {};
     this.exclusive = true;
-    this.store = gameDiscovery.store;
+    this.store = gameDiscovery.store ?? '';
   }
 
-  private initFromTool(gameId: string, tool: IToolStored, toolDiscovery: IDiscoveredTool) {
+  private initFromTool(gameId: string, tool: IDiscoveredTool, toolDiscovery: IDiscoveredTool) {
     if (toolDiscovery !== undefined) {
-      this.name = getSafe(toolDiscovery, ['name'], getSafe(tool, ['name'], undefined));
+      this.name = toolDiscovery.name ?? tool.name;
       // TODO: umm, the discovery path here stores the path to the exe, whereas for a game it
       //   stores the base path of the game? That's not confusing at all...
+      // FIXME: Unresolved for 2 years?! declare a new interface already!
       this.exePath = toolDiscovery.path;
-      this.commandLine = getSafe(toolDiscovery, ['parameters'], getSafe(tool, ['parameters'], []));
-      this.environment =
-        getSafe(toolDiscovery, ['environment'], getSafe(tool, ['environment'], {})) || {};
-      this.logoName = getSafe(toolDiscovery, ['logo'], getSafe(tool, ['logo'], undefined));
-      this.workingDirectory = getSafe(toolDiscovery, ['workingDirectory'],
-        getSafe(tool, ['workingDirectory'], ''));
-      this.shell = getSafe(toolDiscovery, ['shell'], getSafe(tool, ['shell'], undefined));
-      this.exclusive = getSafe(tool, ['exclusive'], false) || false;
-      this.defaultPrimary = getSafe(tool, ['defaultPrimary'], false);
-      this.timestamp = toolDiscovery.timestamp;
+      this.commandLine = toolDiscovery.parameters ?? tool.parameters ?? [];
+      this.environment = toolDiscovery.environment ?? tool.environment ?? {};
+      this.logoName = toolDiscovery.logo ?? tool.logo;
+      this.workingDirectory = toolDiscovery.workingDirectory ?? '';
+      this.shell = toolDiscovery.shell ?? tool.shell ?? false;
+      this.exclusive = tool.exclusive ?? false;
+      this.defaultPrimary = tool.defaultPrimary ?? false;
+      this.timestamp = toolDiscovery.timestamp ?? 0;
     } else {
       // defaults for undiscovered & unconfigured tools
       this.name = tool.name;
       this.exePath = '';
       this.commandLine = tool.parameters;
       this.workingDirectory = '';
-      this.environment = tool.environment || {};
+      this.environment = tool.environment ?? {};
       this.logoName = tool.logo;
-      this.shell = tool.shell;
+      this.shell = tool.shell ?? false;
     }
     this.iconOutPath = StarterInfo.toolIconRW(gameId, this.id);
   }

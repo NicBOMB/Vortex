@@ -19,7 +19,7 @@ import { TFunction } from './i18n';
 import lazyRequire from './lazyRequire';
 import { log } from './log';
 import { decodeSystemError } from './nativeErrors';
-import { restackErr, truthy } from './util';
+import { restackErr } from './util';
 
 import PromiseBB from 'bluebird';
 import { decode } from 'iconv-lite';
@@ -41,7 +41,7 @@ const vortexRun: typeof vortexRunT = lazyRequire(() => require('vortex-run'));
 const wholocks: typeof whoLocksT = lazyRequire(() => require('wholocks'));
 
 const dialog = (process.type === 'renderer')
-  // tslint:disable-next-line:no-var-requires
+
   ? require('@electron/remote').dialog
   : dialogIn;
 
@@ -148,11 +148,11 @@ function ioQuery(): PromiseBB<boolean> {
 }
 
 function unlockConfirm(filePath: string): PromiseBB<boolean> {
-  if ((dialog === undefined) || !truthy(filePath)) {
+  if ((dialog === undefined) || !filePath) {
     return PromiseBB.resolve(false);
   }
 
-  let processes = [];
+  let processes: whoLocksT.ProcessInfo[] = [];
   try {
     processes = wholocks.default(filePath);
   } catch (err) {
@@ -181,7 +181,7 @@ function unlockConfirm(filePath: string): PromiseBB<boolean> {
     detail: processes.length === 0
       ? undefined
       : 'Please close the following applications and retry:\n'
-        + processes.map(proc => `${proc.appName} (${proc.pid})`).join('\n'),
+        + processes.map((proc) => `${proc.appName} (${proc.pid})`).join('\n'),
     buttons,
     type: 'warning',
     noLink: true,
@@ -193,7 +193,7 @@ function unlockConfirm(filePath: string): PromiseBB<boolean> {
     : PromiseBB.resolve(choice === 2);
 }
 
-function unknownErrorRetry(filePath: string, err: Error, stackErr: Error): PromiseBB<boolean> {
+function unknownErrorRetry(filePath: string, err: NodeJS.ErrnoException, stackErr: Error): PromiseBB<boolean> {
   if (dialog === undefined) {
     return PromiseBB.resolve(false);
   }
@@ -212,7 +212,7 @@ function unknownErrorRetry(filePath: string, err: Error, stackErr: Error): Promi
     type: 'warning',
     noLink: true,
   };
-
+  /** ts-expect-error */
   if (![255, 362, 383, 388, 390, 395, 396, 404].includes(err['nativeCode'])) {
     options.detail = 'Possible error causes:\n'
       + `1. "${filePath}" is a removable, possibly network drive which has been disconnected.\n`
@@ -243,14 +243,13 @@ function unknownErrorRetry(filePath: string, err: Error, stackErr: Error): Promi
   const choice = dialog.showMessageBoxSync(getVisibleWindow(), options);
 
   if (options.buttons[choice] === 'Cancel and Report') {
-    // we're reporting this to collect a list of native errors and provide better error
-    // message
+    // we're reporting this to collect a list of native errors and provide better error messages
     const nat = err['nativeCode'];
     createErrorReport('Unknown error', {
       message: `Windows System Error (${nat})`,
       stack: restackErr(err, stackErr).stack,
       path: filePath,
-    }, {}, ['bug'], {});
+    }, {}, ['bug']);
     return PromiseBB.reject(new UserCanceled());
   }
 
@@ -258,6 +257,7 @@ function unknownErrorRetry(filePath: string, err: Error, stackErr: Error): Promi
     case 'Retry': return PromiseBB.resolve(true);
     case 'Ignore': {
       err['code'] = decoded?.rethrowAs ?? 'UNKNOWN';
+      /** ts-expect-error */
       err['allowReport'] = false;
       return PromiseBB.reject(err);
     }
@@ -275,13 +275,14 @@ function busyRetry(filePath: string): PromiseBB<boolean> {
     filePath = '<filename unknown>';
   }
 
-  let processes = [];
+  const processes: whoLocksT.ProcessInfo[] = (() => {
   try {
-    processes = wholocks.default(filePath);
+    return wholocks.default(filePath);
   } catch (err) {
     log('warn', 'failed to determine list of processes locking file',
         { filePath, error: err.message });
-  }
+    return [] as whoLocksT.ProcessInfo[];
+  }})();
 
   const options: Electron.MessageBoxOptions = {
     title: 'File busy',
@@ -319,7 +320,7 @@ function errorRepeat(error: NodeJS.ErrnoException, filePath: string, retries: nu
     return PromiseBB.resolve(false);
   }
   // system error code 1224 means there is a user-mapped section open in the file
-  if ((error.code === 'EBUSY')
+  if ((error.code === 'EBUSY') /** ts-expect-error */
       || (error['nativeCode'] === 1224)
       || ((error.code ===  'ENOTEMPTY') && options?.enotempty)) {
     return busyRetry(filePath);
@@ -339,7 +340,7 @@ function errorRepeat(error: NodeJS.ErrnoException, filePath: string, retries: nu
         }
       })
       .then(() => unlockConfirm(unlockPath))
-      .then(doUnlock => {
+      .then((doUnlock) => {
         if (doUnlock) {
           const userId = permission.getUserId();
           return elevated((ipcPath, req: NodeRequire) => {
@@ -404,19 +405,19 @@ function errorHandler(error: NodeJS.ErrnoException,
     .catch(err => PromiseBB.reject(restackErr(err, stackErr)));
 }
 
-export function genFSWrapperAsync<T extends (...args) => any>(func: T) {
-  const wrapper = (stackErr: Error, tries: number, ...args) =>
+export function genFSWrapperAsync<T extends (...args: any[]) => any>(func: T) {
+  const wrapper = (stackErr: Error, tries: number, ...args: any[]): any =>
     simfail(() => PromiseBB.resolve(func(...args)))
       .catch(err => errorHandler(err, stackErr, tries)
         .then(() => wrapper(stackErr, tries - 1, ...args)));
 
-  const res = (...args) => {
+  const res = (...args: any[]) => {
     return wrapper(new Error(), NUM_RETRIES, ...args);
   };
   return res;
 }
 
-// tslint:disable:max-line-length
+
 const chmodAsync: (path: string, mode: string | number) => PromiseBB<void> = genFSWrapperAsync(fs.chmod);
 const closeAsync: (fd: number) => PromiseBB<void> = genFSWrapperAsync(fs.close);
 const fsyncAsync: (fd: number) => PromiseBB<void> = genFSWrapperAsync(fs.fsync);
@@ -437,7 +438,7 @@ const writeAsync: <BufferT>(...args: any[]) => PromiseBB<{ bytesWritten: number,
 const readAsync: <BufferT>(...args: any[]) => PromiseBB<{ bytesRead: number, buffer: BufferT }> = genFSWrapperAsync(fs.read) as any;
 const writeFileAsync: (file: string, data: any, options?: fs.WriteFileOptions) => PromiseBB<void> = genFSWrapperAsync(fs.writeFile);
 const appendFileAsync: (file: string, data: any, options?: fs.WriteFileOptions) => PromiseBB<void> = genFSWrapperAsync(fs.appendFile);
-// tslint:enable:max-line-length
+
 
 export {
   appendFileAsync,
@@ -538,6 +539,7 @@ function ensureDir(targetDir: string, onDirCreatedCB: (created: string) => Promi
     .then(() => (created.indexOf(targetDir) !== -1)
       ? PromiseBB.resolve(targetDir)
       : PromiseBB.resolve(null));
+  //return toBlue(async () => fsPromises.mkdir(targetDir, {recursive: true}));
 }
 
 function selfCopyCheck(src: string, dest: string) {
@@ -851,9 +853,9 @@ export function ensureDirWritableAsync(dirPath: string,
           .then(() => {
             const userId = permission.getUserId();
             return elevated((ipcPath, req: NodeRequire) => {
-              // tslint:disable-next-line:no-shadowed-variable
+
               const fs = req('fs-extra');
-              // tslint:disable-next-line:no-shadowed-variable
+
               const path = req('path');
               const { allow } = req('permissions');
               const allowDir = (targetPath) => {
@@ -938,7 +940,7 @@ export function changeFileOwnership(filePath: string, stat: fs.Stats): PromiseBB
 export function changeFileAttributes(filePath: string,
                                      wantedAttributes: number,
                                      stat: fs.Stats): PromiseBB<void> {
-    return this.changeFileOwnership(filePath, stat)
+    return changeFileOwnership(filePath, stat)
       .then(() => {
         const finalAttributes = stat.mode | wantedAttributes;
         return PromiseBB.resolve(fs.chmod(filePath, finalAttributes));
@@ -962,7 +964,7 @@ export function makeFileWritableAsync(filePath: string): PromiseBB<void> {
     }
 
     return ((stat.mode & wantedAttributes) !== wantedAttributes)
-      ? this.changeFileAttributes(filePath, wantedAttributes, stat)
+      ? changeFileAttributes(filePath, wantedAttributes, stat)
       : PromiseBB.resolve();
   });
 }
@@ -998,7 +1000,7 @@ function raiseUACDialog<T>(t: TFunction,
         return PromiseBB.resolve();
       })
       .then(() => elevated((ipcPath, req: NodeRequire) => {
-        // tslint:disable-next-line:no-shadowed-variable
+
         const { allow } = req('permissions');
         return allow(fileToAccess, userId, 'rwx');
       }, { fileToAccess, userId })
@@ -1023,16 +1025,16 @@ export function forcePerm<T>(t: TFunction,
                              filePath?: string,
                              maxTries: number = 3): PromiseBB<T> {
   return op()
-    .catch(err => {
-      const fileToAccess = filePath !== undefined ? filePath : err.path;
+    .catch((err) => {
+      const fileToAccess = filePath ?? err.path;
       if ((['EPERM', 'EACCES'].indexOf(err.code) !== -1) || (err.systemCode === 5)) {
         const wantedAttributes = process.platform === 'win32'
           ? parseInt('0666', 8)
           : parseInt('0600', 8);
         return fs.stat(fileToAccess)
-          .then(stat => this.changeFileAttributes(fileToAccess, wantedAttributes, stat))
+          .then((stat) => changeFileAttributes(fileToAccess, wantedAttributes, stat))
           .then(() => op())
-          .catch(innerErr => {
+          .catch((innerErr: any) => {
             if (innerErr instanceof UserCanceled) {
               return Promise.resolve(undefined);
             }

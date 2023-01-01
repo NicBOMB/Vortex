@@ -2,7 +2,6 @@ import { IActionDefinition } from '../types/IActionDefinition';
 import { IExtensibleProps } from '../types/IExtensionProvider';
 import { TFunction } from '../util/i18n';
 import { log } from '../util/log';
-import { truthy } from '../util/util';
 
 import ActionControl, { IActionControlProps, IActionDefinitionEx } from './ActionControl';
 import { HOVER_DELAY } from './constants';
@@ -152,7 +151,7 @@ class DropdownMenu extends React.PureComponent<IProps, { open: boolean }> {
     this.state = { open: false };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, actions, id, className } = this.props;
 
     const classes: string[] = [];
@@ -303,7 +302,7 @@ type ExportType = IBaseProps & IActionControlProps & IExtensibleProps & React.HT
 
 class ActionDropdown extends React.Component<ExportType> {
   private static ACTION_PROPS = ['filter', 'group', 'instanceId', 'staticElements'];
-  public render() {
+  public override render() {
     const actionProps: IActionControlProps =
       _.pick(this.props, ActionDropdown.ACTION_PROPS) as IActionControlProps;
     const menuProps: IBaseProps =

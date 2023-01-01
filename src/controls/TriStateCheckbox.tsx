@@ -28,7 +28,7 @@ class TriStateCheckbox extends ComponentEx<ITriCheckboxProps, ITriCheckboxState>
     });
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { classNames, indeterminate } = this.props;
 
     const indeterminateClass = !!indeterminate ? ['indeterminate'] : [''];

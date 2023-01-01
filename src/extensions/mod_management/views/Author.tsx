@@ -1,6 +1,5 @@
 import { Button, IconButton } from '../../../controls/TooltipControls';
 import { TFunction } from '../../../util/i18n';
-import { truthy } from '../../../util/util';
 import { setModAttributes } from '../actions/mods';
 import { IModWithState } from '../types/IModProps';
 
@@ -76,11 +75,10 @@ function Author(props: { t: TFunction, gameId: string, mod: IModWithState }) {
     );
   } else {
     const authors = [];
-    if (truthy(mod.attributes?.author)) {
+    if (!!mod.attributes?.author){
       authors.push(mod.attributes.author);
     }
-    if (truthy(mod.attributes?.uploader)
-        && (mod.attributes?.uploader !== mod.attributes?.author)) {
+    if (!!mod.attributes?.uploader && (mod.attributes?.uploader !== mod.attributes?.author)) {
       authors.push(mod.attributes.uploader);
     }
 

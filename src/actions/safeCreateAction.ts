@@ -1,7 +1,6 @@
 import { createAction, types } from 'redux-act';
 import * as ra from 'redux-act';
 
-// tslint:disable:max-line-length
 export function safeCreateAction(description: string): ra.EmptyActionCreator;
 export function safeCreateAction<P, M = {}>(description: string): ra.SimpleActionCreator<P, M>;
 export function safeCreateAction<Arg1, P, M = {}>(description: string, payloadReducer: ra.PayloadReducer1<Arg1, P>, metaReducer?: ra.MetaReducer<M>): ra.ComplexActionCreator1<Arg1, P, M>;
@@ -17,7 +16,6 @@ export function safeCreateAction(description, payloadReducer?, metaReducer?) {
   }
   return createAction(description, payloadReducer, metaReducer);
 }
-// tslint:enable:max-line-length
 
 export { SimpleActionCreator, ComplexActionCreator1, ComplexActionCreator2 } from 'redux-act';
 

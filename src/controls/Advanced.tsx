@@ -21,7 +21,7 @@ type IProps = IConnectedProps;
  * @extends {ComponentEx<IProps, {}>}
  */
 class Advanced extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     let control = null;
     if (React.Children.count(this.props.children) === 1) {
       if (this.props.advancedMode) {

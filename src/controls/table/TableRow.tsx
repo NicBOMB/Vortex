@@ -49,7 +49,7 @@ class TableCell extends React.Component<ICellProps, { isOpen: boolean }> {
     };
   }
 
-  public shouldComponentUpdate(newProps: ICellProps, newState: { isOpen: boolean }) {
+  public override shouldComponentUpdate(newProps: ICellProps, newState: { isOpen: boolean }) {
     return ((newProps.attribute.customRenderer !== undefined)
             && (this.props.rawData !== newProps.rawData))
         || this.props.data !== newProps.data
@@ -57,7 +57,7 @@ class TableCell extends React.Component<ICellProps, { isOpen: boolean }> {
         || this.state.isOpen !== newState.isOpen;
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, attribute, onHighlight, rawData, rowId, tableId } = this.props;
 
     // if a custom renderer was set then rowData is the raw object
@@ -325,7 +325,7 @@ class TableRow extends React.Component<IRowProps, IRowState> {
     };
   }
 
-  public shouldComponentUpdate(nextProps: IRowProps, nextState: IRowState) {
+  public override shouldComponentUpdate(nextProps: IRowProps, nextState: IRowState) {
     // don't redraw if _just_ rawdata changed because the calculated data should always update
     // too (with a delay) so updating on both events would cause two updates for every data change
     return (this.props.visible !== nextProps.visible)
@@ -338,7 +338,7 @@ class TableRow extends React.Component<IRowProps, IRowState> {
       || (this.state.context !== nextState.context);
   }
 
-  public render(): JSX.Element | JSX.Element[] {
+  public override render(): JSX.Element | JSX.Element[] {
     const { data, domRef, inlines, group, grouped, highlighted, id, onClick,
             rowClasses, selected } = this.props;
 

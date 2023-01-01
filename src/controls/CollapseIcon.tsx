@@ -9,7 +9,7 @@ export interface ICollapseIconProps {
 }
 
 class CollapseIcon extends React.PureComponent<ICollapseIconProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { onClick, position, visible } = this.props;
 
     // direction of the hide icon

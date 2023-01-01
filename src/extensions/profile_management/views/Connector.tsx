@@ -1,7 +1,6 @@
 import Line from './Line';
 
 import { ComponentEx } from '../../../util/ComponentEx';
-import { getSafe } from '../../../util/storeHelper';
 
 import * as React from 'react';
 import { connect } from 'react-redux';
@@ -21,7 +20,7 @@ class ConnectorImpl extends ComponentEx<IConnectorProps, {}> {
     super(props);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { source, target } = this.props;
 
     if ((source === undefined) || (target === undefined)) {
@@ -45,10 +44,8 @@ class ConnectorImpl extends ComponentEx<IConnectorProps, {}> {
 
 function mapStateToProps(state: any): IConnectorProps {
   return {
-    source:
-      getSafe(state, ['session', 'profileTransfer', 'connection', 'source'], undefined),
-    target:
-      getSafe(state, ['session', 'profileTransfer', 'connection', 'target'], undefined),
+    source: state?.session?.profileTransfer?.connection?.source,
+    target: state?.session?.profileTransfer?.connection?.target,
   };
 }
 

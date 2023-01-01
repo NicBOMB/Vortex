@@ -1,6 +1,6 @@
 import * as fs from '../../../util/fs';
 import getVortexPath from '../../../util/getVortexPath';
-import { deBOM, truthy } from '../../../util/util';
+import { deBOM } from '../../../util/util';
 
 import Promise from 'bluebird';
 import * as path from 'path';
@@ -20,7 +20,7 @@ function chromePath(): Promise<string> {
       .then(state => {
         try {
           const dat = JSON.parse(deBOM(state));
-          const prof = truthy(dat) && truthy(dat.profile) && truthy(dat.profile.last_used)
+          const prof = !!dat && !!dat.profile && !!dat.profile.last_used
             ? dat.profile.last_used
             : 'Default';
           return Promise.resolve(path.join(userData, prof, 'Preferences'));

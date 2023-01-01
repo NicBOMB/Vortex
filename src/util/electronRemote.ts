@@ -51,7 +51,7 @@ ipcRenderer?.on?.(IPC_CHANNEL_REPLY, (event, arg) => {
 });
 
 ipcMain?.on?.(IPC_CHANNEL + '_sync', (event, arg) => {
-  const { id, callId, args } = JSON.parse(arg);
+  const { id, args } = JSON.parse(arg);
   try {
     event.returnValue = {
       error: null,

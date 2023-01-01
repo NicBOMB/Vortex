@@ -1,9 +1,7 @@
 import DateTimeFilter from '../../controls/table/DateTimeFilter';
-import ZoomableImage from '../../controls/ZoomableImage';
 import { ITableAttribute } from '../../types/ITableAttribute';
 import { getCurrentLanguage } from '../../util/i18n';
 import { userFriendlyTime } from '../../util/relativeTime';
-import { getSafe } from '../../util/storeHelper';
 
 import { IModWithState } from './types/IModProps';
 
@@ -54,7 +52,7 @@ export const INSTALL_TIME = (locale: () => string): ITableAttribute<IModWithStat
     description: 'Time when this mod was installed',
     icon: 'calendar-plus-o',
     customRenderer: (mod: IModWithState, detail: boolean, t) => {
-      const timeString = getSafe(mod, ['attributes', 'installTime'], undefined);
+      const timeString = mod?.attributes?.installTime;
       if (detail) {
         const lang = getCurrentLanguage();
         return (
@@ -73,7 +71,7 @@ export const INSTALL_TIME = (locale: () => string): ITableAttribute<IModWithStat
         return <span>{userFriendlyTime(new Date(timeString), t, locale())}</span>;
       }
     },
-    calc: (mod: IModWithState) => new Date(getSafe(mod.attributes, ['installTime'], 0)),
+    calc: (mod: IModWithState) => new Date(mod.attributes?.installTime ?? 0),
     placement: 'both',
     isToggleable: true,
     isDefaultVisible: false,
@@ -98,7 +96,7 @@ export const DOWNLOAD_TIME = (getApi: () => IExtensionApi): ITableAttribute<IMod
         return <span>{t('Unknown')}</span>;
       }
 
-      const timeString = getSafe(download, ['fileTime'], undefined);
+      const timeString = download?.fileTime;
       if (detail) {
         const lang = getCurrentLanguage();
         return (
@@ -125,7 +123,7 @@ export const DOWNLOAD_TIME = (getApi: () => IExtensionApi): ITableAttribute<IMod
         return new Date(0);
       }
 
-      const timeString = getSafe(download, ['fileTime'], undefined);
+      const timeString = download?.fileTime;
       return timeString !== undefined
         ? new Date(timeString)
         : new Date(0);

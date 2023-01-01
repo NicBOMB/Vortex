@@ -5,7 +5,6 @@ import { ComponentEx } from '../../../util/ComponentEx';
 import * as fs from '../../../util/fs';
 import getVortexPath from '../../../util/getVortexPath';
 import { log } from '../../../util/log';
-import { getSafe } from '../../../util/storeHelper';
 
 import { getGame } from '../../gamemode_management/util/getGame';
 
@@ -64,7 +63,7 @@ class ProfileItem extends ComponentEx<IProps, IComponentState> {
     this.mUserData = getVortexPath('userData');
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     if (this.props.profile === undefined) {
       this.setHasProfileImage(false);
     } else {
@@ -79,15 +78,15 @@ class ProfileItem extends ComponentEx<IProps, IComponentState> {
     this.mMounted = true;
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.mMounted = false;
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, active, available, features, highlightGameId, mods, profile } = this.props;
     const { counter, hasProfileImage } = this.state;
 
-    const modState = getSafe(profile, ['modState'], {});
+    const modState = profile?.modState ?? {};
 
     const enabledMods = Object.keys(modState).reduce(
       (prev: number, key: string): number => {
@@ -181,7 +180,7 @@ class ProfileItem extends ComponentEx<IProps, IComponentState> {
   }
 
   private getActions(): IActionDefinition[] {
-    const { t, active, available } = this.props;
+    const { active, available } = this.props;
 
     const res: IActionDefinition[] = [];
     if (!active && available) {
@@ -200,7 +199,7 @@ class ProfileItem extends ComponentEx<IProps, IComponentState> {
 
   private renderFeature = (feature: IProfileFeature): JSX.Element => {
     const { profile } = this.props;
-    const value = getSafe(profile, ['features', feature.id], undefined);
+    const value = profile?.features[feature.id];
     return this.renderFeatureWithValue(feature, value);
   }
 

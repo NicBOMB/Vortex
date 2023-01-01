@@ -6,9 +6,7 @@ import Icon from '../Icon';
 
 import { TD, TR } from './MyTable';
 
-import i18next from 'i18next';
 import * as React from 'react';
-import * as Redux from 'redux';
 
 export const EMPTY_ID = '<Unspecified>';
 
@@ -52,7 +50,7 @@ class GroupingRow extends ComponentEx<IGroupingRowProps, IGroupingRowState> {
     ];
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, count, expanded, groupId, groupName, width } = this.props;
     const { context } = this.state;
     return (

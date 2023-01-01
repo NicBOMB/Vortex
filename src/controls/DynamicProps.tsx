@@ -26,7 +26,7 @@ export interface IBaseProps {
 class DynamicProps extends React.Component<IBaseProps, {}> {
   private mLastProps: any = {};
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mLastProps = this.props.dynamicProps();
     listeners.push(this);
     if (listeners.length === 1) {
@@ -36,7 +36,7 @@ class DynamicProps extends React.Component<IBaseProps, {}> {
     }
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     const idx = listeners.indexOf(this);
     if (idx !== -1) {
       listeners.splice(idx, 1);
@@ -52,7 +52,7 @@ class DynamicProps extends React.Component<IBaseProps, {}> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render() {
     return (
       <this.props.component {...this.props.staticProps} {...this.mLastProps}>
         {this.props.children}

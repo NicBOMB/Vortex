@@ -2,10 +2,8 @@ import Modal from '../../../controls/Modal';
 import { IDeploymentMethod } from '../../../types/api';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 import { activeGameId, currentGameDiscovery, modPathsForGame } from '../../../util/selectors';
-import { truthy } from '../../../util/util';
 import { getGame } from '../../gamemode_management/util/getGame';
 import { IDeploymentProblem, setDeploymentProblem } from '../actions/session';
-import { IUnavailableReason } from '../types/IDeploymentMethod';
 import allTypesSupported from '../util/allTypesSupported';
 import { getAllActivators } from '../util/deploymentMethods';
 
@@ -50,13 +48,13 @@ class FixDeploymentDialog extends ComponentEx<IProps, IFixDeploymentDialogState>
     this.deploymentMethods = getAllActivators();
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (this.props.problems !== newProps.problems) {
       this.nextState.step = -1;
     }
   }
 
-  public render() {
+  public override render() {
     const { t, gameId, problems } = this.props;
     const { step } = this.state;
     const automaticFix = step !== -1 && problems[step].hasAutomaticFix;
@@ -103,7 +101,7 @@ class FixDeploymentDialog extends ComponentEx<IProps, IFixDeploymentDialogState>
 
   private renderStartPage() {
     return (
-      // tslint:disable:max-line-length
+
       <Trans i18nKey='fix-deployment-instructions'>
         Vortex supports different Deployment Method to support a wide variety of systems and games, but some may only be available with the right settings.
         <br/>
@@ -111,7 +109,7 @@ class FixDeploymentDialog extends ComponentEx<IProps, IFixDeploymentDialogState>
         <br/>
         On the following screens we will offer possible solutions, simplest one first.
       </Trans>
-      // tslint:enable:max-line-length
+
     );
   }
 
@@ -148,7 +146,7 @@ class FixDeploymentDialog extends ComponentEx<IProps, IFixDeploymentDialogState>
     }
 
     const modPaths = modPathsForGame(state, gameId);
-    if (truthy(modPaths)) {
+    if (!!modPaths){
       // we have to find the unavailable reason again because the data we have doesn't contain
       // the actual fix function (since we can't put functions into the store)
       // However, it's technically possible that we find a different fail reason this time around

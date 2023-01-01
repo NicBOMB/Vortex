@@ -1,5 +1,3 @@
-import { contextType } from 'react-bootstrap/lib/Accordion';
-import { IExtensionContext } from '../../types/IExtensionContext';
 import { getApplication } from '../../util/application';
 import { log } from '../../util/log';
 import { activeGameId, discoveryByGame } from '../../util/selectors';
@@ -11,6 +9,7 @@ import { NAVIGATION_EVENT_LISTENERS, NAVIGATION_STATE_LISTENERS } from './analyt
 import { HELP_ARTICLE } from './constants';
 import settingsReducer from './reducers/settings.reducer';
 import SettingsAnalytics from './views/SettingsAnalytics';
+import { IExtensionContext } from '../../types/IExtensionContext';
 
 let ignoreNextAnalyticsStateChange = false;
 

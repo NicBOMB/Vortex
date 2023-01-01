@@ -10,7 +10,7 @@ import * as fsFast from 'fs-extra';
 import * as path from 'path';
 
 const dialog = (process.type === 'renderer')
-  // tslint:disable-next-line:no-var-requires
+
   ? require('@electron/remote').dialog
   : dialogIn;
 
@@ -44,8 +44,8 @@ class FileAssembler {
   private static MIN_FLUSH_TIME = 5 * 1000;
 
   private mFD: number;
-  private mFileName: string;
-  private mTotalSize: number;
+  private mFileName: string; // @ts-expect-error
+  private mTotalSize: number; // FIXME: this is not used?
   private mQueue: (cb: () => Promise<any>, tryOnly: boolean) => Promise<any>;
   private mWritten: number = 0;
   private mLastFlushedTime: number = 0;

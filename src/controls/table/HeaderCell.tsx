@@ -32,17 +32,13 @@ function nextDirection(direction: SortDirection): SortDirection {
   }
 }
 
-function nop() {
-  // nop
-}
-
 type IProps = React.PropsWithChildren<IHeaderProps>;
 
 class HeaderCell extends React.Component<IProps, {}> {
   private mMinWidth: number = -1;
   private mRef: HTMLDivElement = null;
 
-  public shouldComponentUpdate(newProps: IProps) {
+  public override shouldComponentUpdate(newProps: IProps) {
     // TODO: state is a new object every call, needs to be fixed in Table.tsx
     return (this.props.attribute !== newProps.attribute)
              || !_.isEqual(this.props.state, newProps.state)
@@ -51,7 +47,7 @@ class HeaderCell extends React.Component<IProps, {}> {
              || (this.props.children !== newProps.children);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, attribute, className, doFilter } = this.props;
     const style = {};
     if (this.mMinWidth >= 0) {

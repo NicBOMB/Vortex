@@ -37,8 +37,6 @@ import { getApplication } from '../../util/application';
 import { ProcessCanceled, UserCanceled } from '../../util/CustomErrors';
 import { log } from '../../util/log';
 import { activeGameId, activeProfile } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
-import { setdefault } from '../../util/util';
 
 import Promise from 'bluebird';
 import * as _ from 'lodash';
@@ -176,7 +174,7 @@ function runChecks(api: IExtensionApi, event: string, delay?: number) {
   }
 
   triggerDelays[event] = setTimeout(() => {
-    const eventChecks = getSafe(checks, [event], []);
+    const eventChecks = checks?.[event] ?? [];
     log('debug', 'running checks', { event, count: eventChecks.length });
     Promise.map(eventChecks, (par: ICheckEntry) => runCheck(api, par))
       .then(() => {
@@ -187,7 +185,7 @@ function runChecks(api: IExtensionApi, event: string, delay?: number) {
 
 function withSuppressedTests(tests: string[], cb: () => Promise<void>) {
   tests.forEach(test => {
-    setdefault(suppressedTests, test, 0);
+    suppressedTests[test] ??= 0;
     suppressedTests[test] += 1;
   });
 
@@ -203,7 +201,8 @@ function init(context: IExtensionContext): boolean {
   context.registerTest = (id, eventType, check) => {
     log('debug', 'register test', { id, eventType });
     const stackErr = new Error();
-    setdefault(checks, eventType, []).push({
+    checks[eventType] ??= [];
+    checks[eventType].push({
       id,
       check,
       stack: () => stackErr.stack,

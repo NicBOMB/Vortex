@@ -1,4 +1,3 @@
-import { truthy } from '../../../util/util';
 import Analytics from './Analytics';
 import { EventListeners, StateListeners } from '../types';
 
@@ -15,7 +14,7 @@ export const NAVIGATION_STATE_LISTENERS: StateListeners = [
     // Check for when the user uses the secondayPageFeature
     path: ['session', 'base', 'secondaryPage'],
     callback: (previous, current) => {
-      if (truthy(current)) {
+      if (!!current){
         Analytics.trackNavigation(`secondaryPage/${current}`);
       } // if current is null it means the secondary page got closed
     },
@@ -31,7 +30,7 @@ export const NAVIGATION_STATE_LISTENERS: StateListeners = [
     // Check for navigation in dialogs
     path: ['session', 'base', 'visibleDialog'],
     callback: (previous, current) => {
-      if (truthy(current)) {
+      if (!!current){
         Analytics.trackNavigation(`dialog/${current}`);
       }
     },

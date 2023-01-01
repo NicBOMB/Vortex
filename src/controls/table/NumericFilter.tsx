@@ -1,6 +1,5 @@
 import { Button } from '../../controls/TooltipControls';
 import {IFilterProps, ITableFilter} from '../../types/ITableAttribute';
-import { truthy } from '../../util/util';
 
 import * as React from 'react';
 import { FormControl, InputGroup } from 'react-bootstrap';
@@ -33,8 +32,8 @@ export class NumericFilterComponent extends React.Component<IFilterProps, {}> {
     };
   }
 
-  public render(): JSX.Element {
-    const { filter, t } = this.props;
+  public override render(): JSX.Element {
+    const { filter } = this.props;
 
     const filt = filter || { comparison: 'eq', value: '' };
 
@@ -90,7 +89,7 @@ class NumericFilter implements ITableFilter {
   public matches(filter: any, input: number): boolean {
     const { comparison, value } = filter;
 
-    if (!truthy(value)) {
+    if (!value){
       return true;
     }
 

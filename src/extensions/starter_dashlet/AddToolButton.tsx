@@ -3,7 +3,6 @@ import { IStarterInfo } from '../../util/StarterInfo';
 import { useTranslation } from 'react-i18next';
 
 import Icon from '../../controls/Icon';
-import { getSafe } from '../../util/storeHelper';
 
 import React from 'react';
 import * as ReactDOM from 'react-dom';
@@ -100,7 +99,7 @@ export default function AddToolButton(props: IBaseProps) {
         <div className='btn-add-tool-text'>{t('Add Tool')}</div>
       </Dropdown.Toggle>
       <PortalMenu
-        onClick={nop}
+        onClick={()=>{}}
         onClose={onToggleClose}
         open={open}
         target={dropRef.current}
@@ -126,28 +125,12 @@ export default function AddToolButton(props: IBaseProps) {
   );
 }
 
-const emptyObj = {};
 function mapStateToProps(state: IState): IConnectedProps {
   const game: IGameStored = selectors.currentGame(state);
-  if (game?.id === undefined) {
-    return {
-      gameMode: undefined,
-      toolsOrder: [],
-      discoveredTools: emptyObj,
-      primaryTool: undefined,
-    };
-  }
-
   return {
     gameMode: game.id,
-    toolsOrder: getSafe(state,
-      ['settings', 'interface', 'tools', 'order', game.id], []),
-    discoveredTools: getSafe(state,
-      ['settings', 'gameMode', 'discovered', game.id, 'tools'], emptyObj),
-    primaryTool: getSafe(state, ['settings', 'interface', 'primaryTool', game.id], undefined),
+    toolsOrder: state?.settings?.interface?.tools?.order?.[game.id] ?? [],
+    discoveredTools: state?.settings?.gameMode?.discovered?.[game.id]?.tools ?? {},
+    primaryTool: state?.settings?.interface?.primaryTool?.[game.id],
   };
-}
-
-function nop() {
-  // nop
 }

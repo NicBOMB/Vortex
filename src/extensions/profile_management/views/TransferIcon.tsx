@@ -52,10 +52,6 @@ interface IDropProps {
 
 type IProps = IBaseProps & IConnectedProps & IActionProps & IDragProps & IDropProps;
 
-interface IDragInfo {
-  onUpdateLine: (targetX: number, targetY: number, isConnect: boolean) => void;
-}
-
 function componentCenter(component: React.Component<any, any>) {
   const domNode = findDOMNode(component) as Element;
   const box = domNode.getBoundingClientRect();
@@ -146,26 +142,18 @@ function collectDrop(dropConnect: DropTargetConnector,
 }
 
 class TransferIcon extends ComponentEx<IProps, IComponentState> {
-  private mIsMounted: boolean;
   private mRef: JSX.Element;
 
   constructor(props: IProps) {
     super(props);
-
     this.initState({ showOverlay: false });
-    this.mIsMounted = false;
   }
 
-  public componentDidMount() {
-    this.mIsMounted = true;
+  public override componentDidMount() {
     this.props.connectDragPreview(getEmptyImage());
   }
 
-  public componentWillUnmount() {
-    this.mIsMounted = false;
-  }
-
-  public UNSAFE_componentWillReceiveProps(nextProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: IProps) {
     if (this.props.isDragging !== nextProps.isDragging) {
       let pos;
       if (nextProps.isDragging) {
@@ -185,7 +173,7 @@ class TransferIcon extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, connectDragSource, connectDropTarget, disabled, profile } = this.props;
 
     const classes = ['btn-embed'];

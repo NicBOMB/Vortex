@@ -9,7 +9,7 @@ import {
   ICollectionLoadOrder, IGameSpecificInterfaceProps,
 } from '../types/collections';
 
-import { ILoadOrderGameInfoExt, IValidationResult, LoadOrderValidationError } from '../types/types';
+import { ILoadOrderGameInfoExt } from '../types/types';
 
 import { findGameEntry } from '../gameSupport';
 import { genCollectionLoadOrder } from '../util';

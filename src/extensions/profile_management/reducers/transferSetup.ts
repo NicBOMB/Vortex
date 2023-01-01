@@ -1,5 +1,5 @@
 import { IReducerSpec } from '../../../types/IExtensionContext';
-import { getSafe, setSafe } from '../../../util/storeHelper';
+import { setSafe } from '../../../util/storeHelper';
 
 import * as actions from '../actions/transferSetup';
 
@@ -8,7 +8,7 @@ const userlistReducer: IReducerSpec = {
     [actions.setSource as any]: (state, payload) => {
       if (payload.pos !== undefined) {
         return setSafe(state, ['connection', 'source'], payload);
-      } else if (payload.id === getSafe(state, ['connection', 'source', 'id'], undefined)) {
+      } else if (payload.id === state?.connection?.source?.id){
         return setSafe(state, ['connection', 'source'], undefined);
       } else {
         return state;
@@ -22,7 +22,7 @@ const userlistReducer: IReducerSpec = {
               || (state.connection.target.id === undefined)
               || (state.connection.target.id === null))) {
         return setSafe(state, ['connection', 'target'], payload);
-      } else if (payload.id === getSafe(state, ['connection', 'target', 'id'], undefined)) {
+      } else if (payload.id === state?.connection?.target?.id){
         return setSafe(state, ['connection', 'target'], undefined);
       } else {
         return state;

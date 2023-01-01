@@ -1,11 +1,11 @@
 import { Tag } from 'bbcode-to-react';
 
 class IdentityTag extends Tag {
-  public toHTML(): string[] {
+  public override toHTML(): string[] {
     return [this.getContent()];
   }
 
-  public toReact(): React.ReactChild[] {
+  public override toReact(): React.ReactChild[] {
     return this.getComponents();
   }
 }

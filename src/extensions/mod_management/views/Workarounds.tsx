@@ -24,7 +24,7 @@ interface IActionProps {
 type IProps = IBaseProps & IActionProps & IConnectedProps;
 
 class Settings extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, cleanupOnDeploy } = this.props;
 
     return (

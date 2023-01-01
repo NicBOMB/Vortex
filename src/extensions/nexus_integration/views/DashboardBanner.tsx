@@ -6,7 +6,6 @@ import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 import { UserCanceled } from '../../../util/CustomErrors';
 import getVortexPath from '../../../util/getVortexPath';
 import opn from '../../../util/opn';
-import { truthy } from '../../../util/util';
 import { setUserAPIKey } from '../actions/account';
 import { IValidateKeyData } from '../types/IValidateKeyData';
 
@@ -41,7 +40,7 @@ class DashboardBanner extends ComponentEx<IProps, { requested: boolean }> {
     });
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { userInfo } = this.props;
     if ((userInfo !== undefined) && (userInfo !== null)) {
       return this.renderLoggedIn(userInfo);
@@ -73,7 +72,7 @@ class DashboardBanner extends ComponentEx<IProps, { requested: boolean }> {
     const fallback =
       pathToFileURL(path.join(getVortexPath('assets'), '..', FALLBACK_AVATAR)).href;
 
-    const profileIcon = truthy(userInfo) && truthy(userInfo.profileUrl)
+    const profileIcon = !!userInfo && !!userInfo.profileUrl
       ? `${userInfo.profileUrl}?r_${START_TIME}`
       : fallback;
 

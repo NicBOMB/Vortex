@@ -1,5 +1,4 @@
 import { log } from '../util/log';
-import { truthy } from '../util/util';
 import { Icon } from './TooltipControls';
 
 import * as _ from 'lodash';
@@ -26,11 +25,11 @@ class ExtensionGate extends React.Component<{ id: string }, {}> {
   private mWrappers: { [key: string]: any } = {};
   private mValid: boolean;
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     if (this.mValid) {
       const props = (React.Children.only(this.props.children) as React.ReactElement<any>).props;
       Object.keys(props).forEach(key => {
-        if (truthy(props[key])
+        if (!!props[key]
           && (props[key].attach !== undefined)
           && (props[key].detach !== undefined)) {
           props[key].detach(this);
@@ -40,7 +39,7 @@ class ExtensionGate extends React.Component<{ id: string }, {}> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render() {
     if (React.Children.count(this.props.children) === 0) {
       return null;
     }
@@ -71,7 +70,7 @@ class ExtensionGate extends React.Component<{ id: string }, {}> {
     try {
       const props = (React.Children.only(this.props.children) as React.ReactElement<any>).props;
       Object.keys(props).forEach(key => {
-        if (truthy(props[key])
+        if (!!props[key]
           && (props[key].attach !== undefined)
           && (props[key].detach !== undefined)) {
 

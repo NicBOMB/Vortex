@@ -20,7 +20,7 @@ interface IActionProps {
 }
 
 class Action extends React.Component<IActionProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, count, icon, title } = this.props;
     if (icon !== undefined) {
       return <IconButton onClick={this.trigger} icon={icon} tooltip={t(title, { count })}/>;
@@ -56,7 +56,7 @@ class Notification extends ComponentEx<IProps, { open: boolean }> {
     this.initState({ open: false });
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, collapsed, onDismiss, onExpand, onTriggerAction } = this.props;
     const { actions, id, message, noDismiss, progress, title, type } = this.props.params;
 
@@ -160,7 +160,7 @@ class Notification extends ComponentEx<IProps, { open: boolean }> {
     onSuppress(params.id);
   }
 
-  private renderAction = (action: INotificationAction, count) => {
+  private renderAction = (action: INotificationAction, count: number) => {
     return (
       <Action
         key={action.title ?? action.icon}

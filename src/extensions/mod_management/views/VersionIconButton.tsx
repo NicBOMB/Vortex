@@ -1,6 +1,5 @@
 import { IconButton } from '../../../controls/TooltipControls';
 import { ComponentEx } from '../../../util/ComponentEx';
-import { getSafe } from '../../../util/storeHelper';
 
 import { IDownload } from '../../download_management/types/IDownload';
 
@@ -28,7 +27,7 @@ type IProps = IBaseProps;
  * @class VersionIconButton
  */
 class VersionIconButton extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { mod, state } = this.props;
 
     const valid = isIdValid(mod);
@@ -65,7 +64,7 @@ class VersionIconButton extends ComponentEx<IProps, {}> {
       }
     }
 
-    const newVersion = getSafe(mod.attributes, ['newestVersion'], '?');
+    const newVersion = mod.attributes?.newestVersion ?? '?';
 
     switch (state) {
       case 'bug-update':
@@ -100,9 +99,9 @@ class VersionIconButton extends ComponentEx<IProps, {}> {
 
   private trigger = () => {
     const { gameMode, mod, state } = this.props;
-    const newestFileId = getSafe(mod.attributes, ['newestFileId'], undefined);
-    const downloadGame = getSafe(mod.attributes, ['downloadGame'], gameMode);
-    const newestVersion = getSafe(mod.attributes, ['newestVersion'], undefined);
+    const newestFileId = mod.attributes?.newestFileId;
+    const downloadGame = mod.attributes?.downloadGame?.[gameMode];
+    const newestVersion = mod.attributes?.newestVersion;
 
     if ((state === 'update') || (state === 'bug-update')) {
       if (mod.attributes?.collectionId !== undefined) {

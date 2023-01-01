@@ -1,4 +1,4 @@
-import { getSafe, pushSafe } from '../../../util/storeHelper';
+import { pushSafe } from '../../../util/storeHelper';
 
 import { IMod } from '../../mod_management/types/IMod';
 import { ICategory } from '../types/ICategoryDictionary';
@@ -19,10 +19,10 @@ function searchChildren(t: TFunction,
 
   children.forEach(childId => {
     const nestedChildren: ICategoriesTree[] = searchChildren(t, categories, childId, mods);
-    // tslint:disable-next-line:no-shadowed-variable
+
     const nestedModCount = nestedChildren.reduce((total: number, child: ICategoriesTree) =>
       total + child.modCount, 0);
-    const modCount = getSafe(mods, [childId], []).length;
+    const modCount = (mods?.[childId] ?? []).length;
     const subt: string = (mods !== undefined)
       ? generateSubtitle(t, childId, mods, nestedModCount) : '';
     const child: ICategoriesTree = {
@@ -58,7 +58,7 @@ function createTreeDataObject(t: TFunction,
 
   const modsByCategory = Object.keys(mods || {}).reduce(
       (prev: {[categoryId: string]: IMod[]}, current: string) => {
-        const category = getSafe(mods, [current, 'attributes', 'category'], undefined);
+        const category = mods?.[current]?.attributes?.category;
         if (category === undefined) {
           return prev;
         }
@@ -84,12 +84,12 @@ function createTreeDataObject(t: TFunction,
 
     children.forEach(element => {
       const nestedChildren = searchChildren(t, categories, element, modsByCategory);
-      // tslint:disable-next-line:no-shadowed-variable
+
       const nestedModCount = nestedChildren.reduce((total: number, child: ICategoriesTree) =>
         total + child.modCount, 0);
 
       const subtitle: string = generateSubtitle(t, element, modsByCategory, nestedModCount);
-      const modCount = getSafe(modsByCategory, [element], []).length;
+      const modCount = (modsByCategory?.[element] ?? []).length;
       childCategoryModCount += modCount;
       const child: ICategoriesTree = {
         categoryId: element,
@@ -110,7 +110,7 @@ function createTreeDataObject(t: TFunction,
       subtitle: generateSubtitle(t, rootElement, modsByCategory, childCategoryModCount),
       expanded: false,
       parentId: undefined,
-      modCount: getSafe(modsByCategory, [rootElement], []).length,
+      modCount: (modsByCategory?.[rootElement] ?? []).length,
       children: childrenList,
       order: categories[rootElement].order,
     });

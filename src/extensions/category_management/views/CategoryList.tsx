@@ -93,8 +93,6 @@ class CategoryList extends ComponentEx<IProps, IComponentState> {
       searchFoundCount: 0,
     });
 
-    const { t } = props;
-
     this.mButtons = [
       {
         title: 'Expand All',
@@ -120,17 +118,17 @@ class CategoryList extends ComponentEx<IProps, IComponentState> {
     ];
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.refreshTree(this.props);
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (this.props.categories !== newProps.categories) {
       this.refreshTree(newProps);
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t } = this.props;
     const { expandedTreeData, searchString, searchFocusIndex,
             searchFoundCount } = this.state;
@@ -202,7 +200,7 @@ class CategoryList extends ComponentEx<IProps, IComponentState> {
     );
   }
 
-  // tslint:disable-next-line:no-shadowed-variable
+
   private searchMethod = ({ node, path, treeIndex, searchQuery }:
     { node: ICategoriesTree, path: number[] | string[],
       treeIndex: number, searchQuery: any }) => {
@@ -376,7 +374,7 @@ class CategoryList extends ComponentEx<IProps, IComponentState> {
   }
 
   private addRootCategory = () => {
-    const {categories, gameMode, onSetCategory, onShowDialog, onShowError} = this.props;
+    const { categories, gameMode, onSetCategory, onShowDialog } = this.props;
     const lastIndex = this.searchLastRootId(categories);
 
     onShowDialog('question', 'Add new Root Category', {

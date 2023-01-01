@@ -1,12 +1,10 @@
-import {IState} from '../../../types/IState';
+import { IState } from '../../../types/IState';
 import { activeGameId } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 import { ICategoryDictionary } from '../types/ICategoryDictionary';
 
 function createCategoryDetailPath(categories: ICategoryDictionary, category: string,
                                   categoryPath: string, hideTopLevel: boolean, visited: Set<string>) {
-  if (!truthy(categories[category])) {
+  if (!categories[category]){
     return null;
   }
 
@@ -29,19 +27,16 @@ function createCategoryDetailPath(categories: ICategoryDictionary, category: str
 
 /**
  * retrieve the Category from the Store returning the full category path.
- *
- * @param {number} category
- * @param {Redux.Store<any>} store
  */
 export function resolveCategoryPath(category: string, state: IState) {
-  if (!truthy(category)) {
+  if (!category){
     return null;
   }
   let completePath: string = '';
   const gameId: string = activeGameId(state);
 
-  const categories: ICategoryDictionary = getSafe(state, ['persistent', 'categories', gameId], {});
-  const hideTopLevel: boolean = getSafe(state, ['settings', 'interface', 'hideTopLevelCategory'], false);
+  const categories: ICategoryDictionary = state?.persistent?.categories?.[gameId] ?? {};
+  const hideTopLevel: boolean = state?.settings?.interface?.hideTopLevelCategory ?? false;
   if (categories[category] !== undefined) {
     completePath = createCategoryDetailPath(categories, category, '', hideTopLevel, new Set<string>());
   }
@@ -64,16 +59,13 @@ export function resolveCategoryId(name: string, state: IState): number {
 
 /**
  * retrieve the Category from the Store
- *
- * @param {number} category
- * @param {Redux.Store<any>} store
  */
 export function resolveCategoryName(category: string, state: IState) {
-  if (!truthy(category)) {
+  if (!category){
     return '';
   }
 
   const gameId: string = activeGameId(state);
 
-  return getSafe(state, ['persistent', 'categories', gameId, category, 'name'], '');
+  return state?.persistent?.categories?.[gameId]?.[category]?.name ?? '';
 }

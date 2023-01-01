@@ -35,7 +35,7 @@ class GameInfoPopover extends ComponentEx<IProps, { loading: boolean }> {
     this.state = { loading: false };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     const { game, onRefreshGameInfo } = this.props;
     this.mMounted = true;
     if (onRefreshGameInfo !== undefined) {
@@ -49,11 +49,11 @@ class GameInfoPopover extends ComponentEx<IProps, { loading: boolean }> {
     }
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.mMounted = false;
   }
 
-  public UNSAFE_componentWillReceiveProps(nextProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: IProps) {
     if ((this.props.discoveredGames !== nextProps.discoveredGames)
       && (nextProps.onRefreshGameInfo !== undefined)) {
       // A change in discovered games would suggest that the player has
@@ -67,7 +67,7 @@ class GameInfoPopover extends ComponentEx<IProps, { loading: boolean }> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t } = this.props;
     const gameInfo: { [key: string]: IGameInfoEntry } = this.props.gameInfo || {};
 

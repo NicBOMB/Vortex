@@ -56,11 +56,11 @@ class MainPageContainer extends ComponentEx<IProps, IComponentState> {
     };
   }
 
-  public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  public override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     this.setState({ error, errorInfo });
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, active, page, secondary } = this.props;
     const { error } = this.state;
 
@@ -127,7 +127,7 @@ ComponentStack:
     this.setState({ error: undefined, errorInfo: undefined });
   }
 
-  private setHeaderRef = ref => {
+  private setHeaderRef = (ref: HTMLElement) => {
     if (this.headerRef !== ref) {
       this.headerRef = ref;
       this.forceUpdate();

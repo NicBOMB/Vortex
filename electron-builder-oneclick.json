@@ -1,5 +1,5 @@
 {
-  "$schema": "node_modules/electron-builder/node_modules/app-builder-lib/scheme.json",
+  "$schema": "node_modules/app-builder-lib/scheme.json",
   "asar": true,
   "asarUnpack": [
     "7z.exe",
@@ -86,6 +86,7 @@
     "!**/build/Debug${/*}",
     "!**/build/Release/obj${/*}",
     "!**/build/.vs${/*}",
+    "!**/build/node_gyp_bins",
     "!**/autogypi.json",
     "!**/binding.gyp",
     "!**/binding.map",
@@ -117,5 +118,5 @@
     "!**/node_modules/zeromq/prebuilds"
   ],
   "buildDependenciesFromSource": false,
-  "npmRebuild": false
+  "npmRebuild": true
 }

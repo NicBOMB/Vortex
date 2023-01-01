@@ -72,7 +72,7 @@ function runThreaded(func: (...args: any[]) => any,
           try {
             cleanup();
           } catch (cleanupErr) {
-            // tslint:disable-next-line:no-console
+
             console.error('failed to clean up temporary script', cleanupErr.message);
           }
           return reject(writeErr);

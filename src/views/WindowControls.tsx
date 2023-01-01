@@ -27,19 +27,19 @@ class WindowControls extends React.Component<{}, { isMaximized: boolean }> {
     };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     window().on('maximize', this.onMaximize);
     window().on('unmaximize', this.onUnMaximize);
     window().on('close', this.onClose);
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     window().removeListener('maximize', this.onMaximize);
     window().removeListener('unmaximize', this.onUnMaximize);
     window().removeListener('close', this.onClose);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element|null {
     const { isMaximized } = this.state;
     if (this.mClosed) {
       return null;

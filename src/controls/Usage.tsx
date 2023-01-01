@@ -27,7 +27,7 @@ interface IActionProps {
 type IProps = IUsageProps & IConnectedProps & IActionProps & WithTranslation;
 
 class Usage extends PureComponentEx<IProps, { }> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, persistent, show, opaque } = this.props;
 
     const classes = ['usage-instructions'];

@@ -354,6 +354,5 @@ export function getPluginPath(gameMode: string): string {
 }
 
 export function getNativePlugins(gameMode: string): string[] {
-  const x = gameSupport.get(gameMode, 'nativePlugins');
   return gameSupport.get(gameMode, 'nativePlugins') ?? [];
 }

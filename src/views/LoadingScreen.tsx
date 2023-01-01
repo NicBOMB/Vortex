@@ -34,7 +34,7 @@ class LoadingScreen extends React.Component<ILoadingScreenProps, ILoadingScreenS
     });
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { currentlyLoading, loaded } = this.state;
     return (
       <div id='loading-screen'>

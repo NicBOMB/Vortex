@@ -2,7 +2,6 @@ import { Button } from '../../controls/TooltipControls';
 import { IFilterProps, ITableFilter } from '../../types/ITableAttribute';
 import { ComponentEx } from '../../util/ComponentEx';
 import { getDateFormat, getLocale } from '../../util/datelocales';
-import { truthy } from '../../util/util';
 
 import * as React from 'react';
 import { InputGroup } from 'react-bootstrap';
@@ -36,7 +35,7 @@ export class DateTimeFilterComponent extends ComponentEx<IFilterProps, {}> {
     };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { filter } = this.props;
 
     const filt = this.hasValidComparison(filter)
@@ -60,7 +59,7 @@ export class DateTimeFilterComponent extends ComponentEx<IFilterProps, {}> {
             </Button>
           </InputGroup.Addon>
           <ReactDatePicker
-            selected={truthy(filt.value) ? new Date(filt.value) : null}
+            selected={!!filt.value ? new Date(filt.value) : null}
             onChange={this.changeFilter}
             locale={getLocale(locale)}
             dateFormat={getDateFormat(locale)}
@@ -113,11 +112,11 @@ class DateTimeFilter implements ITableFilter {
   public matches(filter: any, input: any): boolean {
     const { comparison, value } = filter;
 
-    if (!truthy(value)) {
+    if (!value){
       return true;
     }
 
-    if (!truthy(input)) {
+    if (!input){
       return false;
     }
 
@@ -129,7 +128,7 @@ class DateTimeFilter implements ITableFilter {
   }
 
   public isEmpty(filter: any): boolean {
-    return !truthy(filter) || !truthy(filter.value);
+    return !filter || !filter.value;
   }
 }
 

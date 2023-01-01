@@ -21,7 +21,7 @@ interface ITodoProps {
 }
 
 class Todo extends React.PureComponent<ITodoProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, extensionProps, todo } = this.props;
     const text: JSX.Element = this.resolveElement(todo.text as string, 'todo-text');
     const value: JSX.Element = this.resolveElement(todo.value as string, 'todo-value');
@@ -91,13 +91,13 @@ class TodoDashlet extends ComponentEx<IProps, {}> {
     super(inProps);
   }
 
-  public shouldComponentUpdate(newProps: IProps): boolean {
+  public override shouldComponentUpdate(newProps: IProps): boolean {
     return (newProps.dismissAll !== this.props.dismissAll)
         || (newProps.steps !== this.props.steps)
         || !_.isEqual(newProps.extensionProps, this.props.extensionProps);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, dismissAll, extensionProps, steps, todos } = this.props;
 
     if (dismissAll) {

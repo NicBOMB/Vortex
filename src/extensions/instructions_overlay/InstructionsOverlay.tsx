@@ -2,7 +2,7 @@ import memoizeOne from 'memoize-one';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import ReactMarkdown from 'react-markdown';
-import { FlexLayout, Icon, MainContext, tooltip, types } from 'vortex-api';
+import { FlexLayout, Icon, tooltip, types } from 'vortex-api';
 import { IOverlay, IPosition } from '../../types/IState';
 
 const BORDER = 8;
@@ -31,7 +31,6 @@ const getContainer = memoizeOne(() => getContainerImpl());
 
 function InstructionsOverlay(props: IInstructionsOverlayProps) {
   const { t, overlay, overlayId } = props;
-  const context = React.useContext(MainContext);
   const [open, setOpen] = React.useState(true);
   const ref = React.useRef<HTMLDivElement>(null);
   const abortDrag = React.useRef<AbortController>(null);

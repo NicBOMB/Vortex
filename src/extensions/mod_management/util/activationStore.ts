@@ -9,8 +9,7 @@ import getVortexPath from '../../../util/getVortexPath';
 import { TFunction } from '../../../util/i18n';
 import { log } from '../../../util/log';
 import { activeGameId, discoveryByGame, installPathForGame } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
-import { deBOM, makeQueue, truthy } from '../../../util/util';
+import { deBOM, makeQueue } from '../../../util/util';
 
 import { getGame } from '../../gamemode_management/util/getGame';
 
@@ -44,11 +43,11 @@ function emptyManifest(instance: string): IDeploymentManifest {
  * Check it for correctness
  */
 function repairManifest(input: IDeploymentManifest): IDeploymentManifest {
-  if (!truthy(input.version)) {
+  if (!input.version){
     input.version = CURRENT_VERSION;
   }
 
-  if (!truthy(input.instance)) {
+  if (!input.instance){
     input.instance = '';
   }
 
@@ -246,13 +245,6 @@ export function fallbackPurgeType(api: IExtensionApi, activator: IDeploymentMeth
       .then(tagObject => {
         let result: Promise<void>;
         if (tagObject.files.length > 0) {
-          let safe = true;
-          if (tagObject.deploymentMethod !== undefined) {
-            const previousActivator = getActivator(tagObject.deploymentMethod);
-            if ((previousActivator !== undefined) && !previousActivator.isFallbackPurgeSafe) {
-              safe = false;
-            }
-          }
           result = purgeDeployedFiles(deployPath, tagObject.files)
               .then(() => saveActivation(gameId, modType, state.app.instanceId,
                                          deployPath, stagingPath,
@@ -325,7 +317,7 @@ export function getManifest(api: IExtensionApi,
     }
 
     const game = getGame(gameId);
-    const discovery = getSafe(state, ['settings', 'gameMode', 'discovered', gameId], undefined);
+    const discovery = state?.settings?.gameMode?.discovered?.[gameId];
     if ((discovery?.path === undefined) || (game === undefined)) {
       return Promise.resolve(emptyManifest(instanceId));
     }

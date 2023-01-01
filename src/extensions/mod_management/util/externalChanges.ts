@@ -4,8 +4,6 @@ import { ProcessCanceled } from '../../../util/CustomErrors';
 import * as fs from '../../../util/fs';
 import { log } from '../../../util/log';
 import { activeGameId, activeProfile, profileById } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
-import { setdefault, truthy } from '../../../util/util';
 
 import { showExternalChanges } from '../actions/session';
 import { FileAction, IFileEntry } from '../types/IFileEntry';
@@ -42,7 +40,8 @@ function applyFileActions(api: IExtensionApi,
         ? (value.sourceModified > value.destModified) ? 'drop' : 'import'
         : value.action;
 
-      setdefault(prev, action, []).push(value);
+      prev[action] ??= [];
+      prev[action].push(value);
       return prev;
     }, {});
 
@@ -52,11 +51,11 @@ function applyFileActions(api: IExtensionApi,
   // process the actions that the user selected in the dialog
   return Promise.map(actionGroups['drop'] || [],
       // delete the links the user wants to drop.
-      (entry) => truthy(entry.filePath)
+      (entry) => !!entry.filePath
           ? fs.removeAsync(path.join(outputPath, entry.filePath))
           : Promise.reject(new Error('invalid file path')))
     .then(() => Promise.map(actionGroups['delete'] || [],
-      entry => truthy(entry.filePath)
+      entry => !!entry.filePath
           ? fs.removeAsync(path.join(sourcePath, entry.source, entry.filePath))
           : Promise.reject(new Error('invalid file path'))))
     .then(() => Promise.map(actionGroups['import'] || [],
@@ -182,7 +181,7 @@ function checkForExternalChanges(api: IExtensionApi,
   const state = api.store.getState();
 
   const profile = profileId !== undefined
-    ? getSafe(state, ['persistent', 'profiles', profileId], undefined)
+    ? state?.persistent?.profiles?.[profileId]
     : activeProfile(state);
   if (profile === undefined) {
     return Promise.reject(new ProcessCanceled('Profile no longer exists.'));

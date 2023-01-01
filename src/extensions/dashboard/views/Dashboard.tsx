@@ -6,7 +6,6 @@ import { IDashletSettings, IState } from '../../../types/IState';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 import Debouncer from '../../../util/Debouncer';
 import lazyRequire from '../../../util/lazyRequire';
-import { getSafe } from '../../../util/storeHelper';
 import MainPage from '../../../views/MainPage';
 
 import { setDashletEnabled, setDashletHeight, setDashletWidth, setLayout } from '../actions';
@@ -84,7 +83,7 @@ class Dashboard extends ComponentEx<IProps, IComponentState> {
     this.mWindowFocused = window.isFocused();
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.startUpdateCycle();
     const win = remote.getCurrentWindow();
     win.on('focus', this.onFocus);
@@ -95,14 +94,14 @@ class Dashboard extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     clearTimeout(this.mUpdateTimer);
     const win = remote.getCurrentWindow();
     win.removeListener('focus', this.onFocus);
     win.removeListener('blur', this.onBlur);
   }
 
-  public UNSAFE_componentWillReceiveProps(nextProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: IProps) {
     if (this.props.active !== nextProps.active) {
       if (nextProps.active && (this.mUpdateTimer === undefined)) {
         this.startUpdateCycle();
@@ -113,8 +112,8 @@ class Dashboard extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
-    const { t, dashletSettings, layout, dashlets } = this.props;
+  public override render(): JSX.Element {
+    const { dashletSettings, layout, dashlets } = this.props;
     const { editMode } = this.state;
 
     const state = this.context.api.store.getState();
@@ -127,13 +126,13 @@ class Dashboard extends ComponentEx<IProps, IComponentState> {
     const sorted = dashlets
       .filter((dash: IDashletProps) =>
         ((dash.isVisible === undefined) || dash.isVisible(state))
-        && (!dash.closable || getSafe(dashletSettings, [dash.title, 'enabled'], true)))
+        && (!dash.closable || (dashletSettings?.[dash.title]?.enabled ?? true)))
       .sort((lhs: IDashletProps, rhs: IDashletProps) =>
         (layoutMap[lhs.title] || lhs.position) - (layoutMap[rhs.title] || rhs.position))
       ;
 
     const { fixed, dynamic } = sorted.reduce((prev, dash) => {
-      const isFixed = getSafe(dashletSettings, [dash.title, 'fixed'], dash.fixed);
+      const isFixed = dashletSettings?.[dash.title]?.fixed ?? dash.fixed;
       prev[isFixed ? 'fixed' : 'dynamic'].push(dash);
       return prev;
     }, { fixed: [], dynamic: [] });

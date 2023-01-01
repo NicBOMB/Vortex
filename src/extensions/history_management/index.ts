@@ -1,6 +1,5 @@
 import { Action } from 'redux';
 import { generate as shortid } from 'shortid';
-import { showDialog } from '../../actions';
 import { IExtensionApi, IExtensionContext } from '../../types/IExtensionContext';
 import { ProcessCanceled, UserCanceled } from '../../util/CustomErrors';
 import Debouncer from '../../util/Debouncer';

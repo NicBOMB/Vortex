@@ -11,7 +11,6 @@ class Progress {
   private mBaseValue: number;
   private mCallback: (percent: number, label: string) => void;
   private mDepth: number;
-  private mIdx: number;
   private mLastProgress: number = 0;
   private mLastProgressTime: number = Date.now();
 

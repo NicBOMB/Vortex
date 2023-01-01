@@ -60,7 +60,7 @@ export function TBody(props: DProps<HTMLTableSectionElement>
 type THProps = DProps<HTMLTableHeaderCellElement> & { domRef?: (ref: HTMLDivElement) => void };
 
 export class TH extends React.Component<THProps, {}> {
-  public render() {
+  public override render() {
     const { children, className, domRef, style } = this.props;
     const classes = ['table-header-cell', 'xth'].concat((className || '').split(' '));
     return (

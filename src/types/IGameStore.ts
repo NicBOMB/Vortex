@@ -23,14 +23,12 @@ export class GameStoreNotFound extends Error {
 export class GameEntryNotFound extends Error {
   private mName: string;
   private mStore: string;
-  private mExistingNames: string[];
-  constructor(name: string, store: string, existing?: string[]) {
+  constructor(name: string, store: string) {
     super('Game entry not found');
     Error.captureStackTrace(this, this.constructor);
     this.name = this.constructor.name;
     this.mName = name;
     this.mStore = store;
-    this.mExistingNames = existing;
   }
 
   // Returns the name of the game we couldn't find.
@@ -41,12 +39,6 @@ export class GameEntryNotFound extends Error {
   // Name/Id of the store that couldn't find the game.
   public get storeName() {
     return this.mStore;
-  }
-
-  // Returns the name of the games we had confirmed exist
-  //  in this game store.
-  public get existingGames() {
-    return this.mExistingNames;
   }
 }
 
@@ -85,7 +77,7 @@ export interface IGameStore {
    * (lower means preferred)
    * This should be solely based on which store tends to be less problematic for modding
    * (stuff like DRM and such), not a subjective preference of the store.
-   * 
+   *
    * Values <= 30 are for stores that have features benefiting modding (no DRM GOG)
    * Values >= 70 are for stores that have features hindering modding (extra DRM Xbox)
    * Values between should all be ok, we only assign different values so the order is deterministic

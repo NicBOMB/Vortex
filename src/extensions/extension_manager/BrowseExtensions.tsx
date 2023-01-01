@@ -94,7 +94,7 @@ class BrowseExtensions extends ComponentEx<IProps, IBrowseExtensionsState> {
     this.mModalRef = React.createRef();
   }
 
-  public UNSAFE_componentWillReceiveProps(nextProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: IProps) {
     if ((nextProps.localState.preselectModId !== this.props.localState.preselectModId)
         ?? (nextProps.localState.preselectModId !== undefined)) {
       this.nextState.selected = {
@@ -105,7 +105,7 @@ class BrowseExtensions extends ComponentEx<IProps, IBrowseExtensionsState> {
     }
   }
 
-  public render() {
+  public override render() {
     const { t, availableExtensions, language, onHide,
             onRefreshExtensions, updateTime, visible } = this.props;
     const { searchTerm, selected, sort } = this.state;

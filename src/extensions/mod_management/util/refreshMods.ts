@@ -3,7 +3,6 @@ import { IState } from '../../../types/IState';
 import { getApplication } from '../../../util/application';
 import * as fs from '../../../util/fs';
 import { log } from '../../../util/log';
-import { getSafe } from '../../../util/storeHelper';
 
 import { setModArchiveId } from '../actions/mods';
 import {IMod} from '../types/IMod';
@@ -127,7 +126,7 @@ function refreshMods(api: IExtensionApi, gameId: string,
       knownModNames.forEach(modId => {
         if ((!!knownMods[modId].archiveId)
             && (downloads[knownMods[modId].archiveId] === undefined)) {
-          const fileName = getSafe(knownMods, [modId, 'attributes', 'fileName'], undefined);
+          const fileName = knownMods?.[modId]?.attributes?.fileName;
           log('info', 'archive referenced in mod doesn\'t exist',
               { modId, archiveId: knownMods[modId].archiveId, fileName });
           if (fileName !== undefined) {

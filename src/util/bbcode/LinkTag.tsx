@@ -6,7 +6,7 @@ import * as React from 'react';
 import * as url from 'url';
 
 class LinkTag extends Tag {
-  public toHTML() {
+  public override toHTML() {
     let linkUrl = this.renderer.strip(this.params[this.name] || this.getContent(true));
     if (/javascript:/i.test(linkUrl)) {
       linkUrl = '';
@@ -22,7 +22,7 @@ class LinkTag extends Tag {
     );
   }
 
-  public toReact() {
+  public override toReact() {
     let linkUrl = this.renderer.strip(this.params[this.name] || this.getContent(true));
     if (/javascript:/i.test(linkUrl)) {
       linkUrl = '';
@@ -47,7 +47,7 @@ class LinkTag extends Tag {
           (context) => (
             <a
               href={linkUrl}
-              // tslint:disable-next-line:jsx-no-lambda
+
               onClick={context.safeCB((evt) => this.clicked(evt, callbacks, allowLocal),
                                       [this.renderer.options])}
               title={title}

@@ -1,8 +1,6 @@
 import FormInput from '../../../controls/FormInput';
 import More from '../../../controls/More';
 import { ValidationState } from '../../../types/ITableAttribute';
-import { ComponentEx } from '../../../util/ComponentEx';
-import { truthy } from '../../../util/util';
 
 import { setDownloadModInfo } from '../../download_management/actions/state';
 import { setModAttribute } from '../../mod_management/actions/mods';
@@ -16,7 +14,7 @@ import * as Redux from 'redux';
 import { Button, Icon, IconButton } from '../../../controls/TooltipControls';
 
 function validateNum(value: string): ValidationState {
-  return !truthy(value)
+  return !value
       || isNaN(Number(value))
       || (parseInt(value, 10) < 1)
       ? 'error' : 'success';

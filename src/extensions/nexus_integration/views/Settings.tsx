@@ -62,7 +62,7 @@ class Settings extends ComponentEx<IProps, {}> {
     this.mHelpText = getText('chrome-fix', this.props.t);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, associated } = this.props;
 
     return (

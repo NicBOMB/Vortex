@@ -1,7 +1,5 @@
 import { IconButton } from '../../../controls/TooltipControls';
 import { ComponentEx } from '../../../util/ComponentEx';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 
 import { IMod } from '../../mod_management/types/IMod';
 
@@ -11,7 +9,7 @@ import { ControlLabel, FormGroup, OverlayTrigger, Popover } from 'react-bootstra
 import Interweave, { ElementAttributes, Filter } from 'interweave';
 
 class LinkFilter extends Filter {
-  public attribute<K extends keyof ElementAttributes>(name: K, value: ElementAttributes[K]): ElementAttributes[K] | null | undefined {
+  public override attribute<K extends keyof ElementAttributes>(name: K, value: ElementAttributes[K]): ElementAttributes[K] | null | undefined {
     if (['href', 'src'].includes(name)) {
       return undefined;
     }
@@ -19,7 +17,7 @@ class LinkFilter extends Filter {
     return value;
   }
 
-  public node(name: string, node: HTMLElement): HTMLElement {
+  public override node(name: string, node: HTMLElement): HTMLElement {
     if (name === 'a') {
       for (let i = 0; i < node.attributes.length; ++i) {
         node.removeAttributeNode(node.attributes[i]);
@@ -43,13 +41,13 @@ type IProps = IBaseProps;
  * @class VersionChangelogButton
  */
 class VersionChangelogButton extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { mod, t } = this.props;
 
-    const changelog = getSafe(mod.attributes, ['changelog'], undefined);
-    const newestChangelog = getSafe(mod.attributes, ['newestChangelog'], undefined);
+    const changelog = mod.attributes?.changelog;
+    const newestChangelog = mod.attributes?.newestChangelog;
 
-    if (!truthy(changelog) && !truthy(newestChangelog)) {
+    if (!changelog && !newestChangelog){
       return null;
     }
 

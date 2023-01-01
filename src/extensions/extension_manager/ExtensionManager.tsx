@@ -9,7 +9,6 @@ import { relaunch } from '../../util/commandLine';
 import { ComponentEx, connect, translate } from '../../util/ComponentEx';
 import { log } from '../../util/log';
 import * as selectors from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
 import MainPage from '../../views/MainPage';
 
 import { IDownload } from '../download_management/types/IDownload';
@@ -90,7 +89,7 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
           const { extensionConfig, extensions, onSetExtensionEnabled } = this.props;
           const extId = Object.keys(extensions)
             .find(iter => extensions[iter].name === extName);
-          const enabled = !getSafe(extensionConfig, [extId, 'enabled'], true);
+          const enabled = !extensionConfig?.[extId]?.enabled ?? true;
           log('info', 'user toggling extension manually', { extId, enabled });
           onSetExtensionEnabled(extId, enabled);
         },
@@ -118,7 +117,7 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {t, extensions, localState, extensionConfig} = this.props;
     const {oldExtensionConfig} = this.state;
 
@@ -245,11 +244,11 @@ class ExtensionManager extends ComponentEx<IProps, IComponentState> {
                    : { [id: string]: IExtensionWithState } {
     const { loadFailures } = this.props;
     return Object.keys(extensions).reduce((prev, id) => {
-      if (!getSafe(extensionConfig, [id, 'remove'], false)) {
-        const enabled = loadFailures[id] === undefined ?
-          getSafe(extensionConfig, [id, 'enabled'], true)
+      if (!extensionConfig?.[id]?.remove ?? false){
+        const enabled = loadFailures[id] === undefined
+          ? extensionConfig?.[id]?.enabled ?? true
           : 'failed';
-        const endorsed: EndorsedStatus = getSafe(extensionConfig, [id, 'endorsed'], 'Undecided');
+        const endorsed: EndorsedStatus = extensionConfig?.[id]?.endorsed ?? 'Undecided';
         prev[id] = {
           ...extensions[id],
           enabled,

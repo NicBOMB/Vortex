@@ -1,6 +1,6 @@
 import { IExtensionContext } from '../../types/IExtensionContext';
 import { ILoadOrderGameInfo, ILoadOrderGameInfoExt, IValidationResult, LoadOrder,
-  LoadOrderSerializationError, LoadOrderValidationError } from './types/types';
+  LoadOrderValidationError } from './types/types';
 
 import { ICollection } from './types/collections';
 
@@ -226,8 +226,7 @@ export default function init(context: IExtensionContext) {
     (gameId: string, includedMods: string[]) => {
       const state = context.api.getState();
       const stagingPath = selectors.installPathForGame(state, gameId);
-      const mods: { [modId: string]: types.IMod } =
-        util.getSafe(state, ['persistent', 'mods', gameId], {});
+      const mods: { [modId: string]: types.IMod } = state?.persistent?.mods?.[gameId] ?? {};
       return generate(context.api, state, gameId, stagingPath, includedMods, mods);
     },
     (gameId: string, collection: ICollection) => parser(context.api, gameId, collection),
@@ -269,7 +268,7 @@ async function validateLoadOrder(api: types.IExtensionApi,
       log('error', 'failed to validate load order due to undefined profile', loadOrder);
       throw new util.DataInvalid('invalid profile');
     }
-    const prevLO = util.getSafe(state, ['persistent', 'loadOrder', profile.id], []);
+    const prevLO = state?.persistent?.loadOrder?.[profile.id] ?? [];
     const gameEntry: ILoadOrderGameInfo = findGameEntry(profile.gameId);
     if (gameEntry === undefined) {
       const details = (gameEntry === undefined)
@@ -300,7 +299,7 @@ async function onStartUp(api: types.IExtensionApi, gameId: string): Promise<Load
     return Promise.resolve(undefined);
   }
 
-  const prev = util.getSafe(state, ['persistent', 'loadOrder', profileId], []);
+  const prev = state?.persistent?.loadOrder?.[profileId] ?? [];
   try {
     const loadOrder = await gameEntry.deserializeLoadOrder();
     const validRes: IValidationResult = await gameEntry.validate(prev, loadOrder);

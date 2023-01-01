@@ -20,8 +20,7 @@ import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 import { ProcessCanceled, UserCanceled } from '../../../util/CustomErrors';
 import Debouncer from '../../../util/Debouncer';
 import * as selectors from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
-import { batchDispatch, bytesToString, toPromise, truthy } from '../../../util/util';
+import { batchDispatch, bytesToString, toPromise } from '../../../util/util';
 import MainPage from '../../../views/MainPage';
 
 import calculateFolderSize from '../../../util/calculateFolderSize';
@@ -76,18 +75,18 @@ interface IVersionOptionProps {
 }
 
 class VersionOption extends React.PureComponent<IVersionOptionProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, modId, altId, mod } = this.props;
     if (mod === undefined) {
       return null;
     }
 
-    const variant = getSafe(mod.attributes, ['variant'], undefined);
+    const variant = mod.attributes?.variant;
 
     return (
       <a className='version-option'>
         <div>
-          {getSafe(mod.attributes, ['version'], '')}
+          {mod.attributes?.version ?? ''}
           {variant !== undefined ? ` (${variant})` : ` (${t('default')})`}
         </div>
         <IconButton
@@ -160,7 +159,6 @@ class ModList extends ComponentEx<IProps, IComponentState> {
   private mAttributes: ITableAttribute[];
   private mUpdateDebouncer: Debouncer;
   private mLastUpdateProps: IModProps = { mods: {}, modState: {}, downloads: {} };
-  private mIsMounted: boolean = false;
   private staticButtons: IActionDefinition[];
   private mRef: Element;
 
@@ -239,7 +237,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
             return false;
           }
           const cond = (id: string) => (this.props.mods[id] !== undefined)
-              && (truthy(this.props.mods[id].archiveId));
+              && (!!this.props.mods[id].archiveId);
           const res: boolean = (typeof(instanceId) === 'string')
             ? cond(instanceId)
             : instanceId.find(cond) !== undefined;
@@ -303,8 +301,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public componentDidMount() {
-    this.mIsMounted = true;
+  public override componentDidMount() {
     this.updateModsWithState(this.props)
     .then(() => this.forceUpdate());
   }
@@ -316,11 +313,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public componentWillUnmount() {
-    this.mIsMounted = false;
-  }
-
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if ((this.props.gameMode !== newProps.gameMode)
         || (this.props.mods !== newProps.mods)
         || (this.props.modState !== newProps.modState)
@@ -330,7 +323,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, gameMode, modSources, showDropzone } = this.props;
 
     if (gameMode === undefined) {
@@ -528,7 +521,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
 
   private calcVersion = (mod: IModWithState): string => {
     const { t } = this.props;
-    const version = getSafe(mod.attributes, ['version'], undefined);
+    const version = mod.attributes?.version;
     const equalMods = this.state.groupedMods[mod.id];
     if ((equalMods !== undefined) && (equalMods.length > 1)) {
       return version + ' (' + t('{{ count }} more', { count: equalMods.length - 1 }) + ')';
@@ -546,14 +539,14 @@ class ModList extends ComponentEx<IProps, IComponentState> {
 
     const updateState = modUpdateState(mod.attributes);
 
-    const variant = getSafe(mod.attributes, ['variant'], undefined);
+    const variant = mod.attributes?.variant;
 
     const versionDropdown = alternatives.length > 1
       ? (
         <DropdownButton
           className='dropdown-version'
           title={
-            (getSafe(mod.attributes, ['version'], undefined) || '')
+            (mod.attributes?.version ?? '')
             + (variant !== undefined ? ` (${variant})` : ` (${t('default')})`)
           }
           id={`version-dropdown-${mod.id}`}
@@ -565,7 +558,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
 
     return (
       <div className={'mod-update ' + this.updateClass(updateState, isIdValid(mod))}>
-        {alternatives.length === 1 ? getSafe(mod.attributes, ['version'], null) : null}
+        {alternatives.length === 1 ? mod.attributes?.version ?? null : null}
         <ButtonGroup id={`btngroup-${mod.id}`} className='btngroup-version'>
           {versionDropdown}
           <VersionIconButton
@@ -659,10 +652,10 @@ class ModList extends ComponentEx<IProps, IComponentState> {
       id: 'picture',
       description: 'A picture provided by the author',
       customRenderer: (mod: IModWithState, detail: boolean, t: TFunction) => {
-        const long = getSafe(mod, ['attributes', 'description'], '');
-        const short = getSafe(mod, ['attributes', 'shortDescription'], '');
+        const long = mod?.attributes?.description ?? '';
+        const short = mod?.attributes?.shortDescription ?? '';
 
-        const url = getSafe(mod, ['attributes', 'pictureUrl'], undefined);
+        const url = mod?.attributes?.pictureUrl;
         return (
           <ZoomableImage className='mod-picture' url={url}>
             <Description
@@ -677,7 +670,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
           </ZoomableImage>
         );
       },
-      calc: mod => getSafe(mod.attributes, ['pictureUrl'], ''),
+      calc: mod => mod.attributes?.pictureUrl ?? '',
       placement: 'detail',
       edit: {},
     };
@@ -689,7 +682,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
       icon: 'check-o',
       calc: (mod: IModWithState) => {
         if (mod.state === 'downloaded') {
-          return (getSafe(mod.attributes, ['wasInstalled'], false))
+          return (mod.attributes?.wasInstalled ?? false)
             ? 'Uninstalled'
             : 'Never Installed';
         } else if (mod.state === 'installing') {
@@ -747,7 +740,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
       help: getText('version', this.props.t),
       icon: 'cake',
       calc: (mod: IModWithState) => (mod.type !== 'collection')
-        ? getSafe(mod.attributes, ['version'], '')
+        ? mod.attributes?.version ?? ''
         : undefined,
       placement: 'detail',
       isToggleable: false,
@@ -767,7 +760,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
       help: getText('version', this.props.t),
       icon: 'cake',
       calc: (mod: IModWithState) => (mod.type === 'collection')
-        ? getSafe(mod.attributes, ['version'], '')
+        ? mod.attributes?.version ?? ''
         : undefined,
       placement: 'detail',
       isToggleable: false,
@@ -806,7 +799,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
       name: 'Variant',
       description: 'File variant',
       help: getText('variant', this.props.t),
-      calc: (mod: IModWithState) => getSafe(mod.attributes, ['variant'], ''),
+      calc: (mod: IModWithState) => mod.attributes?.variant ?? '',
       placement: 'detail',
       isToggleable: false,
       edit: {
@@ -1103,7 +1096,6 @@ class ModList extends ComponentEx<IProps, IComponentState> {
   }
 
   private selectVersion = (evtKey) => {
-    const { gameMode, profileId } = this.props;
     const { modId, altId } = evtKey;
 
     if (modId === altId) {
@@ -1404,7 +1396,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
       withBatchContext<void>('install-mod', validIds.map(modId => mods[modId].archiveId), () => {
         return Promise.all(
           validIds.map(modId => {
-            const choices = getSafe(mods[modId], ['attributes', 'installerChoices'], undefined);
+            const choices = mods[modId]?.attributes?.installerChoices;
             return toPromise(cb => this.context.api.events.emit('start-install-download',
                 mods[modId].archiveId, { choices, allowAutoEnable: false }, cb))
               .catch(err => {
@@ -1420,7 +1412,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
           .then(() => {
             const newMods = this.props.mods;
             const enabled = validIds
-              .filter(id => getSafe(modState, [id, 'enabled'], false))
+              .filter(id => modState?.[id]?.enabled ?? false)
               .filter(id => installTimes?.[id] !== newMods[id]?.attributes?.installTime);
             if (enabled.length > 0) {
               this.context.api.events.emit('mods-enabled', enabled, true, gameMode);
@@ -1428,7 +1420,7 @@ class ModList extends ComponentEx<IProps, IComponentState> {
           });
         });
     } else if (mods[modIds] !== undefined) {
-      const choices = getSafe(mods[modIds], ['attributes', 'installerChoices'], undefined);
+      const choices = mods[modIds]?.attributes?.installerChoices;
       this.context.api.events.emit('start-install-download', mods[modIds].archiveId,
                                    { choices, allowAutoEnable: false }, (err) => {
         if (err === null) {
@@ -1498,18 +1490,16 @@ class ModList extends ComponentEx<IProps, IComponentState> {
   }
 }
 
-const empty = {};
-
 function mapStateToProps(state: IState): IConnectedProps {
   const profile = selectors.activeProfile(state);
   const gameMode = selectors.activeGameId(state);
 
   return {
-    mods: getSafe(state, ['persistent', 'mods', gameMode], empty),
-    modState: getSafe(profile, ['modState'], empty),
-    downloads: getSafe(state, ['persistent', 'downloads', 'files'], empty),
+    mods: state?.persistent?.mods?.[gameMode] ?? {},
+    modState: profile?.modState ?? {},
+    downloads: state?.persistent?.downloads?.files ?? {},
     gameMode,
-    profileId: getSafe(profile, ['id'], undefined),
+    profileId: profile?.id,
     language: state.settings.interface.language,
     installPath: selectors.installPath(state),
     downloadPath: selectors.downloadPath(state),

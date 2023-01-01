@@ -41,18 +41,18 @@ class RadialProgress extends React.Component<IProps, {}> {
     this.updateArcGen(props);
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     this.updateArcGen(newProps);
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { className, data, offset, style, totalRadius, spin } = this.props;
     const sideLength = (totalRadius + (offset || 0)) * 2;
 
     const classNames = ['radial', className];
 
     let progressData = [...data]
-    
+
     if (spin && progressData.length == 0) {
       // The normal progress has higher priority than the spin
       classNames.push('radial--spin');

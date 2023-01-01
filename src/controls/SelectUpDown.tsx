@@ -24,11 +24,11 @@ class SelectUpDown extends React.Component<IProps, ISelectUpDownState> {
     };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mNode = ReactDOM.findDOMNode(this) as Element;
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const classes = ['select-up-down'];
     if (this.props.className) {
       classes.push(...this.props.className.split(' '));

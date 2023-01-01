@@ -197,8 +197,9 @@ function exists(filePath: string): boolean {
 
 export function markImported(basePath: string): Promise<void> {
   return fs.writeFileAsync(
-      path.join(basePath, currentStatePath, IMPORTED_TAG), '')
-    .then(() => null);
+      path.join(basePath, currentStatePath, IMPORTED_TAG),
+      ''
+    ).then(() => undefined);
 }
 
 export function importState(basePath: string): Promise<any> {
@@ -219,9 +220,10 @@ export function importState(basePath: string): Promise<any> {
     : Promise.resolve();
 }
 
-export function createFullStateBackup(backupName: string,
-                                      store: Redux.Store<any>)
-                                      : Promise<string> {
+export function createFullStateBackup(
+  backupName: string,
+  store: Redux.Store<any>
+): Promise<string> {
   const before = Date.now();
   // not backing up confidential, session or extension persistors
   const state = _.pick(store.getState(), ['settings', 'persistent', 'app', 'user']);

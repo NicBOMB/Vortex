@@ -19,7 +19,7 @@ import getVortexPath from '../../util/getVortexPath';
 class DeploymendMethod extends LinkingDeployment {
   public compatible: string[] = ['symlink_activator_elevated'];
 
-  public priority: number = 10;
+  public override priority: number = 10;
 
   private mDidLogElevation: boolean = false;
 
@@ -31,7 +31,7 @@ class DeploymendMethod extends LinkingDeployment {
         api);
   }
 
-  public detailedDescription(t: TFunction): string {
+  public override detailedDescription(t: TFunction): string {
     return t(
       'Symbolic links are special files containing a reference to another file. '
       + 'They are supported directly by the low-level API of the operating system '

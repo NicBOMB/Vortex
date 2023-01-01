@@ -14,7 +14,7 @@ class EmptyPlaceholder extends React.PureComponent<IEmptyPlaceholderProps, {}> {
     super(props);
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { fill, icon, subtext, text } = this.props;
     const classes = ['placeholder'];
     if (fill) {

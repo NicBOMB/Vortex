@@ -23,7 +23,7 @@ export type ButtonProps = ITooltipProps & typeof BootstrapButton.prototype.props
  *
  */
 export class Button extends React.PureComponent<ButtonProps, {}> {
-  public render() {
+  public override render() {
     const { tooltip } = this.props;
     const relayProps: any = { ...this.props };
     delete relayProps.tooltip;
@@ -72,7 +72,7 @@ const iconPropNames = new Set(['spin', 'pulse', 'stroke', 'hollow', 'border', 'i
 export type IconButtonProps = ButtonProps & IIconButtonExtraProps;
 
 export class IconButton extends React.Component<IconButtonProps, {}> {
-  public render() {
+  public override render() {
     const buttonProps = {};
     const iconProps = {};
     Object.keys(this.props).forEach(propKey => {
@@ -145,7 +145,7 @@ export interface IToggleButtonExtraProps {
 export type ToggleButtonProps = ButtonProps & IToggleButtonExtraProps;
 
 export class ToggleButton extends React.Component<ToggleButtonProps, {}> {
-  public render() {
+  public override render() {
     const {state} = this.props;
     const relayProps = { ...this.props };
 
@@ -197,7 +197,7 @@ export class ToggleButton extends React.Component<ToggleButtonProps, {}> {
 export type NavItemProps = ITooltipProps & typeof BootstrapNavItem.prototype.props;
 
 export class NavItem extends React.Component<NavItemProps, {}> {
-  public render() {
+  public override render() {
     const relayProps: any = { ...this.props };
     delete relayProps.tooltip;
     delete relayProps.placement;
@@ -223,8 +223,6 @@ export class NavItem extends React.Component<NavItemProps, {}> {
     }
   }
 }
-
-type FontAwesomeSize = 'lg' | '2x' | '3x' | '4x' | '5x';
 
 /**
  * copied from the typings .d.ts file because this interface is not exported
@@ -257,7 +255,7 @@ export type IconProps = ITooltipProps & ITooltipIconProps;
  * @class Icon
  */
 export class Icon extends React.Component<IconProps, {}> {
-  public render() {
+  public override render() {
     const relayProps: any = _.omit(this.props, ['tooltip', 'placement']);
 
     const classes = ['fake-link'].concat((this.props.className || '').split(' '));
@@ -298,7 +296,7 @@ export class ClickPopover extends React.Component<ClickPopoverProps, { open: boo
     };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { className, children, icon, id, tooltip } = this.props;
     const popover = (
       <Popover id={`popover-${id}`} style={{ maxWidth: 500 }}>

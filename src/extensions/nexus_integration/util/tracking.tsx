@@ -9,8 +9,6 @@ import { ProcessCanceled } from '../../../util/CustomErrors';
 import { laterT } from '../../../util/i18n';
 import { log } from '../../../util/log';
 import { activeGameId, gameById } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 import { getGame } from '../../gamemode_management/util/getGame';
 import { nexusGameId } from './convertGameId';
 
@@ -27,7 +25,7 @@ class Tracking {
   public once(nexusInstance: Nexus) {
     this.mNexus = nexusInstance;
     const state = this.mApi.getState();
-    const username = getSafe(state, ['persistent', 'nexus', 'userInfo', 'name'], undefined);
+    const username = state?.persistent?.nexus?.userInfo?.name;
     if (username !== undefined) {
       this.fetch();
     }
@@ -58,7 +56,7 @@ class Tracking {
         if (mod.attributes?.source === 'nexus') {
           const gameMode = activeGameId(this.mApi.getState());
           const nexusId = nexusGameId(getGame(gameMode));
-          if (!truthy(mod.attributes?.modId)) {
+          if (!mod.attributes?.modId){
             return false;
           }
           return this.mTrackedMods[nexusId]?.has?.(
@@ -89,9 +87,9 @@ class Tracking {
     const nexusId = nexusGameId(game);
 
     modIds.forEach(modId => {
-      if (truthy(mods[modId]?.attributes?.modId)) {
+      if (!!mods[modId]?.attributes?.modId){
         this.trackMod(nexusId, mods[modId].attributes.modId.toString?.());
-      } else if (truthy(downloads[modId]?.modInfo?.nexus?.ids?.modId)) {
+      } else if (!!downloads[modId]?.modInfo?.nexus?.ids?.modId){
         this.trackMod(nexusId, downloads[modId].modInfo.nexus.ids.modId.toString());
       }
     });
@@ -107,9 +105,9 @@ class Tracking {
     const nexusId = nexusGameId(game);
 
     modIds.forEach(modId => {
-      if (truthy(mods[modId]?.attributes?.modId)) {
+      if (!!mods[modId]?.attributes?.modId){
         this.untrackMod(nexusId, mods[modId].attributes.modId.toString?.());
-      } else if (truthy(downloads[modId]?.modInfo?.nexus?.ids?.modId)) {
+      } else if (!!downloads[modId]?.modInfo?.nexus?.ids?.modId){
         this.untrackMod(nexusId, downloads[modId].modInfo.nexus.ids.modId.toString());
       }
     });

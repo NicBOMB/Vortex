@@ -1,10 +1,7 @@
-import program from 'commander';
+import { Command } from 'commander';
 import { app, ipcMain, ipcRenderer } from 'electron';
-import * as fs from 'fs-extra';
-import * as path from 'path';
 import * as process from 'process';
 import { getApplication } from './application';
-import { log } from './log';
 import startupSettings from './startupSettings';
 
 export interface IParameters {
@@ -89,7 +86,7 @@ function electronIsShitArgumentSort(argv: string[]): string[] {
     nextArg++;
   }
 
-  switches.forEach(sw => {
+  switches.forEach((sw: keyof typeof ARG_COUNTS) => {
     res.push(sw);
     const argCount = ARG_COUNTS[sw] || 0;
     res.push(...args.slice(nextArg, nextArg + argCount));
@@ -112,27 +109,19 @@ function parseCommandline(argv: string[], electronIsShitHack: boolean): IParamet
     argv = electronIsShitArgumentSort(argv);
   }
 
-  let version: string = '1.0.0';
-  try {
-    // won't happen in regular operation but lets us test this function outside vortex
-    version = getApplication().version;
-  } catch (err) {
-    // nop
-  }
-
-  const commandLine = program
-    .command('Vortex')
-    .version(version)
-    .option('-d, --download <url>', 'Start downloadling the specified url '
+  const commandLine = new Command('Vortex')
+    .description('The elegant, powerful, and open-source mod manager from Nexus Mods.')
+    .version(getApplication().version)
+    .option('-d|--download <url>', 'Start downloadling the specified url '
                                   + '(any supported protocol like nxm:, https:, ...).')
-    .option('-i, --install <url>', 'Start downloadling & installing the specified url '
+    .option('-i|--install <url>', 'Start downloadling & installing the specified url '
                                   + '(any supported protocol like nxm:, https:, ...).')
     .option('--install-extension <id>', 'Start downloadling & installing the specified '
                                        + 'vortex extension. id can be "modId:<number>".')
-    .option('-g, --get <path>', 'Print the state variable at the specified path and quit. '
+    .option('-g|--get <path>', 'Print the state variable at the specified path and quit. '
                               + 'This can be used repeatedly to print multiple items',
             collect)
-    .option('-s, --set <path=value>', 'Change a value in the state. Please be very careful '
+    .option('-s|--set <path=value>', 'Change a value in the state. Please be very careful '
                                       + 'with this, incorrect use will break Vortex and you may '
                                       + 'lose data', assign)
     .option('--del <path>', 'Remove a value in state', collect)
@@ -153,7 +142,7 @@ function parseCommandline(argv: string[], electronIsShitHack: boolean): IParamet
     .option('--profile <profile id>', 'Start Vortex with a specific profile active')
     // allow unknown options since they may be interpreted by electron/node
     .allowUnknownOption()
-    .parse(argv || []).opts() as IParameters;
+    .parse(argv || []).opts();
 
   return {
     ...startupSettings,
@@ -177,9 +166,9 @@ const SKIP_ARGS = {
 
 export function filterArgs(input: string[]): string[] {
   let skipCount = 0;
-  const result = [];
+  const result: string[] = [];
 
-  input.forEach((arg, idx) => {
+  input.forEach((arg: keyof typeof SKIP_ARGS, idx) => {
     if (skipCount > 0) {
       skipCount --;
     } else if (idx === 0)  {

@@ -33,7 +33,7 @@ export class FileFound extends Error {
 }
 
 class DeploymentMethod extends LinkingDeployment {
-  public priority: number = 50;
+  public override priority: number = 50;
 
   private mLnkExpression = new RegExp(LNK_EXT + '$');
 
@@ -45,7 +45,7 @@ class DeploymentMethod extends LinkingDeployment {
         api);
   }
 
-  public detailedDescription(t: TFunction): string {
+  public override detailedDescription(t: TFunction): string {
     return t(
       'This deployment method doesn\'t use links but actually moves files to the destination '
       + 'directory.\nFor every deployed file it creates a lnk file in the source location to '
@@ -146,7 +146,7 @@ class DeploymentMethod extends LinkingDeployment {
       : Promise.resolve());
   }
 
-  public finalize(gameId: string,
+  public override finalize(gameId: string,
                   dataPath: string,
                   installationPath: string,
                   progressCB?: (files: number, total: number) => void): Promise<IDeployedFile[]> {
@@ -168,7 +168,7 @@ class DeploymentMethod extends LinkingDeployment {
     return super.finalize(gameId, dataPath, installationPath, progressCB);
   }
 
-  public deactivate(sourcePath: string, dataPath: string, sourceName: string): Promise<void> {
+  public override deactivate(sourcePath: string, dataPath: string, sourceName: string): Promise<void> {
     return turbowalk(sourcePath, entries => {
       if (this.context === undefined) {
         return;
@@ -187,7 +187,7 @@ class DeploymentMethod extends LinkingDeployment {
     });
   }
 
-  public getDeployedPath(input: string): string {
+  public override getDeployedPath(input: string): string {
     if (path.extname(input) === LNK_EXT) {
       return input.substring(0, input.length - LNK_EXT.length);
     }
@@ -241,14 +241,14 @@ class DeploymentMethod extends LinkingDeployment {
     return true;
   }
 
-  protected stat(filePath: string): Promise<fs.Stats> {
+  protected override stat(filePath: string): Promise<fs.Stats> {
     return fs.statAsync(filePath)
       .catch(err => (err.code === 'ENOENT')
         ? this.statVortexLink(filePath)
         : Promise.reject(err));
   }
 
-  protected statLink(filePath: string): Promise<fs.Stats> {
+  protected override statLink(filePath: string): Promise<fs.Stats> {
     return Promise.resolve(fs.lstatAsync(filePath));
   }
 

@@ -1,6 +1,5 @@
 import { IExtensionApi } from '../../../types/IExtensionContext';
 import { log } from '../../../util/log';
-import { getSafe } from '../../../util/storeHelper';
 
 import { downloadPathForGame } from '../../download_management/selectors';
 
@@ -59,20 +58,20 @@ function sortMods(gameId: string, mods: IMod[], api: IExtensionApi): Promise<IMo
   let numRules: number = 0;
 
   const modMapper = (mod: IMod) => {
-    let downloadGame = getSafe(mod.attributes, ['downloadGame'], gameId);
+    let downloadGame = mod.attributes?.downloadGame ?? gameId;
     if (Array.isArray(downloadGame)) {
       downloadGame = downloadGame[0];
     }
 
     const state = api.getState();
     const downloadPath = downloadPathForGame(state, downloadGame);
-    const fileName = getSafe(mod.attributes, ['fileName'], undefined);
+    const fileName = mod.attributes?.fileName;
     const filePath = fileName !== undefined ? path.join(downloadPath, fileName) : undefined;
     const effectiveGameId = mod.attributes?.downloadGame || gameId;
 
     return api.lookupModMeta({
-                fileMD5: getSafe(mod.attributes, ['fileMD5'], undefined),
-                fileSize: getSafe(mod.attributes, ['fileSize'], undefined),
+                fileMD5: mod.attributes?.fileMD5,
+                fileSize: mod.attributes?.fileSize,
                 filePath,
                 gameId: effectiveGameId,
               })
@@ -83,8 +82,8 @@ function sortMods(gameId: string, mods: IMod[], api: IExtensionApi): Promise<IMo
               setModAttribute(gameId, mod.id, 'fileMD5', metaInfo[0].value.fileMD5));
           }
           const rules = [].concat(
-            getSafe(metaInfo, [0, 'value', 'rules'], []),
-            mod.rules || []);
+            metaInfo?.[0]?.value?.rules ?? [],
+            mod.rules ?? []);
           rules.forEach((rule: IRule) => {
             const ref = findByRef(mods, rule.reference, { modId: mod.id, gameId });
             if (ref !== undefined) {

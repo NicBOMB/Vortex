@@ -1,7 +1,7 @@
 import { ILink, triggerDialogLink } from '../actions';
 import { closeDialog, DialogContentItem } from '../actions/notifications';
 import Collapse from '../controls/Collapse';
-import ErrorBoundary, { ErrorContext } from '../controls/ErrorBoundary';
+import ErrorBoundary from '../controls/ErrorBoundary';
 import Icon from '../controls/Icon';
 import Webview from '../controls/Webview';
 import {
@@ -40,7 +40,7 @@ interface IActionProps {
 }
 
 class Action extends React.Component<IActionProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, action, isDefault, isDisabled } = this.props;
     return (
       <Button
@@ -94,7 +94,7 @@ class Dialog extends ComponentEx<IProps, IComponentState> {
     };
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (newProps.dialogs.length > 0) {
       if (newProps.dialogs[0].id !== this.state.currentDialogId) {
         // dialog changed
@@ -133,7 +133,7 @@ class Dialog extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     if (this.props.dialogs.length > 0) {
       this.setState(update(this.state, {
         currentDialogId: { $set: this.props.dialogs[0].id },
@@ -142,7 +142,7 @@ class Dialog extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, dialogs } = this.props;
     const { dialogState } = this.state;
 

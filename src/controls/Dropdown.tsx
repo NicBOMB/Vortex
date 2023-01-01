@@ -13,7 +13,7 @@ export class DummyMenu extends React.Component<{}, {}> {
   public static defaultProps = {
     bsRole: (Dropdown.Menu as any).defaultProps.bsRole,
   };
-  public render(): JSX.Element {
+  public override render() {
     return <div/>;
   }
 
@@ -44,11 +44,11 @@ class MyDropdown extends React.Component<IProps, { up: boolean }> {
     };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mNode = ReactDOM.findDOMNode(this) as Element;
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const relayProps: any = _.omit(this.props, ['container', 'dropup', 'onToggle', 'children']);
     const filt = this.mOpen
       ? this.props.children

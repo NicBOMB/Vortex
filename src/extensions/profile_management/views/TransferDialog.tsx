@@ -1,8 +1,6 @@
 import { IconButton } from '../../../controls/TooltipControls';
 import { IState } from '../../../types/IState';
 import { ComponentEx, translate } from '../../../util/ComponentEx';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 
 import { IMod } from '../../mod_management/types/IMod';
 
@@ -53,19 +51,19 @@ class Editor extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public UNSAFE_componentWillReceiveProps(nextProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: IProps) {
     if (nextProps.dialog !== this.props.dialog) {
       this.nextState.dialog = nextProps.dialog;
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, profiles } = this.props;
     const { dialog } = this.state;
 
     return (
-      <Modal show={truthy(dialog)} onHide={this.close}>
-        {truthy(dialog)
+      <Modal show={!!dialog} onHide={this.close}>
+        {!!dialog
           ? (
             <Modal.Body>
             <div>
@@ -111,9 +109,8 @@ class Editor extends ComponentEx<IProps, IComponentState> {
   private apply = () => {
     const { mods, onSetModEnabled, profiles } = this.props;
     const { dialog } = this.state;
-    Object.keys(mods || {}).forEach(modId => {
-      onSetModEnabled(dialog.target, modId,
-        getSafe(profiles, [dialog.source, 'modState', modId, 'enabled'], false));
+    Object.keys(mods ?? {}).forEach(modId => {
+      onSetModEnabled(dialog.target, modId, profiles?.[dialog.source]?.modState?.[modId]?.enabled ?? false);
     });
     this.close();
   }
@@ -128,7 +125,7 @@ function mapStateToProps(state: IState): IConnectedProps {
   return {
     dialog,
     profiles: state.persistent.profiles,
-    mods: truthy(dialog) ? state.persistent.mods[dialog.gameId] : undefined,
+    mods: !!dialog ? state.persistent.mods[dialog.gameId] : undefined,
   };
 }
 

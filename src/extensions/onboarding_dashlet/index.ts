@@ -1,4 +1,3 @@
-import { IExtensionContext } from '../../types/IExtensionContext';
 import opn from '../../util/opn';
 import { currentGame } from '../../util/storeHelper';
 import { dismissOverlay } from '../instructions_overlay/actions';
@@ -6,15 +5,15 @@ import { NEXUS_BASE_URL } from '../nexus_integration/constants';
 import { nexusGameId } from '../nexus_integration/util/convertGameId';
 import Dashlet, { IOnCardClickPayload } from './Dashlet';
 import settingsReducer from './reducers';
-import { STEPS } from './steps';
+import { STEPS, IOnboardingContextOverride } from './steps';
 import { Overlay } from './views/Overlay';
 
-function init(context: IExtensionContext): boolean {
+function init(context: IOnboardingContextOverride): boolean {
   context.registerReducer(['settings', 'onboardingsteps'], settingsReducer);
 
   const allStepIds = STEPS.map((x) => x.id);
 
-  context.registerDashlet('Onboarding', 2, 3, 0, Dashlet, state => {
+  context.registerDashlet('Onboarding', 2, 3, 0, Dashlet, (state) => {
     return true;
   },
     () => ({

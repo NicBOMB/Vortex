@@ -1,6 +1,3 @@
-import { log } from '../../../util/log';
-import { truthy } from '../../../util/util';
-
 import { IMod, IModReference } from '../types/IMod';
 
 import * as _ from 'lodash';
@@ -62,13 +59,13 @@ function safeCoerce(input: string): string {
 
 export function isFuzzyVersion(input: string) {
   const cachedRes: boolean = fuzzyVersionCache[input];
-  if (cachedRes !== undefined) {
+  if (cachedRes !== undefined){
     return cachedRes;
   }
 
-  if (!truthy(input)) {
+  if (!input){
     fuzzyVersionCache[input] = false;
-  } else if (input.endsWith('+prefer') || (input === '*')) {
+  } else if (input.endsWith('+prefer') || (input === '*')){
     // +prefer can be used with non-semver versions as well
     fuzzyVersionCache[input] = true;
   } else {
@@ -136,9 +133,9 @@ function testRef(mod: IModLookupInfo, modId: string, ref: IModReference,
   }
 
   // if reference is by file hash and the match is not fuzzy, require the md5 to match
-  if ((truthy(ref.fileMD5))
+  if (!!ref.fileMD5
       && !fuzzyVersion
-      && (mod.fileMD5 !== ref.fileMD5)) {
+      && (mod.fileMD5 !== ref.fileMD5)){
     return false;
   }
 
@@ -186,7 +183,7 @@ function testRef(mod: IModLookupInfo, modId: string, ref: IModReference,
   // right version?
   if ((ref.versionMatch !== undefined)
       && (ref.versionMatch !== '*')
-      && truthy(mod.version)) {
+      && !!mod.version){
     const versionMatch = ref.versionMatch.split('+')[0];
     const doesMatch = (mod.version === ref.versionMatch)
                     || (mod.version === safeCoerce(versionMatch));

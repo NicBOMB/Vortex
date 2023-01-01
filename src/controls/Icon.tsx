@@ -67,18 +67,18 @@ class Icon extends React.Component<IIconProps, { sets: { [setId: string]: Set<st
     };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mMounted = true;
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.mMounted = false;
     if (this.mLoadPromise !== undefined) {
       this.mLoadPromise.cancel();
     }
   }
 
-  public render(): JSX.Element {
+  public override render() {
     return <IconBase {...this.props} getSet={this.loadSet} />;
   }
 

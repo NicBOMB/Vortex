@@ -1,5 +1,5 @@
 import Promise from 'bluebird';
-import {ILookupResult, IModInfo} from 'modmeta-db';
+import { ILookupResult, IModInfo } from 'modmeta-db';
 import { IFileListItem, IMod, IModReference } from './IMod';
 
 export interface IModInfoEx extends IModInfo {
@@ -22,7 +22,7 @@ export interface IDependency {
   phase?: number;
 }
 
-export interface IDependencyError {
+export interface IDependencyError extends IDependency {
   error: string;
 }
 

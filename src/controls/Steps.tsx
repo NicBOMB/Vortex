@@ -12,7 +12,7 @@ export type IProps = React.HTMLAttributes<any> & IStepsProps;
 class Steps extends React.Component<IProps, {}> {
   public static Step = Step;
 
-  public render(): JSX.Element {
+  public override render() {
     const { step } = this.props;
 
     const childArray: Array<React.ReactElement<any>> =

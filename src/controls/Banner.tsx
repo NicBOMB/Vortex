@@ -2,7 +2,6 @@ import { IBannerOptions } from '../types/IBannerOptions';
 import { IExtensibleProps } from '../types/IExtensionProvider';
 import { connect } from '../util/ComponentEx';
 import { extend } from '../util/ExtensionProvider';
-import { truthy } from '../util/util';
 
 import * as _ from 'lodash';
 import * as React from 'react';
@@ -37,11 +36,11 @@ class Banner extends React.Component<IProps, {}> {
   private mBanners: IBannerDefinition[];
   private mCurrentBanner: number = 0;
 
-  public componentDidMount() {
+  public override componentDidMount() {
     setInterval(this.cycle, this.props.cycleTime || 15000);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { bannerProps, className, objects, style } = this.props;
 
     this.mBanners = objects.filter((obj, idx) =>
@@ -70,7 +69,7 @@ class Banner extends React.Component<IProps, {}> {
   }
 
   private cycle = () => {
-    if (truthy(this.mRef)) {
+    if (!!this.mRef){
       const prev = (this.mRef.childNodes.item(this.mCurrentBanner) as any);
       prev?.attributes?.removeNamedItem?.('class');
 

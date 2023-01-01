@@ -1,5 +1,5 @@
 import { IReducerSpec } from '../../../types/IExtensionContext';
-import { getSafe, setSafe } from '../../../util/storeHelper';
+import { setSafe } from '../../../util/storeHelper';
 
 import { ILoadOrderEntry } from '../types/types';
 
@@ -9,7 +9,7 @@ export const modLoadOrderReducer: IReducerSpec = {
   reducers: {
     [actions.setFBLoadOrderEntry as any]: (state, payload) => {
       const { profileId, loEntry } = payload;
-      const loadOrder = getSafe(state, [profileId], []);
+      const loadOrder = state?.[profileId] ?? [];
       const newLO = loadOrder.reduce((accum, iter) => {
         if (iter.id === loEntry.id) {
           accum.push(loEntry);

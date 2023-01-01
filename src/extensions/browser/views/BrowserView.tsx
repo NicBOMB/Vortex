@@ -8,7 +8,6 @@ import { IState } from '../../../types/IState';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 import Debouncer from '../../../util/Debouncer';
 import { log } from '../../../util/log';
-import { truthy } from '../../../util/util';
 import Notification from '../../../views/Notification';
 
 import { closeBrowser } from '../actions';
@@ -65,7 +64,6 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
   private mRef: WebviewOverlay | WebviewEmbed;
   private mWebView = null;
   private mCallbacks: { [event: string]: (...args: any[]) => void };
-  private mSessionCallbacks: { [event: string]: (...args: any[]) => void };
   private mLoadingDebouncer: Debouncer;
   private mUpdateTimer: NodeJS.Timeout = undefined;
   private mMounted: boolean = false;
@@ -118,25 +116,25 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
     };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.updateFiltered();
     this.mMounted = true;
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.mMounted = false;
     if (this.mUpdateTimer !== undefined) {
       clearTimeout(this.mUpdateTimer);
     }
   }
 
-  public componentDidUpdate(prevProps: IProps) {
+  public override componentDidUpdate(prevProps: IProps) {
     if (prevProps.notifications !== this.props.notifications) {
       this.updateFiltered();
     }
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (newProps.url !== this.props.url) {
       if ((newProps.url === undefined) || (this.props.url === undefined)
         || (new URL(newProps.url).hostname !== new URL(this.props.url).hostname)) {
@@ -151,7 +149,7 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public shouldComponentUpdate(newProps: IProps, newState: IComponentState) {
+  public override shouldComponentUpdate(newProps: IProps, newState: IComponentState) {
     const res = (this.props.url !== newProps.url)
         || (this.props.instructions !== newProps.instructions)
         || (this.props.notifications !== newProps.notifications)
@@ -164,7 +162,7 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
     return res;
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, overlay, instructions, skippable } = this.props;
     const { confirmed, filtered, history, historyIdx, loading, url } = this.state;
     const referrer = (history.length > 0)
@@ -237,10 +235,6 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
     );
   }
 
-  private renderLoadingOverlay(): JSX.Element {
-    return <div className='browser-loading'><Spinner /></div>;
-  }
-
   private renderNav(): JSX.Element {
     const { t } = this.props;
     const { history, historyIdx } = this.state;
@@ -263,7 +257,7 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
   }
 
   private renderUrl(input: string): JSX.Element {
-    if (!truthy(input)) {
+    if (!input){
       return null;
     }
     const parsed = nodeUrl.parse(input);
@@ -386,13 +380,13 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
     this.mRef = ref;
     if (ref !== null) {
       this.mWebView = ReactDOM.findDOMNode(this.mRef) as any;
-      if (truthy(this.mWebView)) {
+      if (!!this.mWebView){
         Object.keys(this.mCallbacks).forEach(event => {
           this.mWebView.addEventListener(event, this.mCallbacks[event]);
         });
       }
     } else {
-      if (truthy(this.mWebView)) {
+      if (this.mWebView){
         Object.keys(this.mCallbacks).forEach(event => {
           this.mWebView.removeEventListener(event, this.mCallbacks[event]);
         });
@@ -405,7 +399,7 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
     const newPos = Math.max(0, historyIdx - 1);
     this.nextState.historyIdx = newPos;
     // this.nextState.url = history[newPos];
-    if (truthy(this.mWebView)) {
+    if (this.mWebView){
       try {
         this.mRef.loadURL(history[newPos]);
       } catch (err) {
@@ -419,7 +413,7 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
     const newPos = Math.min(history.length - 1, historyIdx + 1);
     this.nextState.historyIdx = newPos;
     // this.nextState.url = history[newPos];
-    if (truthy(this.mWebView)) {
+    if (!!this.mWebView){
       try {
         this.mRef.loadURL(history[newPos]);
       } catch (err) {
@@ -429,7 +423,7 @@ class BrowserView extends ComponentEx<IProps, IComponentState> {
   }
 
   private navCrumb = (evt) => {
-    if (!truthy(this.mWebView) || !truthy(this.mCurrentUrl)) {
+    if (!this.mWebView || !this.mCurrentUrl){
       return;
     }
 

@@ -1,6 +1,5 @@
 import Icon from '../../../controls/Icon';
 import bbcode from '../../../util/bbcode';
-import { truthy } from '../../../util/util';
 
 import { TFunction } from 'i18next';
 import memoizeOne from 'memoize-one';
@@ -41,14 +40,13 @@ class Description extends React.Component<IProps, IComponentState> {
     };
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, installed, short, source } = this.props;
 
     const popover = (
       <Popover id='popover-mod-description'>
         <div>{this.mLongBB}</div>
-        {truthy(source)
-          ? (
+        {!!source ? (
             <a
               onClick={nop}
               className='fake-link-disabled'
@@ -56,9 +54,7 @@ class Description extends React.Component<IProps, IComponentState> {
             >
               <Icon name='edit'/>{t('Edit Description')}
             </a>
-          )
-          : !installed
-          ? (
+          ) : !installed ? (
             <a
               onClick={nop}
               className='fake-link-disabled'
@@ -66,9 +62,7 @@ class Description extends React.Component<IProps, IComponentState> {
             >
               <Icon name='edit'/>{t('Edit Description')}
             </a>
-          )
-          :
-          (
+          ) : (
             <a onClick={this.editDescription}>
               <Icon name='edit'/>{t('Edit Description')}
             </a>

@@ -3,11 +3,11 @@
  */
 
 import { IGameStored } from '../extensions/gamemode_management/types/IGameStored';
-
+import { ThunkStore } from '../types/IExtensionContext';
+import { IState } from '../types/IState';
 import { activeGameId } from './selectors';
 
 import Promise from 'bluebird';
-import * as Redux from 'redux';
 
 function clone<T>(input: T): T {
   return Array.isArray(input)
@@ -26,7 +26,7 @@ function clone<T>(input: T): T {
  * @param {T} fallback
  * @returns {T}
  */
-export function getSafe<T>(state: any, path: Array<(string | number)>, fallback: T): T {
+function getSafe<T>(state: any, path: Array<(string | number)>, fallback: T): T {
   let current = state;
   for (const segment of path) {
     if ((current === undefined)
@@ -39,37 +39,6 @@ export function getSafe<T>(state: any, path: Array<(string | number)>, fallback:
   }
   if (current === undefined) {
     return fallback;
-  }
-  return current;
-}
-
-/**
- * case insensitive variant of getSafe
- */
-export function getSafeCI<T>(state: any, path: Array<(string | number)>, fallback: T): T {
-  let current = state;
-  const getCaseCorrected = (obj: any, prop: string | number) => {
-    if (typeof(prop) === 'number') {
-      return obj[prop] !== undefined ? prop : undefined;
-    }
-    const keys = Object.keys(obj);
-    const idx = keys.map(key => key.toLowerCase()).indexOf(prop.toLowerCase());
-    if (idx === -1) {
-      return undefined;
-    }
-    return keys[idx];
-  };
-
-  for (const segment of path) {
-    if ((current === undefined) || (current === null)) {
-      return fallback;
-    }
-
-    const caseCorrected = getCaseCorrected(current, segment);
-    if (caseCorrected === undefined) {
-      return fallback;
-    }
-    current = current[caseCorrected];
   }
   return current;
 }
@@ -349,29 +318,21 @@ function waitUntil(predicate: () => boolean, interval: number = 100): Promise<vo
  * the return value is a promise because known games are loaded during extension
  * initialization so there is quite a bit of code where we can't be sure
  * if this is yet available
- *
- * @export
- * @param {*} state
- * @returns {Promise<IGameStored>}
  */
-export function currentGame(store: Redux.Store<any>): Promise<IGameStored> {
-  const fallback = {id: '__placeholder', name: '<No game>', requiredFiles: []};
-  let knownGames = getSafe(store.getState(), ['session', 'gameMode', 'known'], null);
+export function currentGame(store: ThunkStore<IState>): Promise<IGameStored> {
+  const fallback: IGameStored = {id: '__placeholder', name: '<No game>', requiredFiles: [], executable: ''};
+  let knownGames = store.getState()?.session?.gameMode?.known;
   if ((knownGames !== null) && (knownGames !== undefined)) {
     const gameMode = activeGameId(store.getState());
-    const res = knownGames.find((ele: IGameStored) => ele.id === gameMode);
-    return Promise.resolve(res || fallback);
+    return Promise.resolve(knownGames.find((ele: IGameStored) => ele.id === gameMode) ?? fallback);
   } else {
     return waitUntil(() => {
-             knownGames =
-                 getSafe(store.getState(), ['session', 'gameMode', 'known'], null);
-             return (knownGames !== null) && (knownGames !== undefined);
-           })
-        .then(() => {
-          const gameMode = activeGameId(store.getState());
-
-          const res = knownGames.find((ele: IGameStored) => ele.id === gameMode);
-          return Promise.resolve(res || fallback);
-        });
+        knownGames = store.getState()?.session?.gameMode?.known;
+        return (knownGames !== undefined);
+      })
+      .then(() => {
+        const gameMode = activeGameId(store.getState());
+        return Promise.resolve(knownGames.find((ele: IGameStored) => ele.id === gameMode) ?? fallback);
+      });
   }
 }

@@ -17,45 +17,6 @@ import * as tmp from 'tmp';
 import * as url from 'url';
 
 /**
- * count the elements in an array for which the predicate matches
- *
- * @export
- * @template T
- * @param {T[]} container
- * @param {(value: T) => boolean} predicate
- * @returns {number}
- */
-export function countIf<T>(container: T[], predicate: (value: T) => boolean): number {
-  return container.reduce((count: number, value: T): number => {
-    return count + (predicate(value) ? 1 : 0);
-  }, 0);
-}
-
-/**
- * calculate the sum of the elements of an array
- *
- * @export
- * @param {number[]} container
- * @returns {number}
- */
-export function sum(container: number[]): number {
-  return container.reduce((total: number, value: number): number =>
-    total + value, 0);
-}
-
-/**
- * like the python setdefault function:
- * returns the attribute "key" from "obj". If that attribute doesn't exist
- * on obj, it will be set to the default value and that is returned.
- */
-export function setdefault<T, K extends keyof T>(obj: T, key: K, def: T[K]): T[K] {
-  if (!obj.hasOwnProperty(key)) {
-    obj[key] = def;
-  }
-  return obj[key];
-}
-
-/**
  * An ellipsis ("this text is too lo...") function. Usually these
  * functions clip the text at the end but often (i.e. when
  * clipping file paths) the end of the text is the most interesting part,
@@ -76,37 +37,18 @@ export function midClip(input: string, maxLength: number): string {
 }
 
 /**
- * test if a string is null, undefined or consists only of whitespaces
- * @param {string} check the string to check
+ * gets the delta between two objects
+ * ignores properties named in skip
+ * @param lhs left object, "before"
+ * @param rhs right object, "after"
  */
-export function isNullOrWhitespace(check: string): boolean {
-    return (!check || (check.trim().length === 0));
-}
-
-/**
- * return whether the specified value is "truthy" (not one of
- * these: undefined, null, 0, -0, NaN "")
- *
- * Obviously one could just do "if (val)" but js noobs
- * may not be aware what values that accepts exactly and whether that was
- * intentional. This is more explicit.
- */
-export function truthy(val: any): boolean {
-  return !!val;
-}
-
-/**
- * return the delta between two objects
- * @param lhs the left, "before", object
- * @param rhs the right, "after", object
- */
-export function objDiff(lhs: any, rhs: any, skip?: string[]): any {
-  const res = {};
+export function objDiff(lhs: any, rhs: any, skip?: string[]): object|null {
+  const res: {[key: string]: any} = {};
 
   if ((typeof(lhs) === 'object') && (typeof(rhs) === 'object')) {
-    Object.keys(lhs || {}).forEach(key => {
+    Object.keys(lhs || {}).forEach((key) => {
       if ((skip !== undefined) && (skip.indexOf(key) !== -1)) {
-        return;
+        return null;
       }
       if (!rhs?.hasOwnProperty?.(key) && lhs?.hasOwnProperty?.(key)) {
         res['-' + key] = lhs[key];
@@ -120,7 +62,7 @@ export function objDiff(lhs: any, rhs: any, skip?: string[]): any {
         }
       }
     });
-    Object.keys(rhs || {}).forEach(key => {
+    Object.keys(rhs || {}).forEach((key) => {
       if (!lhs?.hasOwnProperty?.(key) && rhs?.hasOwnProperty?.(key)) {
         res['+' + key] = rhs[key];
       }
@@ -408,21 +350,21 @@ export function timeout<T>(prom: Bluebird<T>,
 
   const doTimeout = () => {
     timedOut = true;
-    if (options?.throw === true) {
+    if (options?.throw === true){
       return Bluebird.reject(new TimeoutError());
     } else {
       return undefined;
     }
   };
 
-  const onTimeExpired = () => {
-    if (resolved) {
+  const onTimeExpired = (): Bluebird<any> => {
+    if (resolved){
       return Bluebird.resolve();
     }
-    if (options?.queryContinue !== undefined) {
+    if (options?.queryContinue !== undefined){
       return options?.queryContinue()
-        .then(requestContinue => {
-          if (requestContinue) {
+        .then((requestContinue) => {
+          if (requestContinue){
             delayMS *= 2;
             return Bluebird.delay(delayMS).then(onTimeExpired);
           } else {
@@ -448,7 +390,7 @@ export function timeout<T>(prom: Bluebird<T>,
  * Bluebird has this feature as Promise.delay but when using es6 default promises this can be used
  */
 export function delay(timeoutMS: number): Bluebird<void> {
-  return new Bluebird(resolve => {
+  return new Bluebird((resolve) => {
     setTimeout(resolve, timeoutMS);
   });
 }
@@ -595,7 +537,7 @@ function flattenInner(obj: any, key: string[],
   const getKeys = options.nonEnumerable
     ? Object.getOwnPropertyNames
     : Object.keys;
-  return getKeys(obj).reduce((prev, attr: string) => {
+  return getKeys(obj).reduce((prev: {[key: string]: any}, attr: string) => {
     if (objStack.indexOf(obj[attr]) !== -1) {
       return prev;
     }
@@ -625,21 +567,6 @@ export function toPromise<ResT>(func: (cb) => void): Bluebird<ResT> {
   });
 }
 
-export function makeUnique<T>(input: T[]): T[] {
-  return Array.from(new Set(input));
-}
-
-/**
- * create a list with only "unique" items, using a key function to determine uniqueness.
- * in case of collisions the last item with a key is kept
- * @param input the input list of items
- * @param key key function
- * @returns a list with duplicates removed
- */
-export function makeUniqueByKey<T>(input: T[], key: (item: T) => string): T[] {
-  return Object.values(input.reduce((prev, item) => { prev[key(item)] = item; return prev; }, {}));
-}
-
 export function withTmpDir<T>(cb: (tmpPath: string) => Promise<T>): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     tmp.dir({ unsafeCleanup: true }, (err, tmpPath, cleanup) => {
@@ -664,18 +591,6 @@ export function withTmpDir<T>(cb: (tmpPath: string) => Promise<T>): Promise<T> {
       }
     });
   });
-}
-
-export function unique<T, U>(input: T[], keyFunc?: (item: T) => U): T[] {
-  const keys = new Set<U>();
-  return input.reduce((prev: T[], iter: T) => {
-    const key = keyFunc?.(iter);
-    if (keys.has(key)) {
-      return prev;
-    }
-    keys.add(key);
-    return [].concat(prev, iter);
-  }, []);
 }
 
 export function delayed(delayMS: number): Promise<void> {
@@ -727,14 +642,11 @@ export function semverCoerce(input: string): semver.SemVer {
 
 // TODO: support thunk actions?
 export function batchDispatch(store: Redux.Dispatch | Redux.Store, actions: Redux.Action[]) {
-  const dispatch = store['dispatch'] ?? store;
+  /** @ts-expect-error */
+  const dispatch = store?.dispatch ?? store;
   if (actions.length > 0) {
     dispatch(batch(actions));
   }
-}
-
-export function isFunction(functionToCheck) {
-  return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
 /**
@@ -920,9 +832,9 @@ const proxyHandler: ProxyHandler<Overlayable<any, any>> = {
  * helper function to create a dictionary that can have conditional
  * overlays applied to it
  * @param baseData the base data object
- * @param layers keyed layers 
- * @param deduceLayer determine the layer to be used for a given key. If this returns 
- * @returns 
+ * @param layers keyed layers
+ * @param deduceLayer determine the layer to be used for a given key. If this returns
+ * @returns
  */
 export function makeOverlayableDictionary<KeyT extends string | number | symbol, ValueT>(
   baseData: Record<KeyT, ValueT>,

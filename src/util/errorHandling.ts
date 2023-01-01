@@ -1,6 +1,7 @@
 import { NEXUS_BASE_URL } from '../extensions/nexus_integration/constants';
 import { IErrorOptions, IExtensionApi } from '../types/api';
 import { IError } from '../types/IError';
+import { IState } from '../types/IState';
 
 import { COMPANY_ID } from './constants';
 import { UserCanceled } from './CustomErrors';
@@ -8,10 +9,9 @@ import { genHash } from './genHash';
 import getVortexPath from './getVortexPath';
 import { fallbackTFunc } from './i18n';
 import { log } from './log';
-import { bundleAttachment } from './message';
+import { bundleAttachment, IPrettifiedError } from './message';
 import opn from './opn';
-import { getSafe } from './storeHelper';
-import { flatten, getAllPropertyNames, spawnSelf, truthy } from './util';
+import { flatten, getAllPropertyNames, spawnSelf } from './util';
 
 import * as RemoteT from '@electron/remote';
 import NexusT, { IFeedbackResponse } from '@nexusmods/nexus-api';
@@ -113,12 +113,12 @@ ${error.stack}
 }
 
 export function createErrorReport(type: string, error: IError, context: IErrorContext,
-                                  labels: string[], state: any, sourceProcess?: string) {
+                                  labels: string[], state?: IState, sourceProcess?: string) {
   const userData = getVortexPath('userData');
   const reportPath = path.join(userData, 'crashinfo.json');
   fs.writeFileSync(reportPath, JSON.stringify({
     type, error, labels: labels || [], context,
-    reporterId: getSafe(state, ['confidential', 'account', 'nexus', 'APIKey'], undefined),
+    reporterId: state?.confidential?.account?.nexus?.APIKey,
     reportProcess: process.type, sourceProcess,
     userData,
   }));
@@ -244,7 +244,7 @@ export function sendReport(type: string, error: IError, context: IErrorContext,
   }
 }
 
-let defaultWindow: BrowserWindow = null;
+let defaultWindow: BrowserWindow;
 
 export function setWindow(window: BrowserWindow): void {
   defaultWindow = window;
@@ -256,28 +256,24 @@ export function getWindow(): BrowserWindow {
 
 let currentWindow: BrowserWindow;
 
-function getCurrentWindow() {
-  if (currentWindow === undefined) {
-    currentWindow = process.type === 'renderer'
-      ? remote.getCurrentWindow() : null;
+function getCurrentWindow(): BrowserWindow {
+  if (currentWindow === undefined && process.type === 'renderer') {
+    currentWindow = remote.getCurrentWindow();
   }
 
   return currentWindow;
 }
 
-export function getVisibleWindow(win?: BrowserWindow): BrowserWindow | null {
-  if (!truthy(win)) {
+export function getVisibleWindow(win?: BrowserWindow): BrowserWindow {
+  if (!win || win.isDestroyed() || !win.isVisible()){
     win = getCurrentWindow() ?? getWindow();
   }
-
-  return ((win !== null) && !win.isDestroyed() && win.isVisible())
-    ? win
-    : null;
+  return win;
 }
 
-function showTerminateError(error: IError, state: any, source: string,
-                            allowReport: boolean, withDetails: boolean)
-                            : boolean {
+function showTerminateError(
+  error: IError, source: string, allowReport: boolean,
+  withDetails: boolean, state?: IState ): boolean {
   const dialog = process.type === 'renderer' ? remote.dialog : dialogIn;
   const buttons = ['Ignore', 'Quit'];
   if (!withDetails) {
@@ -335,26 +331,13 @@ function showTerminateError(error: IError, state: any, source: string,
       return true;
     }
   } else if (buttons[action] === 'Show Details') {
-    return showTerminateError(error, state, source, allowReport, true);
+    return showTerminateError(error, source, allowReport, true, state);
   }
   return false;
 }
 
-/**
- * display an error message and quit the application
- * on confirmation.
- * Use this whenever the application state is unknown and thus
- * continuing could lead to data loss
- *
- * @export
- * @param {ITermination} error
- */
-export function terminate(error: IError, state: any, allowReport?: boolean, source?: string) {
+export function terminate(error: IError, state?: IState, allowReport?: boolean, source?: string) {
   const dialog = process.type === 'renderer' ? remote.dialog : dialogIn;
-  let win = process.type === 'renderer' ? remote.getCurrentWindow() : defaultWindow;
-  if (truthy(win) && (win.isDestroyed() || !win.isVisible())) {
-    win = null;
-  }
 
   if ((allowReport === undefined) && (error.allowReport === false)) {
     allowReport = false;
@@ -367,7 +350,7 @@ export function terminate(error: IError, state: any, allowReport?: boolean, sour
   log('error', 'unrecoverable error', { error, process: process.type });
 
   try {
-    if (showTerminateError(error, state, source, allowReport, false)) {
+    if (showTerminateError(error, source ?? '', allowReport ?? false, false, state)) {
       // ignored
       return;
     }
@@ -410,7 +393,7 @@ export function terminate(error: IError, state: any, allowReport?: boolean, sour
  * render error message for internal processing (issue tracker and such).
  * It's important this doesn't translate the error message or lose information
  */
-export function toError(input: any, title?: string,
+export function toError(input: IPrettifiedError|any, title?: string,
                         options?: IErrorOptions, sourceStack?: string): IError {
   let ten = I18next.getFixedT('en');
   try {
@@ -427,7 +410,7 @@ export function toError(input: any, title?: string,
   /* i18next-extract-disable-next-line */
   const t = (text: string) => ten(text, { replace: (options || {}).replace });
 
-  if (input instanceof Error) {
+  if (input as IPrettifiedError instanceof Error) {
     let stack = input.stack;
     if (sourceStack !== undefined) {
       stack += '\n\nReported from:\n' + sourceStack;
@@ -452,7 +435,7 @@ export function toError(input: any, title?: string,
       // object, but not an Error
       let message: string;
       let stack: string;
-      if (!truthy(input) || (getAllPropertyNames(input).length === 0)) {
+      if (!input || (getAllPropertyNames(input).length === 0)) {
         // this is bad...
         message = `An empty error message was thrown: "${inspect(input)}"`;
       } else if ((input.error !== undefined) && (input.error instanceof Error)) {

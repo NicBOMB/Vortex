@@ -7,7 +7,6 @@ import { IState } from '../../types/IState';
 import getVortexPath from '../../util/getVortexPath';
 import { log } from '../../util/log';
 import { showError } from '../../util/message';
-import { getSafe } from '../../util/storeHelper';
 
 import { setDownloadInstalled } from '../download_management/actions/state';
 import { getModType } from '../gamemode_management/util/modTypeExtensions';
@@ -109,16 +108,14 @@ class InstallContext implements IInstallContext {
 
       const profileId = state.settings.profiles.lastActiveProfile[this.mGameId];
       const profile = state.persistent.profiles[profileId];
-      return getSafe(profile, ['modState', modId, 'enabled'], false);
+      return profile?.modState?.[modId]?.enabled ?? false;
     };
     this.mSetDownloadInstalled = (archiveId, gameId, modId) => {
       dispatch(setDownloadInstalled(archiveId, gameId, modId));
     };
     this.mIsDownload = (archiveId) => {
       const state: IState = store.getState();
-      return (archiveId !== null)
-          && (getSafe(state, ['persistent', 'downloads', 'files', archiveId],
-                      undefined) !== undefined);
+      return (archiveId !== null) && (state?.persistent?.downloads?.files?.[archiveId]) !== undefined;
     };
     this.mSilent = silent ?? false;
   }

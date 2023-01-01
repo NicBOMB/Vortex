@@ -14,7 +14,6 @@ function queryGameInfo(game: IGame & IDiscoveryResult): Promise<{ [key: string]:
   }
   let totalSize = 0;
   let sizeWithoutLinks = 0;
-  const start = Date.now();
   return walk(game.path, (iter: string, stats: fs.Stats) => {
     totalSize += stats.size;
     // symbolic links are still counted because walk uses lstat, so the size returned is

@@ -32,13 +32,13 @@ class ProgressBar extends React.PureComponent<IBaseProps, IProgressBarState> {
     };
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IBaseProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IBaseProps) {
     if ((this.props.now !== newProps.now) && (this.state.startTime === undefined)) {
       this.setState({ startTime: Date.now(), startPos: newProps.now });
     }
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { className, labelLeft, labelRight, showPercentage, showTimeLeft,
             style, now } = this.props;
 

@@ -10,12 +10,12 @@ import { IAttachment, IErrorOptions } from '../types/IExtensionContext';
 import { IState } from '../types/IState';
 import { jsonRequest } from '../util/network';
 
-import { HTTPError, StalledError, TemporaryError, ThirdPartyError } from './CustomErrors';
+import { SystemError, HTTPError, StalledError, TemporaryError, ThirdPartyError } from './CustomErrors';
 import { didIgnoreError, getErrorContext, isOutdated,
          sendReport, toError } from './errorHandling';
 import * as fs from './fs';
 import { log } from './log';
-import { flatten, setdefault, truthy } from './util';
+import { flatten } from './util';
 
 import { IFeedbackResponse } from '@nexusmods/nexus-api';
 import Promise from 'bluebird';
@@ -154,7 +154,7 @@ function shouldAllowReport(err: string | Error | any, options?: IErrorOptions): 
   return noReportErrors.indexOf(err.code) === -1;
 }
 
-function dataToFile(id, input: any) {
+function dataToFile(id: string, input: any) {
   return new Promise<string>((resolve, reject) => {
     const data: Buffer = Buffer.from(JSON.stringify(input));
     tmpFile({
@@ -232,6 +232,21 @@ export function bundleAttachment(options?: IErrorOptions): Promise<string> {
     .then(fileNames => zipFiles(fileNames));
 }
 
+export const IErrorOptionsDefault: IErrorOptions = {
+    id: '',
+    message: '',
+    isBBCode: false,
+    isHTML: false,
+    allowReport: false,
+    warning: false,
+    allowSuppress: false,
+    hideDetails: false,
+    replace: { key: '' },
+    attachments: [],
+    extensionName: '',
+    actions: []
+  };
+
 /**
  * show an error notification with an optional "more" button that displays further details
  * in a modal dialog.
@@ -243,34 +258,33 @@ export function bundleAttachment(options?: IErrorOptions): Promise<string> {
  *                        want string or Errors but since some node apis return non-Error objects
  *                        where Errors are expected we have to be a bit more flexible here.
  */
-export function showError(dispatch: ThunkDispatch<IState, null, Redux.Action>,
-                          title: string,
-                          details?: string | Error | any,
-                          options?: IErrorOptions) {
+export function showError(
+  dispatch: ThunkDispatch<IState, null, Redux.Action>,
+  title: string,
+  details?: string | Error | any,
+  options?: IErrorOptions
+){
   if (options === undefined) {
     options = {};
   }
   const sourceErr = new Error();
 
-  if ((options.extensionName === undefined)
-      && (details?.['extensionName'] !== undefined)) {
-    options.extensionName = details['extensionName'];
+  if (options.extensionName.length === 0) {
+    options.extensionName = details?.extensionName ?? options.extensionName;
   }
 
   const err = renderError(details, options);
 
-  const allowReport = err.allowReport !== undefined
-    ? err.allowReport
-    : shouldAllowReport(details, options);
+  const allowReport = err.allowReport ?? shouldAllowReport(details, options);
 
   log(allowReport ? 'error' : 'warn', title, err);
 
-  const content: IDialogContent = (truthy(options) && options.isHTML) ? {
+  const content: IDialogContent = options?.isHTML ? {
     htmlText: err.message || err.text,
     options: {
       wrap: false,
     },
-  } : (options.isBBCode === true) ? {
+  } : options.isBBCode ? {
     bbcode: err.message || err.text,
     options: {
       wrap: false,
@@ -291,8 +305,8 @@ export function showError(dispatch: ThunkDispatch<IState, null, Redux.Action>,
   };
 
   if ((details?.['attachLogOnReport'] === true)
-      && (((options.attachments ?? []).find(iter => iter.id === 'log') === undefined))) {
-    options.attachments = setdefault(options, 'attachments', []).concat([
+      && (((options.attachments ?? []).find((iter) => iter.id === 'log') === undefined))) {
+    options.attachments = (options.attachments ??= []).concat([
       {
         id: 'log',
         type: 'file',
@@ -309,7 +323,8 @@ export function showError(dispatch: ThunkDispatch<IState, null, Redux.Action>,
   }
 
   if (details?.['attachFilesOnReport'] !== undefined) {
-    options.attachments = setdefault(options, 'attachments', []).concat(
+    options.attachments ??= [];
+    options.attachments = options.attachments.concat(
       details['attachFilesOnReport'].map((filePath: string, idx: number) => ({
         id: `file${idx}`,
         type: 'file',
@@ -318,19 +333,17 @@ export function showError(dispatch: ThunkDispatch<IState, null, Redux.Action>,
       })));
   }
 
-  if ((options.attachments !== undefined)
-      && (options.attachments.length > 0)
-      && allowReport) {
-    content.text = (content.text !== undefined ? (content.text + '\n\n') : '')
-      + 'Note: If you report this error, the following data will be added to the report:\n'
-      + options.attachments.map(attach => ` - ${attach.description}`).join('\n');
+  if ((options.attachments?.length ?? 0) > 0 && allowReport) {
+    content.text = `${content.text !== undefined ? (content.text + '\n\n') : ''
+      }Note: If you report this error, the following data will be added to the report:\n${
+      options.attachments.map(attach => ` - ${attach.description}`).join('\n')}`;
   }
 
   if ((options.extensionName !== undefined)
       && (allowReport === false)) {
-    content.text = (content.text !== undefined ? (content.text + '\n\n') : '')
-      + `Note: This error was generated by "${options.extensionName}", please report `
-      + 'it to the extension author.';
+    content.text = `${content.text !== undefined ? (content.text + '\n\n') : ''
+      }Note: This error was generated by "${options.extensionName}", please report ${
+      ''}this error to the extension author.`;
   }
 
   const actions: IDialogAction[] = [];
@@ -341,17 +354,25 @@ export function showError(dispatch: ThunkDispatch<IState, null, Redux.Action>,
     actions.push({
       label: 'Report',
       action: () => bundleAttachment(options)
-        .then(attachmentBundle => sendReport('error',
-                                             toError(details, title, options, sourceErr.stack),
-                                             context, ['error'], '', process.type, undefined,
-                                             attachmentBundle))
-        .then(response => {
+        .then((attachmentBundle) => (
+          sendReport(
+            'error',
+            toError(details, title, options, sourceErr.stack),
+            context,
+            ['error'],
+            '',
+            process.type,
+            '',
+            attachmentBundle
+          )
+        ))
+        .then((response) => {
           if (response?.github_issue !== undefined) {
             const { issue_number } = response.github_issue;
             const githubURL = `https://api.github.com/repos/${GITHUB_PROJ}/issues/${issue_number}`;
             jsonRequest<any>(githubURL)
               .catch(() => undefined)
-              .then(githubInfo => {
+              .then((githubInfo) => {
                 dispatch(showDialog('success', 'Issue reported', {
                   bbcode: genFeedbackText(response, githubInfo),
                 }, [{ label: 'Close' }]));
@@ -363,13 +384,11 @@ export function showError(dispatch: ThunkDispatch<IState, null, Redux.Action>,
 
   actions.push({ label: 'Close', default: true });
 
-  const haveMessage = (options.message !== undefined);
-
   dispatch(addNotification({
     id: options.id,
     type: options?.warning ? 'warning' : 'error',
-    title: haveMessage ? title : undefined,
-    message: haveMessage ? options.message : title,
+    title: options.message && title,
+    message: options.message || title,
     allowSuppress: options.allowSuppress,
     replace: options.replace,
     actions: details !== undefined ? [
@@ -382,165 +401,187 @@ export function showError(dispatch: ThunkDispatch<IState, null, Redux.Action>,
   }));
 }
 
-export interface IPrettifiedError {
+export interface IPrettifiedError extends Error {
   message: string;
   code?: string;
   replace?: any;
   allowReport?: boolean;
 }
 
-export function prettifyNodeErrorMessage(err: any,
+export function prettifyNodeErrorMessage(err: Error|SystemError,
                                          options?: IErrorOptions,
                                          fileName?: string): IPrettifiedError {
-  const decoded = decodeSystemError(err, err.path ?? err.filename ?? fileName);
+  const decoded = decodeSystemError(err, err["path"] ?? err["filename"] ?? fileName);
   if (decoded !== undefined) {
     return {
+      ...err,
       message: decoded.message,
-      replace: { path: err.path ?? err.filename },
+      replace: { path: err["path"] ?? err["filename"] },
       allowReport: false,
     };
   }
 
   if ((err instanceof ThirdPartyError)
-      || (err instanceof ArchiveBrokenError)) {
+      || (err instanceof ArchiveBrokenError)){
     return {
-      message: err.message,
+      ...err,
       allowReport: false,
     };
-  } else if (err instanceof TemporaryError) {
+  } else if (err instanceof TemporaryError){
     return {
-      message: err.message,
+      ...err,
       allowReport: false,
     };
-  } else if (err instanceof NoDeployment) {
+  } else if (err instanceof NoDeployment){
     return {
+      ...err,
       message: 'No supported deployment method selected, '
              + 'please review the deployment settings in Settings->Mods',
       allowReport: false,
     };
-  } else if (err.code === undefined) {
-    return { message: err.message, replace: {}, allowReport: err['allowReport'] };
-  } else if (err.syscall === 'getaddrinfo') {
+  } else if (err["code"] === undefined){
+    return { ...err, replace: {} };
+  } else if (err["syscall"] === 'getaddrinfo'){
     return {
+      ...err,
       message: 'Network address "{{host}}" could not be resolved. This is often a temporary error, '
              + 'please try again later.',
-      replace: { host: err.host || err.hostname },
+      replace: { host: err["host"] ?? err["hostname"] },
       allowReport: false,
     };
-  } else if (err.code === 'EPERM') {
-    const filePath = err.path || err.filename;
+  } else if (err["code"] === 'EPERM'){
+    const filePath = err["path"] || err["filename"];
     const firstLine = filePath !== undefined
       ? 'Vortex needs to access "{{filePath}}" but it\'s write protected.\n'
       : 'Vortex needs to access a file that is write protected.\n';
     return {
+      ...err,
       message: firstLine
             + 'When you configure directories and access rights you need to ensure Vortex can '
             + 'still access data directories.\n'
             + 'This is usually not a bug in Vortex.',
       replace: { filePath },
-      allowReport: false,
+      allowReport: false
     };
-  } else if (err.code === 'ENOENT') {
-    if ((err.path !== undefined) || (err.filename !== undefined)) {
-      const filePath = err.path || err.filename;
+  } else if (err["code"] === 'ENOENT'){
+    if ((err["path"] !== undefined) || (err["filename"] !== undefined)){
+      const filePath = err["path"] || err["filename"];
 
       return {
+        ...err,
         message: 'Vortex tried to access "{{filePath}}" but it doesn\'t exist.',
         replace: { filePath },
-        allowReport: false,
+        allowReport: false
       };
-    } else if (err.host !== undefined) {
+    } else if (err["host"] !== undefined){
       return {
+        ...err,
         message: 'Network address "{{host}}" not found.',
-        replace: { host: err.host },
-        allowReport: false,
+        replace: { host: err["host"] },
+        allowReport: false
       };
     }
-  } else if (err.code === 'ENOSPC') {
+  } else if (err["code"] === 'ENOSPC'){
     return {
+      ...err,
       message: 'The disk is full',
       allowReport: false,
     };
-  } else if ((err.code === 'EACCES') || (err.port !== undefined)) {
+  } else if ((err["code"] === 'EACCES') || (err["port"] !== undefined)){
     return {
+      ...err,
       message: 'Network connect was not permitted, please check your firewall settings',
       allowReport: false,
     };
-  } else if (err.code === 'EPROTO') {
+  } else if (err["code"] === 'EPROTO'){
     return {
+      ...err,
       message: 'Network protocol error. This is usually a temporary error, '
              + 'please try again later.',
       allowReport: false,
     };
-  } else if (err.code === 'ENETUNREACH') {
+  } else if (err["code"] === 'ENETUNREACH'){
     return {
+      ...err,
       message: 'Network server not reachable.',
       allowReport: false,
     };
-  } else if (err.code === 'ECONNABORTED') {
+  } else if (err["code"] === 'ECONNABORTED'){
     return {
+      ...err,
       message: 'Network connection aborted by the server.',
       allowReport: false,
     };
-  } else if (err.code === 'ECONNREFUSED') {
+  } else if (err["code"] === 'ECONNREFUSED'){
     return {
+      ...err,
       message: 'Network connection refused.',
       allowReport: false,
     };
-  } else if (err.code === 'ECONNRESET') {
+  } else if (err["code"] === 'ECONNRESET'){
     return {
+      ...err,
       message: 'Network connection closed unexpectedly.',
       allowReport: false,
     };
-  } else if (['ETIMEDOUT', 'ESOCKETTIMEDOUT'].includes(err.code)) {
+  } else if (['ETIMEDOUT', 'ESOCKETTIMEDOUT'].includes(err["code"])){
     return {
+      ...err,
       message: 'Network connection to "{{address}}" timed out, please try again.',
-      replace: { address: err.address },
+      replace: { address: err["address"] },
       allowReport: false,
     };
-  } else if (err.message.startsWith('connect ETIMEDOUT')) {
+  } else if (err.message.startsWith('connect ETIMEDOUT')){
     return {
+      ...err,
       message: 'Network connection timed out, please try again.',
-      replace: { address: err.address },
+      replace: { address: err["address"] },
       allowReport: false,
     };
-  } else if (err.code === 'EAI_AGAIN') {
+  } else if (err["code"] === 'EAI_AGAIN'){
     return {
+      ...err,
       message: 'Temporary name resolution error, please try again later.',
       allowReport: false,
     };
-  } else if (err.code === 'EISDIR') {
+  } else if (err["code"] === 'EISDIR'){
     return {
+      ...err,
       message: 'Vortex expected a file but found a directory: "{{path}}".',
-      replace: { path: err.path },
+      replace: { path: err["path"] },
       allowReport: false,
     };
-  } else if (err.code === 'ENOTDIR') {
+  } else if (err["code"] === 'ENOTDIR'){
     return {
+      ...err,
       message: 'Vortex expected a directory but found a file.',
       allowReport: false,
     };
-  } else if (err.code === 'EROFS') {
+  } else if (err["code"] === 'EROFS'){
     return {
+      ...err,
       message: 'The filesystem is read-only.',
       allowReport: false,
     };
-  } else if (err.code === 'EIO') {
+  } else if (err["code"] === 'EIO'){
     return {
+      ...err,
       message: 'A general I/O error was reported. This may indicate a hardware defect or a '
              + 'removable medium got disconnected, sometimes it may also be caused by the '
              + 'disk being almost full.',
       allowReport: false,
     };
-  } else if (['ERR_SSL_WRONG_VERSION_NUMBER', 'ERR_SSL_BAD_DECRYPT'].includes(err.code)) {
+  } else if (['ERR_SSL_WRONG_VERSION_NUMBER', 'ERR_SSL_BAD_DECRYPT'].includes(err["code"])){
     return {
+      ...err,
       message: 'A network SSL error occurred. If this problem persists, please update and review '
              + 'any network-related security software in your system (Anti Virus, Firewall, '
              + 'Proxies, ...)',
       allowReport: false,
     };
-  } else if (['CERT_HAS_EXPIRED', 'CERT_NOT_YET_VALID'].includes(err.code)) {
+  } else if (['CERT_HAS_EXPIRED', 'CERT_NOT_YET_VALID'].includes(err["code"])){
     return {
+      ...err,
       message: 'A secure connection was rejected because the server certificate is not valid. '
              + 'If this problem persists it probably indicates an issue with your setup, either your '
              + 'ISP or Anti Virus interfering with the certification or your system is infected '
@@ -550,19 +591,21 @@ export function prettifyNodeErrorMessage(err: any,
   } else if (['UNABLE_TO_VERIFY_LEAF_SIGNATURE',
               'SELF_SIGNED_CERT_IN_CHAIN',
               'ERR_SSL_WRONG_VERSION_NUMBER',
-              'UNABLE_TO_GET_ISSUER_CERT_LOCALLY'].includes(err.code)
-             || (err.function === 'OPENSSL_internal')) {
+              'UNABLE_TO_GET_ISSUER_CERT_LOCALLY'].includes(err["code"])
+             || (err["function"] === 'OPENSSL_internal')){
     return {
+      ...err,
       message: 'Encountered an invalid SSL certificate. If this happens on a network connection '
               + 'to a server that has a proper certificate (like the Nexus Mods API) it may '
               + 'indicate a significant security issue in your system.',
       allowReport: false,
     };
-  } else if (['ERR_DLOPEN_FAILED'].includes(err.code)) {
+  } else if (['ERR_DLOPEN_FAILED'].includes(err["code"])){
     const lines: string[] = err.message.split(os.EOL);
     if (lines.length === 2) {
       const filePath: string = lines[1];
       return {
+        ...err,
         message: 'The DLL "{{fileName}}" failed to load. This usually happens because an '
           + 'Antivirus tool has incorrectly quarantined or locked it.',
         replace: {
@@ -571,18 +614,20 @@ export function prettifyNodeErrorMessage(err: any,
       };
     } else {
       return {
+        ...err,
         message: 'A DLL failed to load. This usually happens because an '
           + 'Antivirus tool has incorrectly quarantined or locked it.',
       };
     }
-  } else if (err.code === 'UNKNOWN') {
-    if (truthy(err['nativeCode'])) {
+  } else if (err["code"] === 'UNKNOWN'){
+    if (!!err['nativeCode']){
       // the if block is the original code from when native error codes were introduced
       // but nativeCode is supposed to be only the numerical code, not an object with both
       // message and code.
       // To be safe I'm keeping both variants but I'm fairly sure the first block is never hit
       if (err['nativeCode'].code !== undefined) {
         return {
+          ...err,
           message: 'An unrecognized error occurred. The error may contain information '
                 + 'useful for handling it better in the future so please do report it (once): \n'
                 + `${err['nativeCode'].message} (${err['nativeCode'].code})`,
@@ -591,6 +636,7 @@ export function prettifyNodeErrorMessage(err: any,
         };
       } else {
         return {
+          ...err,
           message: 'An unrecognized error occurred. The error may contain information '
                 + 'useful for handling it better in the future so please do report it (once): \n'
                 + `${err.message} (${err['nativeCode']})`,
@@ -600,6 +646,7 @@ export function prettifyNodeErrorMessage(err: any,
       }
     } else {
       return {
+        ...err,
         message: 'An unknown error occurred. What this means is that Windows or the framework '
           + 'don\'t provide any useful information to diagnose this problem. '
           + 'Please do not report this issue without saying what exactly you were doing.',
@@ -608,9 +655,7 @@ export function prettifyNodeErrorMessage(err: any,
   }
 
   return {
-    message: err.message,
-    code: err.code,
-    allowReport: err['allowReport'],
+    ...err
   };
 }
 

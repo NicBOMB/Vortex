@@ -13,7 +13,7 @@ interface IPageButtonProps {
 }
 
 class PageButton extends React.Component<IPageButtonProps, {}> {
-  public componentDidMount() {
+  public override componentDidMount() {
     const { page } = this.props;
     if (page.badge) {
       page.badge.attach(this);
@@ -23,7 +23,7 @@ class PageButton extends React.Component<IPageButtonProps, {}> {
     }
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     const { page } = this.props;
     if (page.badge) {
       page.badge.detach(this);
@@ -33,7 +33,7 @@ class PageButton extends React.Component<IPageButtonProps, {}> {
     }
   }
 
-  public render() {
+  public override render() {
     const { t, namespace, page } = this.props;
     return (
       <div>

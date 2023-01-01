@@ -10,8 +10,6 @@ import * as fs from '../../util/fs';
 import lazyRequire from '../../util/lazyRequire';
 import { log } from '../../util/log';
 import { activeGameId, installPathForGame } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
-import { truthy } from '../../util/util';
 
 import { suggestStagingPath } from '../gamemode_management/util/discovery';
 
@@ -115,7 +113,7 @@ function queryStagingFolderInvalid(api: IExtensionApi,
 
 async function ensureStagingDirectoryImpl(api: IExtensionApi,
                                           instPath?: string,
-                                          gameId?: string) 
+                                          gameId?: string)
                                           : Promise<string>
 {
   const state = api.getState();
@@ -154,7 +152,7 @@ async function ensureStagingDirectoryImpl(api: IExtensionApi,
     // staging dir exists, does the tag exist?
     await fs.statAsync(path.join(instPath, STAGING_DIR_TAG));
   } catch (err) {
-    const mods = getSafe(state, ['persistent', 'mods', gameId], undefined);
+    const mods = state?.persistent?.mods?.[gameId];
     if ((partitionExists === true) && (dirExists === false) && (mods === undefined)) {
       // If the mods state branch for this game is undefined - this must be the
       //  first time we manage this game - just create the staging path.
@@ -207,8 +205,8 @@ async function ensureStagingDirectoryImpl(api: IExtensionApi,
           title: api.translate('Select staging folder'),
         });
 
-        if (!truthy(selectedPath)) {
-          return ensureStagingDirectoryImpl(api, instPath, gameId); 
+        if (!selectedPath){
+          return ensureStagingDirectoryImpl(api, instPath, gameId);
         }
 
         try {

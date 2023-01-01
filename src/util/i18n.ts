@@ -2,7 +2,6 @@ import { IExtension } from '../extensions/extension_manager/types';
 
 import * as fs from './fs';
 import getVortexPath from './getVortexPath';
-import { log } from './log';
 
 import Bluebird from 'bluebird';
 import I18next, { i18n, TOptions } from 'i18next';
@@ -31,7 +30,7 @@ export interface IInitResult {
 
 type BackendType = 'bundled' | 'custom' | 'extension';
 
-class MultiBackend {
+class MultiBackend { // @ts-expect-error
   private static type = 'backend';
   private mOptions: any;
   private mServices: any;
@@ -74,6 +73,7 @@ class MultiBackend {
 
     res.init(this.mServices, {
       loadPath: path.join(basePath, '{{lng}}', '{{ns}}.json'),
+      addPath: path.join(basePath, '{{lng}}','{{ns}}.missing.json'),
       jsonIndent: 2,
     });
 

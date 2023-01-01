@@ -27,7 +27,7 @@ type IProps = IDynDivProps & IConnectedProps & IExtensionProps & React.HTMLAttri
  * A control to contain arbitrary controls added through extensions.
  */
 class DynDiv extends React.Component<IProps, {}> {
-  public render(): JSX.Element {
+  public override render() {
     const { group, objects, orientation } = this.props;
 
     const visible = objects.filter((obj, idx) =>

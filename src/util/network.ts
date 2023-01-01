@@ -28,12 +28,11 @@ export function rawRequest(apiURL: string, options?: IRequestOptions): Promise<s
       const { statusCode } = res;
       const contentType = res.headers['content-type'];
 
-      let err: string;
       if (statusCode !== 200) {
-        err = `Request Failed. Status Code: ${statusCode}`;
+        throw `Request Failed. Status Code: ${statusCode}`;
       } else if ((options.expectedContentType !== undefined)
         && !options.expectedContentType.test(contentType)) {
-        err = `Invalid content-type ${contentType}`;
+        throw `Invalid content-type ${contentType}`;
       }
 
       if (options.encoding !== undefined) {
@@ -111,9 +110,8 @@ export function upload(targetUrl: string, dataStream: Readable, dataSize: number
       log('debug', 'upload complete',
           { targetUrl, dataSize, statusCode, elapsed: Date.now() - started });
 
-      let err: string;
       if (statusCode !== 200) {
-        err = `Request Failed. Status Code: ${statusCode}`;
+        throw `Request Failed. Status Code: ${statusCode}`;
       }
 
       let rawData: Buffer = Buffer.alloc(0);

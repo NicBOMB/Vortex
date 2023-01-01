@@ -12,7 +12,7 @@ interface IProps {
 }
 
 export const BoxWithHandle: FC<IProps> = (props: IProps) => {
-  const [{ opacity, isDragging }, drag, dragPreview] = useDrag({
+  const [{ opacity }, drag, dragPreview] = useDrag({
     item: { idx: props.index, id: props.item.id, type: 'TOOL' },
     collect: (monitor) => {
       return {
@@ -22,7 +22,7 @@ export const BoxWithHandle: FC<IProps> = (props: IProps) => {
     },
   });
   const ref = useRef(null)
-  const [spec, dropRef] = useDrop({
+  const [_, dropRef] = useDrop({
     accept: 'TOOL',
     hover: (hoveredOverItem: any, monitor) => {
       const dragIdx = props.index;

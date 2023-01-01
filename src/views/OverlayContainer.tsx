@@ -21,7 +21,7 @@ export interface IExtendedProps {
 type IProps = IBaseProps & IExtendedProps;
 
 class OverlayContainer extends React.Component<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { objects } = this.props;
     return (
       <div>
@@ -46,8 +46,8 @@ class OverlayContainer extends React.Component<IProps, {}> {
   }
 }
 
-function registerOverlay(instanceGroup: undefined, id: string, component: React.ComponentClass<any>,
-                         props?: PropsCallback): IExtOverlay {
+function registerOverlay(instanceGroup: any, id: string, component: React.ComponentClass<any>,
+                         props: PropsCallback): IExtOverlay {
   return { id, component, props };
 }
 

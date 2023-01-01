@@ -11,8 +11,7 @@ import { log } from '../../util/log';
 import presetManager from '../../util/PresetManager';
 import ReduxProp from '../../util/ReduxProp';
 import * as selectors from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
-import { sum, toPromise, truthy } from '../../util/util';
+import { toPromise } from '../../util/util';
 
 import {
   addLocalDownload,
@@ -30,7 +29,7 @@ import { setTransferDownloads } from './actions/transactions';
 import { settingsReducer } from './reducers/settings';
 import { stateReducer } from './reducers/state';
 import { transactionsReducer } from './reducers/transactions';
-import { DownloadState, IDownload } from './types/IDownload';
+import { IDownload } from './types/IDownload';
 import { IProtocolHandlers, IResolvedURL } from './types/ProtocolHandlers';
 import { ensureDownloadsDirectory } from './util/downloadDirectory';
 import getDownloadGames from './util/getDownloadGames';
@@ -43,7 +42,7 @@ import SpeedOMeter from './views/SpeedOMeter';
 
 import downloadAttributes from './downloadAttributes';
 import DownloadManager from './DownloadManager';
-import observe, { DownloadObserver } from './DownloadObserver';
+import observe from './DownloadObserver';
 
 import * as RemoteT from '@electron/remote';
 import Promise from 'bluebird';
@@ -63,7 +62,6 @@ import { convertNXMIdReverse } from '../nexus_integration/util/convertGameId';
 
 const remote = lazyRequire<typeof RemoteT>(() => require('@electron/remote'));
 
-let observer: DownloadObserver;
 let manager: DownloadManager;
 let updateDebouncer: Debouncer;
 
@@ -86,7 +84,7 @@ function withAddInProgress(fileName: string, cb: () => PromiseLike<void>): Promi
 }
 
 function knownArchiveExt(filePath: string): boolean {
-  if (!truthy(filePath)) {
+  if (!filePath){
     return false;
   }
   return archiveExtLookup.has(path.extname(filePath).toLowerCase());
@@ -126,21 +124,21 @@ export interface IExtensionContextExt extends IExtensionContext {
 }
 
 function attributeExtractor(input: any) {
-  let downloadGame: string | string[] = getSafe(input, ['download', 'game'], []);
+  let downloadGame: string | string[] = input?.download?.game ?? [];
   if (Array.isArray(downloadGame)) {
     downloadGame = downloadGame[0];
   }
   const logicalFileName = input?.meta?.logicalFileName
                        || input?.download?.modInfo?.name;
   return Promise.resolve({
-    fileName: getSafe(input, ['download', 'localPath'], undefined),
-    fileMD5: getSafe(input, ['download', 'fileMD5'], undefined),
-    fileSize: getSafe(input, ['download', 'size'], undefined),
-    source: getSafe(input, ['download', 'modInfo', 'source'], undefined),
-    version: getSafe(input, ['download', 'modInfo', 'version'], undefined),
+    fileName: input?.download?.localPath,
+    fileMD5: input?.download?.fileMD5,
+    fileSize: input?.download?.size,
+    source: input?.download?.modInfo?.source,
+    version: input?.download?.modInfo?.version,
     logicalFileName,
-    modId: getSafe(input, ['download', 'modInfo', 'ids', 'modId'], undefined),
-    fileId: getSafe(input, ['download', 'modInfo', 'ids', 'fileId'], undefined),
+    modId: input?.download?.modInfo?.ids?.modId,
+    fileId: input?.download?.modInfo?.ids?.fileId,
     downloadGame,
   });
 }
@@ -255,7 +253,7 @@ function updateDownloadPath(api: IExtensionApi, gameId?: string) {
   // exist, the following block should do nothing
   Object.keys(downloads)
     .filter(dlId => (downloads[dlId].state === 'finished')
-                    && !truthy(downloads[dlId].localPath))
+                    && !downloads[dlId].localPath)
     .forEach(dlId => {
       api.store.dispatch(removeDownload(dlId));
     });
@@ -568,8 +566,7 @@ function checkPendingTransfer(api: IExtensionApi): Promise<ITestResult> {
     return Promise.resolve(result);
   }
 
-  const pendingTransfer: string[] = ['persistent', 'transactions', 'transfer', 'downloads'];
-  const transferDestination = getSafe(state, pendingTransfer, undefined);
+  const transferDestination = state?.persistent?.transactions?.transfer?.downloads;
   if (transferDestination === undefined) {
     return Promise.resolve(result);
   }
@@ -718,7 +715,7 @@ function removeDownloadsWithoutFile(store: Redux.Store,
   // remove downloads that have no localPath set because they just cause trouble. They shouldn't
   // exist at all
   Object.keys(downloads)
-    .filter(dlId => !truthy(downloads[dlId].localPath))
+    .filter(dlId => !downloads[dlId].localPath)
     .forEach(dlId => {
       store.dispatch(removeDownload(dlId));
     });
@@ -730,7 +727,7 @@ function processInterruptedDownloads(api: IExtensionApi,
   const interruptedDownloads = Object.keys(downloads)
     .filter(id => ['init', 'started', 'pending'].includes(downloads[id].state));
   interruptedDownloads.forEach(id => {
-    if (!truthy(downloads[id].urls)) {
+    if (!downloads[id].urls){
       // download was interrupted before receiving urls, has to be canceled
       log('info', 'download removed because urls were never retrieved', { id });
       const gameId = Array.isArray(downloads[id].game)
@@ -747,13 +744,13 @@ function processInterruptedDownloads(api: IExtensionApi,
         api.store.dispatch(removeDownload(id));
       }
     } else {
-      let realSize = (downloads[id].size !== 0)
-        ? downloads[id].size - sum((downloads[id].chunks || []).map(chunk => chunk.size))
-        : 0;
-      if (isNaN(realSize)) {
-        realSize = 0;
-      }
-      api.store.dispatch(setDownloadInterrupted(id, realSize));
+      api.store.dispatch(setDownloadInterrupted(id, (downloads[id].size !== 0 ?
+        downloads[id].size -
+          (downloads[id].chunks ?? [])
+            .map(chunk => chunk.size)
+            .reduce((total: number, value): number => total + value, 0)
+        : 0
+      )));
     }
   });
 }
@@ -822,20 +819,33 @@ function init(context: IExtensionContextExt): boolean {
     protocolHandlers[schema] = handler;
   };
 
-  const queryCondition = (instanceIds: string[]) => {
-    const state: IState = context.api.store.getState();
-    const incomplete = instanceIds.find(instanceId =>
-      getSafe<DownloadState>(state.persistent.downloads.files, [instanceId, 'state'], 'init')
-      !== 'finished');
-    return incomplete === undefined
-      ? true
-      : context.api.translate('Can only query finished downloads') as string;
+  const queryCondition: (instanceIds?: string[]) => boolean | string = (instanceIds) => {
+    const state = context.api.store.getState();
+    const incomplete = instanceIds.find((instanceId) => (
+      state.persistent.downloads.files[instanceId]?.state ?? 'init') !== 'finished'
+    );
+    return incomplete === undefined ||
+      context.api.translate('Can only query finished downloads') as string;
   };
 
-  context.registerAction('downloads-action-icons', 100, 'refresh', {}, 'Query Info',
-    (instanceIds: string[]) => { queryInfo(context.api, instanceIds, true); }, queryCondition);
-  context.registerAction('downloads-multirow-actions', 100, 'refresh', {}, 'Query Info',
-    (instanceIds: string[]) => { queryInfo(context.api, instanceIds, true); }, queryCondition);
+  context.registerAction(
+    'downloads-action-icons',
+    100,
+    'refresh',
+    {},
+    'Query Info',
+    (instanceIds: string[]) => { queryInfo(context.api, instanceIds, true); },
+    queryCondition
+  );
+  context.registerAction(
+    'downloads-multirow-actions',
+    100,
+    'refresh',
+    {},
+    'Query Info',
+    (instanceIds: string[]) => { queryInfo(context.api, instanceIds, true); },
+    queryCondition
+  );
 
   context.registerAttributeExtractor(100, attributeExtractor);
   context.registerAttributeExtractor(25, attributeExtractorCustom);
@@ -848,7 +858,7 @@ function init(context: IExtensionContextExt): boolean {
 
   context.registerActionCheck('INIT_DOWNLOAD', (state: IState, action: any) => {
     const { games } = action.payload;
-    if (!truthy(games) || !Array.isArray(games) || (games.length === 0)) {
+    if (!games || !Array.isArray(games) || (games.length === 0)) {
       return 'No game associated with download';
     }
     return undefined;
@@ -856,7 +866,7 @@ function init(context: IExtensionContextExt): boolean {
 
   context.registerActionCheck('ADD_LOCAL_DOWNLOAD', (state: IState, action: any) => {
     const { game } = action.payload;
-    if (!truthy(game) || (typeof(game) !== 'string')) {
+    if (!game || (typeof(game) !== 'string')) {
       return 'No game associated with download';
     }
     return undefined;
@@ -864,7 +874,7 @@ function init(context: IExtensionContextExt): boolean {
 
   context.registerActionCheck('SET_COMPATIBLE_GAMES', (state, action: any) => {
     const { games } = action.payload;
-    if (!truthy(games) || !Array.isArray(games) || (games.length === 0)) {
+    if (!games || !Array.isArray(games) || (games.length === 0)) {
       return 'Invalid set of compatible games';
     }
     return undefined;
@@ -1067,7 +1077,7 @@ function init(context: IExtensionContextExt): boolean {
         ])
           .then(result => result.action === 'Continue');
       });
-      observer = observeImpl(context.api, manager);
+      observeImpl(context.api, manager);
 
       const state = context.api.getState();
       const downloads = state.persistent.downloads?.files ?? {};

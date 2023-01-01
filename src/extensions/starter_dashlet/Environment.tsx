@@ -1,7 +1,6 @@
 import { ListGroup, ListGroupItem } from 'react-bootstrap';
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { getSafe } from '../../util/storeHelper';
 
 import { TFunction } from '../../util/i18n';
 import EnvButton from './EnvButton';
@@ -26,7 +25,7 @@ export default function Environment(props: IEnvironmentProps): JSX.Element {
     value: environment[key],
   }));
 
-  const group = getSafe(displayGroups, ['envEdit'], undefined);
+  const group = displayGroups?.envEdit;
 
   const editEnv = (itemId: string) => onEditEnv(itemId);
 

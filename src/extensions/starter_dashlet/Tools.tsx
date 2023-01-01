@@ -8,8 +8,6 @@ import { log } from '../../util/log';
 import { showError } from '../../util/message';
 import { activeGameId } from '../../util/selectors';
 import StarterInfo, { IStarterInfo } from '../../util/StarterInfo';
-import { getSafe } from '../../util/storeHelper';
-import { truthy } from '../../util/util';
 
 import AddToolButton from './AddToolButton';
 
@@ -20,7 +18,6 @@ import {
 
 import { IDiscoveryResult } from '../gamemode_management/types/IDiscoveryResult';
 import { IGameStored } from '../gamemode_management/types/IGameStored';
-import { IToolStored } from '../gamemode_management/types/IToolStored';
 
 import { setPrimaryTool, setToolOrder } from './actions';
 
@@ -176,7 +173,7 @@ export default function Tools(props: IStarterProps) {
       { type: propOf<IWelcomeScreenState>('gameStarter'), value: gameStarter },
       { type: propOf<IWelcomeScreenState>('tools'), value: tools },
     ]);
-    const jumpList = truthy(gameStarter)
+    const jumpList = !!gameStarter
       ? [gameStarter].concat(tools)
       : tools;
     updateJumpList(jumpList);
@@ -275,7 +272,7 @@ interface IToolIconsProps {
 function ToolIcons(props: IToolIconsProps): JSX.Element {
   const { counter, discoveredTools, tools, discoveredGame, validToolIds,
     game, applyOrder, addNewTool, editTool, removeTool, setPrimary, startTool } = props;
-  if ((game === undefined) && (getSafe(discoveredGame, ['id'], undefined) === undefined)) {
+  if (game === undefined && discoveredGame.id === undefined){
     return null;
   }
 
@@ -344,15 +341,13 @@ function generateToolStarters(props: IConnectedProps, gameStarterId: string): St
     return [];
   }
 
-  const knownTools: IToolStored[] = getSafe(game, ['supportedTools'], []);
+  const knownTools = game.supportedTools ?? [];
   const gameId = discoveredGame.id || game.id;
   const preConfTools = new Set<string>(knownTools.map(tool => tool.id));
-
-  const starters: StarterInfo[] = [
-  ];
+  const starters: StarterInfo[] = [];
 
   // add the tools provided by the game extension (whether they are found or not)
-  knownTools.forEach((tool: IToolStored) => {
+  knownTools.forEach((tool: IDiscoveredTool) => {
     try {
       starters.push(new StarterInfo(game, discoveredGame, tool, discoveredTools[tool.id]));
     } catch (err) {
@@ -394,17 +389,14 @@ function mapStateToProps(state: any): IConnectedProps {
 
   const res = {
     gameMode,
-    addToTitleBar: getSafe(state,
-      ['settings', 'interface', 'tools', 'addToolsToTitleBar'], false),
-    toolsOrder: getSafe(state,
-      ['settings', 'interface', 'tools', 'order', gameMode], emptyArray),
+    addToTitleBar: state.settings.interface.tools.addToolsToTitleBar ?? false,
+    toolsOrder: state.settings.interface.tools.order[gameMode] ?? emptyArray,
     knownGames: state.session.gameMode.known,
     discoveredGames: state.settings.gameMode.discovered,
-    discoveredTools: getSafe(state, ['settings', 'gameMode',
-      'discovered', gameMode, 'tools'], emptyObj),
-    primaryTool: getSafe(state, ['settings', 'interface', 'primaryTool', gameMode], undefined),
+    discoveredTools: state.settings.gameMode.discovered[gameMode].tools ?? emptyObj,
+    primaryTool: state.settings.interface.primaryTool[gameMode],
     toolsRunning: state.session.base.toolsRunning,
-    mods: getSafe(state, ['persistent', 'mods', gameMode], emptyObj),
+    mods: state.persistent.mods[gameMode] ?? emptyObj
   };
 
   const keys = Object.keys(res);

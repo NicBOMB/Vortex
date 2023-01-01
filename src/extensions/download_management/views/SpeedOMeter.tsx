@@ -23,7 +23,7 @@ type IProps = IBaseProps & IConnectedProps;
 const STATES: DownloadState[] = ['finalizing', 'started', 'paused'];
 
 class SpeedOMeter extends PureComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, downloads, slim, speed } = this.props;
 
     const activeDownloads = Object.keys(downloads ?? {})

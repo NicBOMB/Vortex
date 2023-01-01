@@ -1,7 +1,6 @@
 import { IExtensionApi } from '../types/api';
 import { ComponentEx, translate } from '../util/ComponentEx';
 
-import Icon from './Icon';
 import Overlay from './Overlay';
 import { IconButton } from './TooltipControls';
 
@@ -58,7 +57,7 @@ class More extends ComponentEx<IProps, IComponentState> {
     };
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { t, children, id, name, orientation, wikiId } = this.props;
     const { open } = this.state;
 

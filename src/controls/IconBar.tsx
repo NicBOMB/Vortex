@@ -1,10 +1,8 @@
 import { IActionDefinition } from '../types/IActionDefinition';
 import { IExtensibleProps } from '../types/IExtensionProvider';
 import { TFunction } from '../util/i18n';
-import { setdefault } from '../util/util';
 
 import ActionControl, { IActionControlProps, IActionDefinitionEx } from './ActionControl';
-import { HOVER_DELAY } from './constants';
 import Icon from './Icon';
 import PortalMenu from './PortalMenu';
 import ToolbarDropdown from './ToolbarDropdown';
@@ -15,12 +13,12 @@ import update from 'immutability-helper';
 import * as _ from 'lodash';
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
-import { ButtonGroup, Dropdown, MenuItem } from 'react-bootstrap';
+import { ButtonGroup, MenuItem } from 'react-bootstrap';
 import ReactDOM from 'react-dom';
 
 export type ButtonType = 'text' | 'icon' | 'both' | 'menu';
 
-export interface IBaseProps {
+interface IBaseProps {
   className?: string;
   group?: string;
   instanceId?: string | string[];
@@ -34,10 +32,10 @@ export interface IBaseProps {
   pullRight?: boolean;
   clickAnywhere?: boolean;
   showAll?: boolean;
-  t: TFunction;
+  t?: TFunction;
 }
 
-type IProps = IBaseProps & { actions?: IActionDefinitionEx[] } & React.HTMLAttributes<any>;
+type IProps = IBaseProps & { actions: IActionDefinitionEx[] } & React.HTMLAttributes<any>;
 
 function genTooltip(t: TFunction, show: boolean | string, ns?: string): string {
   return typeof (show) === 'string'
@@ -53,7 +51,7 @@ interface IMenuActionProps {
 }
 
 class MenuAction extends React.PureComponent<IMenuActionProps, {}> {
-  public render(): JSX.Element {
+  public override render() {
     const { t, action, id } = this.props;
     return (
       <MenuItem
@@ -193,11 +191,11 @@ class IconBar extends React.Component<IProps, { open: boolean }> {
     this.updateBGClick();
   }
 
-  public UNSAFE_componentWillReceiveProps() {
+  public override UNSAFE_componentWillReceiveProps() {
     this.updateBGClick();
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { actions, collapse, icon, id, groupByIcon,
             orientation, className, style } = this.props;
 
@@ -258,7 +256,8 @@ class IconBar extends React.Component<IProps, { open: boolean }> {
       const groupedByIcon: { [key: string]: IActionDefinition[] } =
         actions.reduce((prev: { [key: string]: IActionDefinition[] }, action, idx) => {
           if ((action.icon !== undefined) && (groupByIcon !== false)) {
-            setdefault(prev, action.icon, []).push(action);
+            prev[action.icon] ??= [];
+            prev[action.icon].push(action);
           } else {
             prev[idx.toString()] = [action];
           }
@@ -459,11 +458,9 @@ type ExportType = IBaseProps & IActionControlProps & IExtensibleProps & React.HT
 
 class ActionIconBar extends React.Component<ExportType> {
   private static ACTION_PROPS = ['filter', 'group', 'instanceId', 'showAll', 'staticElements'];
-  public render() {
-    const actionProps: IActionControlProps =
-      _.pick(this.props, ActionIconBar.ACTION_PROPS) as IActionControlProps;
-    const barProps: IBaseProps =
-      _.omit(this.props, ActionIconBar.ACTION_PROPS) as any;
+  public override render() {
+    const actionProps: IActionControlProps = _.pick(this.props, ActionIconBar.ACTION_PROPS);
+    const barProps = {actions: [], ...this.props};
     return (
       <ActionControl {...actionProps}>
         <IconBar {...barProps} />

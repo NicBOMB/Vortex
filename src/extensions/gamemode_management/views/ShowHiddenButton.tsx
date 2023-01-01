@@ -1,4 +1,3 @@
-import { ButtonType } from '../../../controls/IconBar';
 import ToolbarIcon from '../../../controls/ToolbarIcon';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 
@@ -12,7 +11,7 @@ export interface IBaseProps {
 }
 
 class ShowHiddenButton extends ComponentEx<IBaseProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, showHidden, toggleHidden } = this.props;
 
     return (

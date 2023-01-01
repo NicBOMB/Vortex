@@ -15,7 +15,6 @@ import getVortexPath from '../../util/getVortexPath';
 import { log } from '../../util/log';
 import opn from '../../util/opn';
 import { activeGameId } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
 
 import sessionReducer from './reducers/announcements';
 import persistentReducer from './reducers/persistent';
@@ -23,8 +22,7 @@ import surveySessionReducer from './reducers/surveys';
 
 import { setAnnouncements, setAvailableSurveys, setSuppressSurvey } from './actions';
 import AnnouncementDashlet from './AnnouncementDashlet';
-import { IAnnouncement, ISurveyInstance,
-  ParserError } from './types';
+import { IAnnouncement, ISurveyInstance, ParserError } from './types';
 
 import { matchesGameMode, matchesVersion } from './util';
 
@@ -139,12 +137,12 @@ function init(context: IExtensionContext): boolean {
   return true;
 }
 
-function showSurveyNotification(context) {
+function showSurveyNotification(context: IExtensionContext) {
   const t = context.api.translate;
   const state = context.api.store.getState();
   const now = new Date().getTime();
-  const surveys = getSafe(state, ['session', 'surveys', 'available'], []);
-  const suppressed = getSafe(state, ['persistent', 'surveys', 'suppressed'], {});
+  const surveys = state?.session?.surveys?.available ?? [] as ISurveyInstance[];
+  const suppressed = state?.persistent?.surveys?.suppressed ?? {};
   const gameMode = activeGameId(state);
   const suppressedIds = Object.keys(suppressed);
   const isOutdated = (survey: ISurveyInstance) => {
@@ -154,8 +152,8 @@ function showSurveyNotification(context) {
 
   const appVersion = getApplication().version;
 
-  const filtered = surveys.filter(survey => {
-    const isSuppressed = (suppressedIds.includes(survey.id) && (suppressed[survey.id] === true));
+  const filtered = surveys.filter((survey) => {
+    const isSuppressed = (suppressedIds.includes(survey?.id) && suppressed[survey.id]);
     return !isSuppressed
         && !isOutdated(survey)
         && matchesGameMode(survey, gameMode, (survey?.gamemode === undefined))

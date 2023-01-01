@@ -2,7 +2,6 @@ import { IExtensionContext } from '../../types/IExtensionContext';
 import { NEXUS_BASE_URL } from '../nexus_integration/constants';
 import { activeGameId } from '../profile_management/selectors';
 
-import APIDashlet from './APIDashlet';
 import { GAMEID_PLACEHOLDER } from './constants';
 import RSSDashlet from './RSSDashlet';
 

@@ -8,7 +8,6 @@ import { UserCanceled } from '../../../util/CustomErrors';
 import { showError } from '../../../util/message';
 import onceCB from '../../../util/onceCB';
 import * as selectors from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
 
 import { IDeploymentMethod } from '../types/IDeploymentMethod';
 import { NoDeployment } from '../util/exceptions';
@@ -35,10 +34,8 @@ export interface IBaseProps {
 
 type IProps = IBaseProps & IConnectedProps & IActionProps;
 
-const nop = () => undefined;
-
 class ActivationButton extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, activator, needToDeploy } = this.props;
 
     return (
@@ -84,7 +81,7 @@ class ActivationButton extends ComponentEx<IProps, {}> {
 
 function mapStateToProps(state: IState, ownProps: IProps): IConnectedProps {
   const gameId = selectors.activeGameId(state);
-  const activatorId = getSafe(state, ['settings', 'mods', 'activator', gameId], undefined);
+  const activatorId = state?.settings?.mods?.activator?.[gameId];
   let activator: IDeploymentMethod;
   if (activatorId !== undefined) {
     activator = ownProps.getActivators().find((act: IDeploymentMethod) => act.id === activatorId);

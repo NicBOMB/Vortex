@@ -1,13 +1,12 @@
 import bbcode, { stripBBCode } from '../../util/bbcode';
 import { ComponentEx, translate } from '../../util/ComponentEx';
-import { getSafe } from '../../util/storeHelper';
-import { truthy } from '../../util/util';
 import { currentGame } from '../gamemode_management/selectors';
 import { nexusGameId } from '../nexus_integration/util/convertGameId';
 
 import BaseDashlet from './BaseDashlet';
 import { GAMEID_PLACEHOLDER, MAX_SUMMARY_LENGTH } from './constants';
-import rss, {IFeedMessage} from './rss';
+import rss from './rss';
+import FeedParser from 'feedparser';
 
 import * as React from 'react';
 import { connect as redConnect } from 'react-redux';
@@ -47,22 +46,22 @@ class RSSDashlet extends ComponentEx<IProps, IComponentState> {
     this.state = {};
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mMounted = true;
     this.refresh();
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.mMounted = false;
   }
 
-  public componentDidUpdate(oldProps: IConnectedProps) {
+  public override componentDidUpdate(oldProps: IConnectedProps) {
     if (oldProps.nexusGameId !== this.props.nexusGameId) {
       this.refresh();
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, emptyText, title } = this.props;
     const { error, messages } = this.state;
 
@@ -90,7 +89,7 @@ class RSSDashlet extends ComponentEx<IProps, IComponentState> {
       if (this.mMounted) {
         this.setState({
           messages: result.map(item => this.transformMessage(item))
-                          .filter(item => truthy(item)),
+                          .filter(item => !!item),
           error: undefined,
         });
       }
@@ -104,17 +103,17 @@ class RSSDashlet extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  private transformMessage(input: IFeedMessage): IListItem {
+  private transformMessage(input: FeedParser.Item): IListItem {
     const { extras } = this.props;
 
     const image = input.enclosures.find(enc =>
-      (!truthy(enc.type) || enc.type.startsWith('image/')) && truthy(enc.url));
+      (!enc.type || enc.type.startsWith('image/')) && !!enc.url);
 
     if (!image) {
       return undefined;
     }
 
-    const messageInput = getSafe(input, ['nexusmods:summary', '#'], input.description);
+    const messageInput = input?.['nexusmods:summary']?.['#'] ?? input.description;
 
     let summary = stripBBCode(messageInput);
     if (summary.length > MAX_SUMMARY_LENGTH) {

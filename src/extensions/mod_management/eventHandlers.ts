@@ -1,7 +1,7 @@
 import { startActivity, stopActivity } from '../../actions/session';
 import { IDialogResult } from '../../types/IDialog';
-import {IExtensionApi} from '../../types/IExtensionContext';
-import {IModTable, IProfile, IState} from '../../types/IState';
+import { IExtensionApi } from '../../types/IExtensionContext';
+import { IModTable, IProfile, IState } from '../../types/IState';
 import { getApplication } from '../../util/application';
 import { DataInvalid, ProcessCanceled,
          TemporaryError, UserCanceled } from '../../util/CustomErrors';
@@ -9,27 +9,25 @@ import { setErrorContext } from '../../util/errorHandling';
 import * as fs from '../../util/fs';
 import getNormalizeFunc, { Normalize } from '../../util/getNormalizeFunc';
 import { log } from '../../util/log';
-import {showError} from '../../util/message';
+import { showError } from '../../util/message';
 import { downloadPathForGame } from '../../util/selectors';
-import {getSafe} from '../../util/storeHelper';
-import {batchDispatch, truthy} from '../../util/util';
 
-import {IDownload} from '../download_management/types/IDownload';
-import {activeGameId, activeProfile} from '../profile_management/selectors';
+import { IDownload } from '../download_management/types/IDownload';
+import { activeGameId, activeProfile } from '../profile_management/selectors';
 
 import { setDeploymentNecessary } from './actions/deployment';
-import {addMod, removeMod} from './actions/mods';
-import {setActivator} from './actions/settings';
+import { addMod, removeMod } from './actions/mods';
+import { setActivator } from './actions/settings';
 import { IDeploymentManifest } from './types/IDeploymentManifest';
-import {IDeployedFile, IDeploymentMethod} from './types/IDeploymentMethod';
-import {IMod, IModRule} from './types/IMod';
-import {getManifest, loadActivation, purgeDeployedFiles, saveActivation, withActivationLock} from './util/activationStore';
+import { IDeployedFile, IDeploymentMethod } from './types/IDeploymentMethod';
+import { IMod, IModRule } from './types/IMod';
+import { getManifest, loadActivation, purgeDeployedFiles, saveActivation } from './util/activationStore';
 import { getCurrentActivator, getSelectedActivator, getSupportedActivators } from './util/deploymentMethods';
 
 import getDownloadGames from '../download_management/util/getDownloadGames';
-import {getGame} from '../gamemode_management/util/getGame';
+import { getGame } from '../gamemode_management/util/getGame';
 import { getModType } from '../gamemode_management/util/modTypeExtensions';
-import {setModsEnabled} from '../profile_management/actions/profiles';
+import { setModsEnabled } from '../profile_management/actions/profiles';
 
 import { setInstallPath } from './actions/settings';
 import { IInstallOptions } from './types/IInstallOptions';
@@ -41,7 +39,7 @@ import queryGameId from './util/queryGameId';
 import refreshMods from './util/refreshMods';
 
 import InstallManager from './InstallManager';
-import {currentActivator, installPath, installPathForGame} from './selectors';
+import { currentActivator, installPath, installPathForGame } from './selectors';
 import { ensureStagingDirectory } from './stagingDirectory';
 
 import Promise from 'bluebird';
@@ -248,8 +246,6 @@ export function onGameModeActivated(
 
   let changeActivator = false;
 
-  let existingManifest: IDeploymentManifest;
-
   let initProm: () => Promise<void> = () => getManifest(api, '', gameId)
     .then((manifest: IDeploymentManifest) => {
       if (manifest.instance !== state.app.instanceId) {
@@ -257,7 +253,6 @@ export function onGameModeActivated(
         // is other code to deal with that during deployment
         return Promise.resolve();
       }
-      existingManifest = manifest;
 
       return checkStagingGame(api, gameId, manifest.gameId)
         .then((purged: boolean) => purged
@@ -393,7 +388,7 @@ export function onGameModeActivated(
     });
   }
 
-  const knownMods: { [modId: string]: IMod } = getSafe(state, ['persistent', 'mods', gameId], {});
+  const knownMods: { [modId: string]: IMod } = state?.persistent?.mods?.[gameId] ?? {};
   initProm()
     .then(() => refreshMods(api, gameId, instPath, knownMods, (mod: IMod) => {
       api.store.dispatch(addMod(gameId, mod));
@@ -476,8 +471,8 @@ export function onModsChanged(api: IExtensionApi, previous: IModTable, current: 
   const changed = (modId: string, attribute: string) =>
     different(previous[gameMode][modId][attribute], current[gameMode][modId][attribute]);
 
-  const rulesOrOverridesChanged = modId =>
-    (getSafe(previous, [gameMode, modId], undefined) !== undefined)
+  const rulesOrOverridesChanged = (modId) =>
+    (previous?.[gameMode]?.[modId] !== undefined)
     && (loadOrderRulesChanged(previous[gameMode][modId].rules, current[gameMode][modId].rules)
         || changed(modId, 'fileOverrides') || changed(modId, 'type'));
 
@@ -516,8 +511,7 @@ function undeploy(api: IExtensionApi,
   log('debug', 'undeploying single mod',
     { game: gameMode, modIds: mods.map(mod => mod.id).join(', ') });
 
-  const activatorId: string =
-    getSafe(state, ['settings', 'mods', 'activator', gameMode], undefined);
+  const activatorId = state?.settings?.mods?.activator?.[gameMode];
   // TODO: can only use one activator that needs to support the whole game
   const activator: IDeploymentMethod = activatorId !== undefined
     ? activators.find(act => act.id === activatorId)
@@ -620,15 +614,14 @@ export function onRemoveMods(api: IExtensionApi,
   const store = api.store;
   const state: IState = store.getState();
 
-  modIds = modIds.filter(modId => truthy(modId));
+  modIds = modIds.filter(modId => !!modId);
 
   log('debug', 'removing mods', { game: gameMode, mods: modIds });
 
   // reject trying to remove mods that are actively being installed/downloaded
   const notInstalled = modIds.find(modId => {
-    const modState = getSafe(state, ['persistent', 'mods', gameMode, modId, 'state'], undefined);
-    return (modState !== undefined)
-        && !['downloaded', 'installed'].includes(modState);
+    const modState = state?.persistent?.mods?.[gameMode]?.[modId]?.state;
+    return (modState !== undefined) && !['downloaded', 'installed'].includes(modState);
   });
 
   if ((options?.ignoreInstalling !== true) && (notInstalled !== undefined)) {
@@ -674,7 +667,7 @@ export function onRemoveMods(api: IExtensionApi,
       const forwardOptions = { ...(options || {}), modData: { ...mod } };
       return api.emitAndAwait('will-remove-mod', gameMode, mod.id, forwardOptions)
       .then(() => {
-        if (truthy(mod) && truthy(mod.installationPath)) {
+        if (!!mod && !!mod.installationPath){
           const fullModPath = path.join(installationPath, mod.installationPath);
           log('debug', 'removing files for mod',
               { game: gameMode, mod: mod.id });
@@ -735,7 +728,7 @@ export function onRemoveMod(api: IExtensionApi,
                             modId: string,
                             callback?: (error: Error) => void,
                             options?: IRemoveModOptions) {
-  if (!truthy(modId)) {
+  if (!modId){
     callback?.(null);
     return;
   }
@@ -784,7 +777,7 @@ export function onStartInstallDownload(api: IExtensionApi,
 
   return queryGameId(api.store, download.game, download.localPath)
     .then(gameId => {
-      if (!truthy(download.localPath)) {
+      if (!download.localPath){
         api.events.emit('refresh-downloads', gameId, () => {
           api.showErrorNotification('Download invalid',
             'Sorry, the meta data for this download is incomplete. Vortex has '

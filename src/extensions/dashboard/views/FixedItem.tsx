@@ -14,7 +14,7 @@ export interface IProps {
 }
 
 function FixedItem(props: React.PropsWithChildren<IProps>): JSX.Element {
-  const { t, id, editable, onDismiss, height, width } = props;
+  const { id, editable, onDismiss, height, width } = props;
 
   const dismissWidget = React.useCallback(() => {
     if (onDismiss !== undefined) {

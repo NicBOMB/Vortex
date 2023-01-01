@@ -53,7 +53,7 @@ function makeGameProxy(game: IGame): IGame {
   return new Proxy(game, gameExHandler);
 }
 
-// this isn't nice...
+// FIXME: this isn't nice...
 const $ = local<{
   gameModeManager: GameModeManager,
   extensionGames: IGame[],
@@ -64,14 +64,14 @@ const $ = local<{
   extensionStubs: [],
 });
 
-// ...neither is this
+// FIXME: ...neither is this
 const gvm = local<{
   gameVersionManager: GameVersionManager,
 }>('gameversion-manager', {
   gameVersionManager: undefined,
 });
 
-// ...or this
+// FIXME: ...or this
 export function getGames(): IGame[] {
   if ($.gameModeManager === undefined) {
     throw new Error('getGames only available in renderer process');

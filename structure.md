@@ -1,9 +1,9 @@
 # Project structrue
 
-- **/**: project base directory. contains mostly configuration on the top level
+- **/**: The project base directory contains mostly configuration files at the top level
   - *package.json*: project file for development
   - *tsconfig.json*: configuration file for the typescript compiler 
-  - *tslint.json*: configuration for our coding guidelines
+  - *eslint.json*: configuration for our coding guidelines
   - **src/**: Vortex source code
     - *main.ts*: Entry point of the main process
     - *renderer.tsx*: Entry point of render processes
@@ -27,19 +27,6 @@
     - *package.json*: project file for production
   - **dist/**: production builds (unpacked and instellers, created during packaging)
   - **out/**: development build (created during build)
-  - **doc/**: api documentation (created by *npm run doc*)
   - **node_modules/**: dependencies (created by *npm install*)
-  - **typings/**: public typings auto-retrieved from public repositories
-  - **typings.custom/**: custom typings for libraries that don't have any yet or where
-    those that exist are incomplete or broken 
+  - **typings.custom/**: custom typings for libraries that don't have any, or are incomplete/broken 
     - *index.d.ts*: top-level index, references the other typings
-
-# npm tasks
-
-- install: download&install dependencies, also downloads typings
-- test: run test suite
-- doc: create api documentation
-- start: compiles typescript, updates all assets, then starts the program in
-  development mode
-- package: creates a distributable installer. Also updates all assets and compiles
-  typescript in the process

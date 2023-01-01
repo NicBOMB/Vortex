@@ -1,5 +1,5 @@
 import { IExtensionApi, ILookupResult, IModInfo } from '../../../types/IExtensionContext';
-import { batchDispatch, truthy } from '../../../util/util';
+import { batchDispatch } from '../../../util/util';
 import { setDownloadModInfo } from '../../download_management/actions/state';
 import { getGame } from '../../gamemode_management/util/getGame';
 import { setModAttribute } from '../../mod_management/actions/mods';
@@ -85,7 +85,6 @@ export function queryLookupResult(api: IExtensionApi,
 }
 
 export function queryResetSource(api: IExtensionApi, gameId: string, mod: IMod) {
-  const t = api.translate;
   return api.showDialog('info', '"{{modName}}" not found', {
       text: 'This mod wasn\'t found on the Nexus Mods servers, maybe it was modified? '
           + 'To avoid warnings going forward you may want to change the "source" for '
@@ -130,7 +129,7 @@ export function fillNexusIdByMD5(api: IExtensionApi,
         return idxProm
           .then(idx => {
             const info: IModInfo = lookupResults[idx].value;
-            if (!truthy(info.sourceURI)) {
+            if (!info.sourceURI){
               return;
             }
             const nxmUrl = new NXMUrl(info.sourceURI);

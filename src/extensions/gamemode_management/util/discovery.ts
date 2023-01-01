@@ -12,13 +12,10 @@ import getNormalizeFunc, { Normalize } from '../../../util/getNormalizeFunc';
 import getVortexPath from '../../../util/getVortexPath';
 import { log } from '../../../util/log';
 import StarterInfo from '../../../util/StarterInfo';
-import { getSafe } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 
 import { modPathsForGame } from '../../mod_management/selectors';
 
 import { IDiscoveryResult } from '../types/IDiscoveryResult';
-import {IToolStored} from '../types/IToolStored';
 
 import Progress from './Progress';
 
@@ -148,7 +145,7 @@ function queryByArgs(discoveredGames: { [id: string]: IDiscoveryResult },
 
 function queryByCB(game: IGame): Bluebird<Partial<IGameStoreEntry>> {
   let gamePath: string | Bluebird<string | IGameStoreEntry>;
-  
+
   try {
     gamePath = game.queryPath();
   } catch (err) {
@@ -205,7 +202,7 @@ function handleDiscoveredGame(game: IGame,
                               onDiscoveredGame: DiscoveredCB,
                               onDiscoveredTool: DiscoveredToolCB)
                               : Bluebird<string> {
-  if (!truthy(resolvedPath)) {
+  if (!resolvedPath){
     return undefined;
   }
   log('info', 'found game', { name: game.name, location: resolvedPath, store });
@@ -249,7 +246,7 @@ export function quickDiscovery(knownGames: IGame[],
   return Bluebird.all(knownGames.map(game =>
     quickDiscoveryTools(game.id, game.supportedTools, onDiscoveredTool)
       .then(() => {
-        if (getSafe(discoveredGames, [game.id, 'pathSetManually'], false)) {
+        if (discoveredGames?.[game.id]?.pathSetManually){
           // don't override manually set game location but maybe update some settings
           return updateManuallyConfigured(discoveredGames, game, onDiscoveredGame)
             .then(() => Bluebird.resolve(undefined));
@@ -390,7 +387,7 @@ function verifyToolDir(tool: ITool, testPath: string): Bluebird<void> {
 
 export function assertToolDir(tool: ITool, testPath: string)
                               : Bluebird<string> {
-  if (!truthy(testPath)) {
+  if (!testPath){
     return Bluebird.resolve(undefined);
   }
 
@@ -419,8 +416,7 @@ export function discoverRelativeTools(game: IGame, gamePath: string,
                                : Bluebird<void> {
   log('info', 'discovering relative tools', gamePath);
   const start = Date.now();
-  const discoveredTools: { [id: string]: IToolStored } =
-    getSafe(discoveredGames[game.id], ['tools'], {});
+  const discoveredTools: { [id: string]: IDiscoveredTool } = discoveredGames?.[game.id]?.tools ?? {};
   const relativeTools = (game.supportedTools || [])
     .filter(tool => tool.relative === true)
     .filter(tool => (discoveredTools[tool.id] === undefined)
@@ -497,7 +493,7 @@ function testApplicationDirValid(application: ITool, testPath: string, gameId: s
 }
 
 function toolFilesForGame(game: IGame,
-                          discoveredTools: { [id: string]: IToolStored },
+                          discoveredTools: { [id: string]: IDiscoveredTool },
                           normalize: Normalize) {
   const result: IFileEntry[] = [];
   if (game.supportedTools !== undefined) {
@@ -505,7 +501,7 @@ function toolFilesForGame(game: IGame,
     game.supportedTools
       .filter(tool => tool.relative !== true)
       .forEach((tool: ITool) => {
-        if (getSafe(discoveredTools, [tool.id, 'path'], undefined) === undefined) {
+        if (discoveredTools?.[tool.id]?.path === undefined) {
           for (const required of tool.requiredFiles) {
             result.push({
               fileName: normalize(required),
@@ -584,7 +580,7 @@ export function searchDiscovery(
             }
             // and its tools
             files.push.apply(files,
-              toolFilesForGame(knownGame, getSafe(discoveredGame, ['tools'], {}), normalize));
+              toolFilesForGame(knownGame, discoveredGame?.['tools'] ?? {}, normalize));
           }, []);
 
           // retrieve only the basenames of required files because the walk only ever looks

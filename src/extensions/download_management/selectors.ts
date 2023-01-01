@@ -1,11 +1,10 @@
 import { activeGameId } from '../../extensions/profile_management/selectors';
 import { IDownload, IState } from '../../types/IState';
-import { log } from '../../util/log';
 
 import getDownloadPath from './util/getDownloadPath';
 
 import createCachedSelector, { OutputParametricSelector } from 're-reselect';
-import { createSelector, OutputSelector } from 'reselect';
+import { createSelector } from 'reselect';
 import { DownloadState } from './types/IDownload';
 
 const downloadPathPattern = (state: IState) => state.settings.downloads.path;

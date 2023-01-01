@@ -1,7 +1,6 @@
 import TableTextFilter from '../../controls/table/TextFilter';
 import { IExtensionLoadFailure } from '../../types/IState';
 import { ITableAttribute } from '../../types/ITableAttribute';
-import { getSafe } from '../../util/storeHelper';
 
 import { SITE_ID } from '../gamemode_management/constants';
 import { EndorseMod } from '../nexus_integration/attributes';
@@ -20,14 +19,14 @@ interface IAttributesContext {
 }
 
 function renderLoadFailure(t: TFunction, fail: IExtensionLoadFailure) {
-  const pattern = getSafe({
+  const pattern = {
     'unsupported-version': 'Not compatible with this version of Vortex',
     'unsupported-api': 'Unsupported API',
     dependency: (fail.args?.['version'] !== undefined)
       ? 'Depends on "{{dependencyId}}" version "{{version}}"'
       : 'Depends on "{{dependencyId}}"',
     exception: 'Failed to load: {{message}}',
-  }, [ fail.id ], 'Unknown error');
+  }?.[fail.id] ?? 'Unknown error';
   return t(pattern, { replace: fail.args });
 }
 

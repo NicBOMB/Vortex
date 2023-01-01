@@ -22,7 +22,7 @@ class MyModal extends React.PureComponent<typeof Modal.prototype.props, {}> {
     return { ...this.context, menuLayer: this.mMenuLayer };
   }
 
-  public render(): JSX.Element {
+  public override render() {
     return (
       <div className='modal-container'>
         <MutexWrapper show={this.props.show}>

@@ -141,17 +141,17 @@ function MenuAction(props: IMenuActionProps) {
 }
 
 class RootCloseWrapper extends React.Component<{ onClose: () => void }, {}> {
-  public componentDidMount() {
+  public override componentDidMount() {
     document.addEventListener('click', this.close);
     document.addEventListener('contextmenu', this.close);
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     document.removeEventListener('click', this.close);
     document.removeEventListener('contextmenu', this.close);
   }
 
-  public render() {
+  public override render() {
     return this.props.children;
   }
 
@@ -202,14 +202,14 @@ class ContextMenu extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if ((this.props.visible !== newProps.visible)
         && newProps.visible) {
       this.updatePlacement(newProps.position);
     }
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { actions, children, className, onHide, position, visible } = this.props;
     const { right, bottom } = this.state;
     if (!visible || ((actions || []).length === 0)) {

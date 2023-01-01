@@ -1,7 +1,5 @@
-import { IExtensionApi } from '../../types/IExtensionContext';
 import { IGame } from '../../types/IGame';
 import { ProcessCanceled } from '../../util/CustomErrors';
-import { truthy } from '../../util/util';
 import { IDiscoveryResult } from '../gamemode_management/types/IDiscoveryResult';
 import { IGameVersionProvider } from './types/IGameVersionProvider';
 
@@ -10,10 +8,8 @@ import { log } from '../../util/log';
 import { getExecGameVersion } from './util/getGameVersion';
 
 export default class GameVersionManager {
-  private mApi: IExtensionApi;
   private mProviders: IGameVersionProvider[];
-  constructor(api: IExtensionApi, providers: IGameVersionProvider[]) {
-    this.mApi = api;
+  constructor(providers: IGameVersionProvider[]) {
     this.mProviders = providers;
   }
 
@@ -44,7 +40,6 @@ export default class GameVersionManager {
   }
 
   private isGameValid(game: IGame, discovery: IDiscoveryResult): boolean {
-    return (discovery?.path !== undefined)
-        && truthy(game?.executable?.(discovery.path));
+    return (discovery?.path !== undefined) && !!game?.executable?.(discovery.path);
   }
 }

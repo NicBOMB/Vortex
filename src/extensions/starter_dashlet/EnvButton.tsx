@@ -2,7 +2,6 @@ import React from 'react';
 import { IconButton } from '../../controls/TooltipControls';
 import { FormControl, InputGroup } from 'react-bootstrap';
 import { TFunction } from '../../util/i18n';
-import { getSafe } from '../../util/storeHelper';
 
 interface IEnvButtonProps {
   t: TFunction;
@@ -42,7 +41,7 @@ export default function EnvButton(props: IEnvButtonProps) {
     onOpen(variable?.key !== undefined ? variable.key : '__add');
   }, [onOpen, variable]);
 
-  const key = getSafe(varCopy, ['key'], '');
+  const key = varCopy?.key ?? '';
   const remove = React.useCallback(() => {
     onRemove(key);
   }, [onRemove, key]);
@@ -59,7 +58,7 @@ export default function EnvButton(props: IEnvButtonProps) {
         />{' '}
         <FormControl
           type='text'
-          value={getSafe(varCopy, ['value'], '')}
+          value={varCopy?.value ?? ''}
           onChange={editValue}
           placeholder={t('Value')}
           style={{ width: '50%' }}

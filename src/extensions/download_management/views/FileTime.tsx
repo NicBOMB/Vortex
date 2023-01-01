@@ -26,16 +26,16 @@ class FileTime extends ComponentEx<IFileTimeProps, { mtime: Date }> {
     this.initState({ mtime: undefined });
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mIsMounted = true;
     this.updateTime();
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.mIsMounted = false;
   }
 
-  public UNSAFE_componentWillReceiveProps(nextProps: IFileTimeProps) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: IFileTimeProps) {
     if ((nextProps.time === undefined)
       && ((this.props.downloadPath !== nextProps.downloadPath)
         || (this.props.download !== nextProps.download))) {
@@ -43,7 +43,7 @@ class FileTime extends ComponentEx<IFileTimeProps, { mtime: Date }> {
       }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, detail, language, time } = this.props;
 
     const mtime = time || this.state.mtime;

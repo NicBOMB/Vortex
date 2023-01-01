@@ -1,14 +1,12 @@
-import {IExtensionApi} from '../../../types/IExtensionContext';
-import {IGame} from '../../../types/IGame';
+import { IExtensionApi } from '../../../types/IExtensionContext';
+import { IGame } from '../../../types/IGame';
 import { getApplication } from '../../../util/application';
-import {ProcessCanceled} from '../../../util/CustomErrors';
+import { ProcessCanceled } from '../../../util/CustomErrors';
 import * as fs from '../../../util/fs';
-import {log} from '../../../util/log';
-import {getSafe} from '../../../util/storeHelper';
-import {isNullOrWhitespace} from '../../../util/util';
+import { log } from '../../../util/log';
 
-import {IDiscoveryResult} from '../../gamemode_management/types/IDiscoveryResult';
-import {getGame} from '../../gamemode_management/util/getGame';
+import { IDiscoveryResult } from '../../gamemode_management/types/IDiscoveryResult';
+import { getGame } from '../../gamemode_management/util/getGame';
 
 import DelegateBase from './DelegateBase';
 
@@ -40,11 +38,9 @@ export class Context extends DelegateBase {
     super(api);
     this.gameId = gameId;
 
-    this.gameDiscovery =
-        getSafe(api.store.getState(),
-                ['settings', 'gameMode', 'discovered', gameId], undefined);
+    this.gameDiscovery = api.store.getState().settings.gameMode.discovered[gameId];
     this.gameInfo = getGame(this.gameId);
-    if ((this.gameDiscovery === undefined) || (this.gameDiscovery.path === undefined)) {
+    if (!this.gameDiscovery.path){
       throw new ProcessCanceled('Game not installed');
     }
   }
@@ -121,7 +117,7 @@ export class Context extends DelegateBase {
       log('debug', 'getExistingDataFileList called', util.inspect(basePath));
       const fullPath = this.resolveFilePath(basePath);
 
-      const filterFunc = isNullOrWhitespace(pattern)
+      const filterFunc = pattern.trim().length !== 0
         ? () => true
         : (input: IEntry) => minimatch(path.basename(input.filePath), pattern);
 

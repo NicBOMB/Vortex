@@ -5,7 +5,6 @@ import { getApplication } from '../../../util/application';
 import { ProcessCanceled } from '../../../util/CustomErrors';
 import { log } from '../../../util/log';
 import { currentGame } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
 
 import getVortexPath from '../../../util/getVortexPath';
 
@@ -15,10 +14,8 @@ import { getGame } from '../../gamemode_management/util/getGame';
 
 import DelegateBase from './DelegateBase';
 
-import Promise from 'bluebird';
 import getVersion from 'exe-version';
 import * as path from 'path';
-import turbowalk, { IEntry } from 'turbowalk';
 
 import { IPatcherDetails } from '../types/injector';
 
@@ -37,9 +34,7 @@ export class Context extends DelegateBase {
     this.mModLoaderPath = modLoaderPath;
     this.mVMLdependenciesPath = path.join(getVortexPath('modules_unpacked'), 'harmony-patcher', 'dist');
 
-    this.mGameDiscovery =
-        getSafe(api.store.getState(),
-                ['settings', 'gameMode', 'discovered', gameId], undefined);
+    this.mGameDiscovery = api.store.getState()?.settings?.gameMode?.discovered?.[gameId];
     this.mGameInfo = getGame(this.mGameId);
     if (this.mGameDiscovery?.path === undefined) {
       const error = new ProcessCanceled('Game not installed');
@@ -149,25 +144,6 @@ export class Context extends DelegateBase {
     }
 
     return game;
-  }
-
-  private readDir = (rootPath: string,
-                     recurse: boolean,
-                     filterFunc: (entry: IEntry) => boolean)
-                     : Promise<string[]> => {
-    let fileList: string[] = [];
-
-    return turbowalk(rootPath, entries => {
-      fileList = fileList.concat(
-        entries
-          .filter(iter => !iter.isDirectory)
-          .filter(filterFunc)
-          // in the past this mapped to a path relative to rootPath but NMM
-          // clearly returns absolute paths. Obviously there is no documentation
-          // for the _expected_ behavior
-          .map(iter => iter.filePath));
-    }, { recurse })
-    .then(() => fileList);
   }
 }
 

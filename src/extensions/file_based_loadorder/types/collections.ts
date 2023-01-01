@@ -1,6 +1,6 @@
 import { ICollectionInfo, IRevision, SourceType, UpdatePolicy } from '@nexusmods/nexus-api';
 import * as types from '../../../types/api';
-import { ILoadOrderEntry, ILoadOrderGameInfoExt, LoadOrder } from '../types/types';
+import { ILoadOrderEntry, LoadOrder } from '../types/types';
 
 export interface ILoadOrderEntryExt extends ILoadOrderEntry {
   exportable: boolean;

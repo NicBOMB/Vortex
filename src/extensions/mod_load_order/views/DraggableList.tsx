@@ -45,7 +45,7 @@ interface IDropProps {
 type IItemProps = IItemBaseProps & IDragProps & IDropProps;
 
 class DraggableItem extends React.Component<IItemProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { isDragging, item, isLocked } = this.props;
     const classNames = [].concat(isLocked ? 'locked' : undefined,
                                 !!item.external ? 'external' : undefined,
@@ -188,13 +188,13 @@ class DraggableList extends ComponentEx<IProps, IState> {
 
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (this.nextState.ordered !== newProps.items) {
       this.nextState.ordered = newProps.items.slice(0);
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { connectDropTarget, id, itemRenderer, loadOrder } = this.props;
     const { ordered } = this.state;
     return connectDropTarget((

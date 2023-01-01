@@ -84,7 +84,7 @@ function ToolButton(props: IToolButtonProps) {
   if (primary) {
     classes.push('tool-button-primary');
   }
-  const [spec, dropRef] = useDrop({
+  const [_, dropRef] = useDrop({
     accept: 'TOOL',
     hover: (hoveredOverItem: any) => {
       if (hoveredOverItem.id !== props.item.id) {

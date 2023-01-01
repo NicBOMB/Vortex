@@ -9,27 +9,14 @@ export interface IProps {
   onSetDirection: (direction: SortDirection) => void;
 }
 
-function next(direction: SortDirection): SortDirection {
-  switch (direction) {
-    case 'asc': return 'desc';
-    default: return 'asc';
-  }
-}
-
 class SortIndicator extends React.Component<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { direction } = this.props;
     return (
       <div style={{ display: 'inline' }}>
         <Icon name={this.icon(direction)} />
       </div>
     );
-  }
-
-  private cycleDirection = () => {
-    const { direction, onSetDirection } = this.props;
-
-    onSetDirection(next(direction));
   }
 
   private icon(direction: SortDirection): string {

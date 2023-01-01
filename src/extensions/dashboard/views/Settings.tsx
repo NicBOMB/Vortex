@@ -1,7 +1,6 @@
 import Toggle from '../../../controls/Toggle';
 import { IDashletSettings, IState } from '../../../types/IState';
 import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
-import { getSafe } from '../../../util/storeHelper';
 
 import { setDashletEnabled } from '../actions';
 import { IDashletProps } from '../types/IDashletProps';
@@ -20,7 +19,7 @@ interface IDashletToggleProps {
 }
 
 class DashletToggle extends React.PureComponent<IDashletToggleProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, dashlet, enabled } = this.props;
     return (
       <Toggle checked={enabled} onToggle={this.toggle}>
@@ -50,7 +49,7 @@ interface IConnectedProps {
 type IProps = IBaseProps & IActionProps & IConnectedProps;
 
 class Settings extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, dashlets, dashletSettings, onSetDashletEnabled } = this.props;
 
     return (
@@ -64,7 +63,7 @@ class Settings extends ComponentEx<IProps, {}> {
                 t={t}
                 key={dashlet.title}
                 dashlet={dashlet}
-                enabled={getSafe(dashletSettings, [dashlet.title, 'enabled'], true)}
+                enabled={dashletSettings?.[dashlet.title]?.enabled ?? true}
                 onToggle={onSetDashletEnabled}
               />
             ))

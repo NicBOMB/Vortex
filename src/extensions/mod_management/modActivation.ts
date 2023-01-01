@@ -2,7 +2,6 @@ import { IExtensionApi } from '../../types/IExtensionContext';
 import * as fs from '../../util/fs';
 import getNormalizeFunc, { Normalize } from '../../util/getNormalizeFunc';
 import { log } from '../../util/log';
-import { truthy } from '../../util/util';
 
 import { IDeployedFile, IDeploymentMethod } from './types/IDeploymentMethod';
 import { IMod } from './types/IMod';
@@ -50,7 +49,7 @@ function deployMods(api: IExtensionApi,
                     subDir: (mod: IMod) => string,
                     progressCB?: (name: string, progress: number) => void,
                    ): Promise<IDeployedFile[]> {
-  if (!truthy(destinationPath)) {
+  if (!destinationPath){
     return Promise.resolve([]);
   }
 
@@ -80,7 +79,7 @@ function deployMods(api: IExtensionApi,
       }
     }))
     .then(() => {
-      const mergePath = truthy(typeId)
+      const mergePath = !!typeId
         ? MERGED_PATH + '.' + typeId
         : MERGED_PATH;
 

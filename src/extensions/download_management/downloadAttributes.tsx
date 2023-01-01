@@ -1,6 +1,5 @@
 import { SITE_GAME_NAME } from '../../controls/constants';
 import ProgressBar from '../../controls/ProgressBar';
-import Spinner from '../../controls/Spinner';
 import DateTimeFilter from '../../controls/table/DateTimeFilter';
 import GameFilter from '../../controls/table/GameFilter';
 import TextFilter from '../../controls/table/TextFilter';
@@ -10,8 +9,7 @@ import { IExtensionApi } from '../../types/IExtensionContext';
 import { ITableAttribute } from '../../types/ITableAttribute';
 import * as fs from '../../util/fs';
 import { getCurrentLanguage } from '../../util/i18n';
-import { getSafe } from '../../util/storeHelper';
-import { bytesToString, truthy } from '../../util/util';
+import { bytesToString } from '../../util/util';
 
 import { SITE_ID } from '../gamemode_management/constants';
 import { gameName } from '../gamemode_management/selectors';
@@ -103,7 +101,7 @@ function nameFromUrl(input: string) {
   }
 
   const pathname = url.parse(input).pathname;
-  if (!truthy(pathname)) {
+  if (!pathname){
     return undefined;
   }
 
@@ -143,7 +141,7 @@ function createColumns(
       icon: '',
       calc: (attributes: IDownload) =>
         attributes.localPath
-        || nameFromUrl(getSafe(attributes, ['urls', 0], undefined)),
+        || nameFromUrl(attributes?.urls?.[0]),
       placement: 'both',
       isToggleable: true,
       edit: {},
@@ -156,8 +154,7 @@ function createColumns(
       name: 'Name',
       description: 'Readable Name',
       icon: '',
-      calc: (attributes: IDownload) =>
-        getSafe(attributes, ['modInfo', 'name'], '') || attributes.localPath,
+      calc: (attributes: IDownload) => (attributes?.modInfo?.name ?? '') || attributes.localPath, // FIXME: modInfo interface?
       placement: 'both',
       isToggleable: true,
       edit: {},

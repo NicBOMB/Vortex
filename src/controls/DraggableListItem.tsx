@@ -33,7 +33,7 @@ interface IDropProps {
 type IProps = IDraggableListItemProps & IDragProps & IDropProps;
 
 class DraggableItem extends React.Component<IProps, {}> {
-  public render(): JSX.Element {
+  public override render() {
     const { isDragging, item } = this.props;
     // Function components cannot be assigned a refrence - in cases like these
     //  we enhance the initial item to forward the setRef functor so that the

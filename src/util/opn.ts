@@ -8,7 +8,7 @@ import {ipcMain, ipcRenderer, shell} from 'electron';
 
 let winapi: typeof winapiT;
 try {
-  // tslint:disable-next-line:no-var-requires
+
   winapi = require('winapi-bindings');
 } catch (err) {
   // nop

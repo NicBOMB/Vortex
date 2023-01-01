@@ -17,7 +17,7 @@ class MainPage extends ComponentEx<IProps, {}> {
   public static Body = Body;
   public static Header = Header;
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { children, className, domRef, id } = this.props;
     return (
       <div id={id} ref={domRef} className={(className || '') + ' main-page-inner'}>

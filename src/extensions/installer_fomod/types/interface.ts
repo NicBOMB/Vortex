@@ -1,3 +1,7 @@
+import { IExtensionContext, IExtensionApi } from '../../../types/IExtensionContext';
+
+export { IExtensionContext, IExtensionApi };
+
 export interface IHeaderImage {
   path: string;
   showFade: boolean;

@@ -2,7 +2,6 @@ import Promise from 'bluebird';
 
 import * as fs from './fs';
 import { log } from './log';
-import { getSafeCI } from './storeHelper';
 
 import * as path from 'path';
 import { parse } from 'simple-vdf';
@@ -228,14 +227,46 @@ class Steam implements IGameStore {
           if (data === undefined) {
             return Promise.resolve(steamPaths);
           }
-          let parsedObj;
-          try {
-            parsedObj = parse(data.toString());
-          } catch (err) {
-            log('warn', 'unable to parse steamfolders.vdf', err);
-            return Promise.resolve(steamPaths);
+          const parsedObj = (()=>{
+            try {
+              return parse(data.toString());
+            } catch (err) {
+              log('warn', 'unable to parse steamfolders.vdf', err);
+              throw err;
+            }
+          })();
+          /**
+           * case insensitive variant of getSafe, another fully deprecated function
+           * This is the only remaing place getSafeCI is used, so it lives here now.
+           */
+          function getSafeCI(state: Object, path: Array<(string | number)>, fallback: Object): Object {
+            let current = state;
+            const getCaseCorrected = (obj: any, prop: string | number) => {
+              if (typeof(prop) === 'number') {
+                return obj[prop] !== undefined ? prop : undefined;
+              }
+              const keys = Object.keys(obj);
+              const idx = keys.map(key => key.toLowerCase()).indexOf(prop.toLowerCase());
+              if (idx === -1) {
+                return undefined;
+              }
+              return keys[idx];
+            };
+
+            for (const segment of path) {
+              if ((current === undefined) || (current === null)) {
+                return fallback;
+              }
+
+              const caseCorrected = getCaseCorrected(current, segment);
+              if (caseCorrected === undefined) {
+                return fallback;
+              }
+              current = current[caseCorrected];
+            }
+            return current;
           }
-          const libObj: any = getSafeCI(parsedObj, ['libraryfolders'], {});
+          const libObj = getSafeCI(parsedObj, ['libraryfolders'], {});
           let counter = libObj.hasOwnProperty('0') ? 0 : 1;
           while (libObj.hasOwnProperty(`${counter}`)) {
             const libPath = libObj[`${counter}`]['path'];

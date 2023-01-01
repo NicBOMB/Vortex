@@ -1,10 +1,9 @@
-import { setSettingsPage } from '../../../actions/session';
 import ErrorBoundary from '../../../controls/ErrorBoundary';
-import {IState} from '../../../types/IState';
-import {ComponentEx, connect} from '../../../util/ComponentEx';
-import { bytesToString, truthy } from '../../../util/util';
+import { IState } from '../../../types/IState';
+import { ComponentEx, connect } from '../../../util/ComponentEx';
+import { bytesToString } from '../../../util/util';
 
-import {NUM_SPEED_DATA_POINTS} from '../reducers/state';
+import { NUM_SPEED_DATA_POINTS } from '../reducers/state';
 
 import { TFunction } from 'i18next';
 import * as React from 'react';
@@ -36,11 +35,11 @@ class DownloadGraph extends ComponentEx<IProps, IComponentState> {
     this.initState({ width: 800 });
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.forceUpdate();
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {t, maxBandwidth, speeds} = this.props;
     const data = this.convertData(speeds);
 
@@ -78,9 +77,8 @@ class DownloadGraph extends ComponentEx<IProps, IComponentState> {
             {showLimit ? (
               <ReferenceLine y={maxBandwidth} strokeDasharray='6 2'>
                 <Label
-                  value={t('Bandwidth Limit (see Settings)')}
+                  value={t('Bandwidth Limit (see Settings)') as  string}
                   position='top'
-                  onClick={this.openSettings}
                 />
               </ReferenceLine>
             ) : null}
@@ -101,15 +99,6 @@ class DownloadGraph extends ComponentEx<IProps, IComponentState> {
     );
   }
 
-  private openSettings = () => {
-    const { api } = this.context;
-    api.events.emit('show-main-page', 'application_settings');
-    api.store.dispatch(setSettingsPage('Download'));
-
-    api.highlightControl('#download-bandwidth-limit', 5000,
-                         'This limits your download speed.');
-  }
-
   private onResize = (width: number, height: number) => {
     this.nextState.width = width;
   }
@@ -120,7 +109,7 @@ class DownloadGraph extends ComponentEx<IProps, IComponentState> {
   }
 
   private setRef = (ref: HTMLDivElement) => {
-    if (truthy(ref)) {
+    if (!!ref){
       this.onResize(ref.clientWidth, ref.clientHeight);
     }
   }

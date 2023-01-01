@@ -60,7 +60,7 @@ function makeListInstaller(extractList: IFileListItem[],
         return Promise.reduce(files.filter(relPath => !relPath.endsWith(path.sep)),
                               (prev, relPath, idx, length) => {
           return lookupFunc(path.join(basePath, relPath))
-            .then(checksum => {
+            .then((checksum) => {
               if (Math.floor((idx * 10) / length) > prog) {
                 prog = Math.floor((idx * 10) / length);
                 progressDelegate(prog * 10);
@@ -69,12 +69,12 @@ function makeListInstaller(extractList: IFileListItem[],
               return prev;
             });
           }, {})
-          .then(lookup => {
-            // for each item in the extract list, look up the source path vial
+          .then((lookup) => {
+            // for each item in the extract list, lookup the source path vial
             // the lookup table, then create the copy instruction.
             const missingItems: IFileListItem[] = [];
             return {
-              instructions: extractList.map(item => {
+              instructions: extractList.map((item) => {
                 let instruction: IInstruction;
                 if (lookup[item[idxId]] === undefined) {
                   missingItems.push(item);

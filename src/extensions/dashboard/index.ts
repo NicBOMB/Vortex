@@ -1,5 +1,4 @@
 import { IDashletOptions, IExtensionContext, PropsCallback } from '../../types/IExtensionContext';
-import { IRegisteredExtension } from '../../util/ExtensionManager';
 
 import { IDashletProps } from './types/IDashletProps';
 import Dashboard from './views/Dashboard';

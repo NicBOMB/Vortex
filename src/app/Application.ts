@@ -28,7 +28,7 @@ import { allHives, createFullStateBackup, createVortexStore, currentStatePath, e
          importState, insertPersistor, markImported, querySanitize } from '../util/store';
 import {} from '../util/storeHelper';
 import SubPersistor from '../util/SubPersistor';
-import { isMajorDowngrade, replaceRecursive, spawnSelf, timeout, truthy } from '../util/util';
+import { isMajorDowngrade, replaceRecursive, spawnSelf, timeout } from '../util/util';
 
 import { addNotification, setCommandLine, showDialog } from '../actions';
 
@@ -70,7 +70,7 @@ class Application {
       return true;
     }
 
-    if (!truthy(error)) {
+    if (!error) {
       log('error', 'empty error unhandled', { wasPromise: promise !== undefined });
       return true;
     }
@@ -125,7 +125,7 @@ class Application {
   constructor(args: IParameters) {
     this.mArgs = args;
 
-    ipcMain.on('show-window', () => this.showMainWindow(args?.startMinimized));
+    ipcMain.on('show-window', () => this.showMainWindow(args?.startMinimized ?? false));
 
     process.env['UV_THREADPOOL_SIZE'] = (os.cpus().length * 1.5).toString();
     app.commandLine.appendSwitch('js-flags', `--max-old-space-size=${args.maxMemory || 4096}`);
@@ -202,7 +202,7 @@ class Application {
   private startSplash(): Promise<SplashScreenT> {
     const SplashScreen = require('./SplashScreen').default;
     const splash: SplashScreenT = new SplashScreen();
-    return splash.create(this.mArgs.disableGPU)
+    return splash.create(this.mArgs.disableGPU ?? false)
       .then(() => {
         setWindow(splash.getHandle());
         return splash;
@@ -247,7 +247,7 @@ class Application {
       let userData = args.userData
           // (only on windows) use ProgramData from environment
           ?? ((args.shared && process.platform === 'win32')
-            ? path.join(process.env.ProgramData, 'vortex')
+            ? path.join(process.env.ProgramData ?? '', 'vortex')
             // this allows the development build to access data from the
             // production version and vice versa
             : path.resolve(app.getPath('userData'), '..', vortexPath));
@@ -259,7 +259,7 @@ class Application {
         this.applyArguments(cfgFile);
       });
 
-      let startupMode: Promise<void>;
+      let startupMode: Promise<void>|undefined;
       if (args.get) {
         startupMode = this.handleGet(args.get, userData);
       } else if (args.set) {
@@ -277,14 +277,14 @@ class Application {
     });
 
     app.on('web-contents-created', (event: Electron.Event, contents: Electron.WebContents) => {
-      // tslint:disable-next-line:no-submodule-imports
+
       require('@electron/remote/main').enable(contents);
       contents.on('will-attach-webview', this.attachWebView);
     });
   }
 
   private attachWebView = (event: Electron.Event,
-                           webPreferences: Electron.WebPreferences & { preloadURL: string },
+                           webPreferences: Electron.WebPreferences & { preloadURL?: string },
                            params) => {
     // disallow creation of insecure webviews
 
@@ -305,7 +305,7 @@ class Application {
   }
 
   private regularStart(args: IParameters): Promise<void> {
-    let splash: SplashScreenT;
+    let splash: SplashScreenT|undefined;
     return fs.writeFileAsync(this.mStartupLogPath, (new Date()).toUTCString())
         .catch(() => null)
         .tap(() => {
@@ -319,10 +319,10 @@ class Application {
           ? Promise.resolve(undefined)
           : this.startSplash())
         // start initialization
-        .tap(splashIn => (splashIn !== undefined)
+        .tap((splashIn) => (splashIn !== undefined)
           ? log('debug', 'showing splash screen')
           : log('debug', 'starting without splash screen'))
-        .then(splashIn => {
+        .then((splashIn) => {
           splash = splashIn;
           return this.createStore(args.restore, args.merge)
             .catch(DataInvalid, err => {
@@ -430,14 +430,14 @@ class Application {
                 details,
                 code: pretty.code,
                 stack: err.stack,
-              }, this.mStore !== undefined ? this.mStore.getState() : {},
+              }, this.mStore.getState(),
                 pretty.allowReport);
             } else {
               terminate({
                 message: 'Startup failed',
                 details: err.message,
                 stack: err.stack,
-              }, this.mStore !== undefined ? this.mStore.getState() : {});
+              }, this.mStore.getState());
             }
           } catch (err) {
             // nop
@@ -475,7 +475,7 @@ class Application {
           }
         });
         const adminConsent = res[0];
-        return ((adminConsent.type === 'REG_DWORD') && (adminConsent.value === 0))
+        return ((adminConsent?.type === 'REG_DWORD') && (adminConsent.value === 0))
           ? Promise.resolve(false)
           : Promise.resolve(true);
       })
@@ -592,13 +592,13 @@ class Application {
   }
 
   private splitPath(statePath: string): string[] {
-    return statePath.match(/(\\.|[^.])+/g).map(input => input.replace(/\\(.)/g, '$1'));
+    return (statePath.match(/(\\.|[^.])+/g) ?? []).map((input) => input.replace(/\\(.)/g, '$1'));
   }
 
   private handleGet(getPaths: string[] | boolean, dbpath: string): Promise<void> {
     if (typeof(getPaths) === 'boolean') {
       fs.writeSync(1, 'Usage: vortex --get <path>\n');
-      return;
+      return new Promise(()=>(undefined));
     }
 
     let persist: LevelPersist;
@@ -618,7 +618,7 @@ class Application {
             .then(output => { process.stdout.write(output.join('\n') + '\n'); })
             .catch(err => { process.stderr.write(err.message + '\n'); });
         }))
-          .then(() => null);
+          .then(() => undefined);
       })
       .catch(err => {
         process.stderr.write(err.message + '\n');
@@ -653,7 +653,7 @@ class Application {
               process.stderr.write(err.message + '\n');
             })
         }))
-          .then(() => null);
+          .then(() => undefined);
       })
       .catch(err => {
         process.stderr.write(err.message + '\n');
@@ -680,7 +680,7 @@ class Application {
             .then(() => process.stdout.write(`removed ${match.join('.')}\n`))
             .catch(err => { process.stderr.write(err.message + '\n'); })));
         }))
-          .then(() => null);
+          .then(() => undefined);
       })
       .catch(err => {
         process.stderr.write(err.message + '\n')
@@ -704,7 +704,7 @@ class Application {
 
   private multiUserPath() {
     if (process.platform === 'win32') {
-      const muPath = path.join(process.env.ProgramData, 'vortex');
+      const muPath = path.join(process.env.ProgramData ?? '', 'vortex');
       try {
         fs.ensureDirSync(muPath);
       } catch (err) {
@@ -765,8 +765,8 @@ class Application {
       })
       .catch(DataInvalid, err => {
         const failedPersistor = this.mLevelPersistors.pop();
-        return failedPersistor.close()
-          .then(() => Promise.reject(err));
+        return failedPersistor?.close?.()
+          ?.then(() => Promise.reject(err));
       })
       .then(() => {
         let dataPath = app.getPath('userData');
@@ -880,7 +880,7 @@ class Application {
                   ? err.message
                   : 'Specified backup file doesn\'t exist',
                 path: restoreBackup,
-              }, {}, false);
+              }, this.mStore.getState(), false);
             });
         } else if (mergeBackup !== undefined) {
           log('info', 'merging state backup', mergeBackup);
@@ -901,7 +901,7 @@ class Application {
                   ? err.message
                   : 'Specified backup file doesn\'t exist',
                 path: mergeBackup,
-              }, {}, false);
+              }, this.mStore.getState(), false);
             });
         } else {
           return Promise.resolve();
@@ -1092,13 +1092,17 @@ class Application {
 
       prom.then(() => {
         if (this.mMainWindow !== undefined) {
-          this.mMainWindow.sendExternalURL(args.download || args.install,
-            args.install !== undefined);
+          this.mMainWindow.sendExternalURL(
+            args.download ?? args.install ?? '',
+            args.install !== undefined
+          );
         } else {
           // TODO: this instructions aren't very correct because we know Vortex doesn't have
           // a UI and needs to be shut down from the task manager
-          dialog.showErrorBox('Vortex unresponsive',
-            'Vortex appears to be frozen, please close Vortex and try again');
+          dialog.showErrorBox(
+            'Vortex unresponsive',
+            'Vortex appears to be frozen, please close Vortex and try again'
+          );
         }
       });
     } else {
@@ -1107,7 +1111,7 @@ class Application {
         //  this is potentially down to the user not realizing that Vortex is minimized
         //  leading him to try to start up Vortex again - we just display the main
         //  window in this case.
-        this.showMainWindow(args?.startMinimized);
+        this.showMainWindow(args?.startMinimized ?? false);
       }
     }
   }

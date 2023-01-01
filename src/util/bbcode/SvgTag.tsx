@@ -4,7 +4,7 @@ import { Tag } from 'bbcode-to-react';
 import * as React from 'react';
 
 class SvgTag extends Tag {
-  public toHTML(): string[] {
+  public override toHTML(): string[] {
     return [`<svg
       preserveAspectRatio='xMidYMid meet'
       class='icon icon-${this.getContent()}'
@@ -13,7 +13,7 @@ class SvgTag extends Tag {
     </svg>`];
   }
 
-  public toReact() {
+  public override toReact() {
     return (
       <Icon name={this.getContent()} />
     );

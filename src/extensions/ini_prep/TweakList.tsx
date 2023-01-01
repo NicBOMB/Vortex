@@ -4,8 +4,6 @@ import Toggle from '../../controls/Toggle';
 import { IState } from '../../types/IState';
 import { ComponentEx, connect, PureComponentEx, translate } from '../../util/ComponentEx';
 import * as fs from '../../util/fs';
-import { getSafe } from '../../util/storeHelper';
-import { truthy } from '../../util/util';
 
 import { setINITweakEnabled } from '../mod_management/actions/mods';
 import { INI_TWEAKS_PATH } from '../mod_management/InstallManager';
@@ -45,11 +43,11 @@ interface ITweakProps {
 }
 
 class Tweak extends PureComponentEx<ITweakProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { enabled, fileName } = this.props;
     const match = fileName.match(/(.*)\[(.*)\]\.ini/);
 
-    if (!truthy(match) || (match.length < 2)) {
+    if (!match || (match.length < 2)) {
       return null;
     }
 
@@ -67,7 +65,7 @@ class Tweak extends PureComponentEx<ITweakProps, {}> {
 }
 
 class TweakList extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, tweaks, mod } = this.props;
 
     if (tweaks.length === 0 || mod === undefined) {

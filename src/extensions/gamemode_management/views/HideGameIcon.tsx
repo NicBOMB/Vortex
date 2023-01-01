@@ -1,7 +1,6 @@
 import { ButtonType } from '../../../controls/IconBar';
 import ToolbarIcon from '../../../controls/ToolbarIcon';
 import { ComponentEx, connect } from '../../../util/ComponentEx';
-import { getSafe } from '../../../util/storeHelper';
 
 import { IDiscoveryResult } from '../../gamemode_management/types/IDiscoveryResult';
 
@@ -27,10 +26,10 @@ interface IActionProps {
 type IProps = IBaseProps & IConnectedProps & IActionProps;
 
 class HideGameIcon extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { buttonType, instanceId, gamesDiscovered } = this.props;
     const t = this.context.api.translate;
-    const hidden = getSafe(gamesDiscovered, [instanceId, 'hidden'], false);
+    const hidden = gamesDiscovered?.[instanceId]?.hidden ?? false;
     const icon = hidden ? 'show' : 'hide';
     const text = hidden ? t('Show') : t('Hide');
     return (
@@ -44,7 +43,7 @@ class HideGameIcon extends ComponentEx<IProps, {}> {
   }
   private toggleHidden = () => {
     const { instanceId, gamesDiscovered, onSetGameHidden } = this.props;
-    const hidden = getSafe(gamesDiscovered, [instanceId, 'hidden'], false);
+    const hidden = gamesDiscovered?.[instanceId]?.hidden ?? false;
     onSetGameHidden(instanceId, !hidden);
   }
 }

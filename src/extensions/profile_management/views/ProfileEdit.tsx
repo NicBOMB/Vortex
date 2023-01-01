@@ -1,14 +1,14 @@
 import Toggle from '../../../controls/Toggle';
-import {Button} from '../../../controls/TooltipControls';
-import {ComponentEx} from '../../../util/ComponentEx';
-import {getSafe, setSafe} from '../../../util/storeHelper';
+import { Button } from '../../../controls/TooltipControls';
+import { ComponentEx } from '../../../util/ComponentEx';
+import { setSafe } from '../../../util/storeHelper';
 
-import {IProfile} from '../types/IProfile';
-import {IProfileFeature} from '../types/IProfileFeature';
+import { IProfile } from '../types/IProfile';
+import { IProfileFeature } from '../types/IProfileFeature';
 
 import update from 'immutability-helper';
 import * as React from 'react';
-import {FormControl, ListGroupItem, Panel} from 'react-bootstrap';
+import { FormControl, ListGroupItem, Panel } from 'react-bootstrap';
 
 export interface IEditState {
   edit: IProfile;
@@ -52,7 +52,7 @@ class ProfileEdit extends ComponentEx<IEditProps, IEditState> {
       };
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IEditProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IEditProps) {
     if (this.props.gameId !== newProps.gameId) {
       this.setState(update(this.state, {
         features: { $set: newProps.features.filter(feature => feature.supported()) },
@@ -60,7 +60,7 @@ class ProfileEdit extends ComponentEx<IEditProps, IEditState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, onCancelEdit, profile, profileId } = this.props;
     const { edit, features } = this.state;
     const inputControl = (
@@ -103,7 +103,7 @@ class ProfileEdit extends ComponentEx<IEditProps, IEditState> {
     if (feature.type === 'boolean') {
       return (
         <Toggle
-          checked={getSafe(edit, ['features', feature.id], false)}
+          checked={edit?.features[feature.id] ?? false}
           dataId={feature.id}
           onToggle={this.toggleCheckbox}
           key={feature.id}
@@ -116,7 +116,7 @@ class ProfileEdit extends ComponentEx<IEditProps, IEditState> {
         <FormControl
           key={feature.id}
           componentClass='textarea'
-          value={getSafe(edit, ['features', feature.id], undefined) ?? ''}
+          value={edit?.features[feature.id] ?? ''}
           data-id={feature.id}
           onChange={this.assignString}
           placeholder={t(feature.description)}

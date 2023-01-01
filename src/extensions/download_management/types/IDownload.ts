@@ -25,26 +25,18 @@ export interface IDownloadOptions {
 export interface IDownload {
   /**
    * current state of the download
-   *
-   * @memberOf IDownload
    */
   state: DownloadState;
 
   /**
    * if the download failed, this will contain a more detailed description
    * of the error
-   *
-   * @type {IDownloadFailCause}
-   * @memberOf IDownload
    */
   failCause?: IDownloadFailCause;
 
   /**
    * list of urls we know serve this file. Should be sorted by preference.
    * If download from the first url isn't possible, the others may be used
-   *
-   * @type {string}
-   * @memberOf IDownload
    */
   urls: string[];
 
@@ -52,26 +44,17 @@ export interface IDownload {
    * path of the file being downloaded to. This is relative to the base download
    * directory for the game and since we use a flat directory structure, this is
    * in practice just the file name
-   *
-   * @type {string}
-   * @memberOf IDownload
    */
   localPath?: string;
 
   /**
    * id of the game(s) to which this archive is compatible.
-   *
-   * @type {string}
-   * @memberOf IDownload
    */
   game: string[];
 
   /**
    * info about the mod being downloaded. This will
    * be associated with the mod entry after its installation
-   *
-   * @type {{ [key: string]: any }}
-   * @memberOf IDownload
    */
   modInfo: { [key: string]: any };
 
@@ -85,9 +68,6 @@ export interface IDownload {
 
   /**
    * hash of the file data
-   *
-   * @type {string}
-   * @memberOf IDownload
    */
   fileMD5?: string;
 
@@ -103,17 +83,11 @@ export interface IDownload {
 
   /**
    * size in bytes
-   *
-   * @type {number}
-   * @memberOf IDownload
    */
   size: number;
 
   /**
    * number of bytes received so far
-   *
-   * @type {number}
-   * @memberOf IDownload
    */
   received: number;
 

@@ -1,0 +1,119 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "airbnb"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": "latest",
+    "project": ["./tsconfig.json"],
+    "sourceType": "module"
+  },
+  "plugins": [
+    "react",
+    "@typescript-eslint"
+  ],
+  "root": true,
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "rules": {
+    "no-unexpected-multiline": "warn",
+    "prefer-const": "warn",
+    "no-async-promise-executor": "warn",
+    "no-var": "warn",
+    "no-useless-escape": "warn",
+    "no-empty": "warn",
+    "no-empty-pattern": "warn",
+    "no-prototype-builtins": "warn",
+    "no-mixed-spaces-and-tabs": "warn",
+    "no-extra-boolean-cast": "error",
+    "no-global-assign": "warn", // this could be off'd since it's done only once
+    "prefer-rest-params": "error",
+    "no-ex-assign": "error",
+    "no-irregular-whitespace": "error",
+    "no-constant-condition": "error",
+    "prefer-spread": "error",
+
+    "@typescript-eslint/no-inferrable-types": "on",
+    "@typescript-eslint/no-explicit-any": "on",
+
+    "@typescript-eslint/prefer-as-const": "warn",
+    "@typescript-eslint/no-var-requires": "warn",
+    "@typescript-eslint/no-this-alias": "warn",
+    "@typescript-eslint/no-empty-function": "warn",
+    "@typescript-eslint/ban-ts-comment": "error",
+
+    // Note: Check https://typescript-eslint.io/rules/ban-types/#extenddefaults
+    // This can be handy to mark deprecated types
+    "@typescript-eslint/ban-types": "warn",
+
+    // You can use types instead of interface for this cases eg:
+    // NO! : interface IAttribute extends IXmlNode<{ id: string, type: string, value: string }> {}
+    // YES!: type IAttribute = IXmlNode<{ id: string, type: string, value: string }>;
+    "@typescript-eslint/no-empty-interface": "error",
+
+    "@typescript-eslint/naming-convention": [
+      "warn",
+      {
+        "selector": "interface",
+        "format": ["PascalCase"],
+        "custom": {
+          "regex": "^I[A-Z]",
+          "match": true
+        }
+      }
+    ],
+
+    "react/prop-types": "warn",
+    "react/display-name": "warn",
+    "react/jsx-no-comment-textnodes": "warn",
+    "react/no-direct-mutation-state": "warn",
+    "react/no-find-dom-node": "error",
+    "react/jsx-key": "error",
+    "react/no-unescaped-entities": "error", // HTML escape codes exist for a reason
+
+    "no-restricted-imports": [
+      "warn",
+      {
+        "name": "bluebird",
+        "message": "Please avoid using Bluebird. Use an ES6 Promise instead!"
+      }
+    ],
+    "max-lines-per-function": [
+      "warn",
+      {
+        "max": 25,
+        "skipComments": true,
+        "skipBlankLines": true
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["*.tsx"],
+      "rules": {
+        "max-lines-per-function": [
+          "warn",
+          {
+            "max": 100,
+            "skipComments": true,
+            "skipBlankLines": true
+          }
+        ]
+      }
+    }
+  ]
+}

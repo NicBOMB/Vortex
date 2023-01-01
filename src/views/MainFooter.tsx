@@ -24,7 +24,7 @@ type IProps = IBaseProps & IExtendedProps;
  * @class MainFooter
  */
 class MainFooter extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { objects } = this.props;
     return (
       <div id='main-footer'>
@@ -40,7 +40,7 @@ class MainFooter extends ComponentEx<IProps, {}> {
   }
 }
 
-function registerFooter(instanceGroup: undefined,
+function registerFooter(instanceGroup: any,
                         id: string,
                         component: React.ComponentClass<any>,
                         props: PropsCallback) {

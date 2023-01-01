@@ -1,5 +1,3 @@
-import {setSafe} from './storeHelper';
-
 export class ObserverProxyHandler<T extends object> implements ProxyHandler<T> {
   private mSubscribers: Array<React.Component<any, any>> = [];
 
@@ -19,7 +17,7 @@ export class ObserverProxyHandler<T extends object> implements ProxyHandler<T> {
 
   public set(target: T, key: PropertyKey, value: any, receiver: any): boolean {
     target[key] = value;
-    this.mSubscribers.forEach(comp => {
+    this.mSubscribers.forEach((comp) => {
       comp.setState({});
     });
     return true;

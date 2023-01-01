@@ -19,7 +19,6 @@ import { log } from '../../../util/log';
 import { showError } from '../../../util/message';
 import opn from '../../../util/opn';
 import * as selectors from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
 import { cleanFailedTransfer, testPathTransfer, transferPath } from '../../../util/transferPath';
 import { Campaign, ciEqual, isChildPath, isPathValid, isReservedDirectory,
          nexusModsURL, Section } from '../../../util/util';
@@ -92,13 +91,13 @@ class Settings extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (this.props.downloadPath !== newProps.downloadPath) {
       this.nextState.downloadPath = newProps.downloadPath;
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, copyOnIFF, downloads, isPremium, maxBandwidth, parallelDownloads } = this.props;
     const { downloadPath, progress, progressFile } = this.state;
 
@@ -520,9 +519,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
         //  Check if we still have the transfer state populated,
         //  if it is - that means that the user has cancelled the transfer,
         //  we need to cleanup.
-        const pendingTransfer: string[] = ['persistent', 'transactions', 'transfer', 'downloads'];
-        if ((getSafe(state, pendingTransfer, undefined) !== undefined)
-          && deleteOldDestination) {
+        if (state?.persistent?.transactions?.transfer?.downloads !== undefined && deleteOldDestination){
           return cleanFailedTransfer(newPath)
             .then(() => {
               onSetTransfer(undefined);
@@ -550,7 +547,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
   }
 
   private confirmElevate = (): Promise<void> => {
-    const { t, onShowDialog } = this.props;
+    const { onShowDialog } = this.props;
     return onShowDialog('question', 'Access denied', {
       text: 'This directory is not writable to the current windows user account. '
           + 'Vortex can try to create the directory as administrator but it will '
@@ -622,7 +619,7 @@ class Settings extends ComponentEx<IProps, IComponentState> {
   }
 
   private transferPath() {
-    const { t, onSetTransfer, onShowDialog } = this.props;
+    const { onSetTransfer, onShowDialog } = this.props;
     const oldPath = getDownloadPath(this.props.downloadPath);
     const newPath = getDownloadPath(this.state.downloadPath);
 
@@ -694,8 +691,8 @@ function mapStateToProps(state: IState): IConnectedProps {
   const modsInstallPath = selectors.installPath(state);
   return {
     parallelDownloads: state.settings.downloads.maxParallelDownloads,
-    // TODO: this breaks encapsulation
-    isPremium: getSafe(state, ['persistent', 'nexus', 'userInfo', 'isPremium'], false),
+    // TODO: this breaks encapsulation // FIXME: woe
+    isPremium: state?.persistent?.nexus?.userInfo?.isPremium,
     downloadPath: state.settings.downloads.path,
     downloads: state.persistent.downloads.files,
     modsInstallPath,

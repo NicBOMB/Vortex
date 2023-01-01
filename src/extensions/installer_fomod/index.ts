@@ -1,7 +1,5 @@
 import { setSettingsPage } from '../../actions/session';
 import {
-  IExtensionApi,
-  IExtensionContext,
   IInstallResult,
   ISupportedResult,
   ProgressDelegate,
@@ -12,8 +10,7 @@ import Debouncer from '../../util/Debouncer';
 import * as fs from '../../util/fs';
 import getVortexPath from '../../util/getVortexPath';
 import { log } from '../../util/log';
-import { getSafe } from '../../util/storeHelper';
-import { delayed, toPromise, truthy} from '../../util/util';
+import { delayed, toPromise } from '../../util/util';
 
 import { getGame } from '../gamemode_management/util/getGame';
 import { ArchiveBrokenError } from '../mod_management/InstallManager';
@@ -24,7 +21,7 @@ import { setInstallerSandbox } from './actions/settings';
 import Core from './delegates/Core';
 import { installerUIReducer } from './reducers/installerUI';
 import { settingsReducer } from './reducers/settings';
-import { IGroupList, IInstallerState } from './types/interface';
+import { IGroupList, IExtensionContext, IExtensionApi } from './types/interface';
 import {
   getPluginPath,
   getStopPatterns,
@@ -191,10 +188,9 @@ function processAttributes(input: any, modPath: string): Bluebird<any> {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(data.slice(offset).toString(encoding), 'text/xml');
       const name: Element = xmlDoc.querySelector('fomod Name');
-      return truthy(name)
-        ? {
-          customFileName: name.childNodes[0].nodeValue,
-        } : {};
+      return !!name ? {
+        customFileName: name.childNodes[0].nodeValue,
+      } : {};
     })
     .catch(() => ({}));
 }
@@ -260,7 +256,7 @@ async function installDotNet(api: IExtensionApi, repair: boolean): Promise<void>
     return Promise.resolve();
   }
 
-  const state = api.getState();
+  const state = api.store.getState();
   const download = state.persistent.downloads.files[dlId];
 
   if (download?.state !== 'finished') {
@@ -338,12 +334,12 @@ function jsonReplace(key: string, value: any) {
 
 function makeJsonRevive(invoke: (data: any) => Promise<void>, getId: () => string) {
   return (key: string, value: any) => {
-    if (truthy(value) && (typeof (value) === 'object')) {
+    if (!!value && (typeof (value) === 'object')) {
       if (value.type === 'Buffer') {
         return Buffer.from(value.data, 'base64');
       }
       Object.keys(value).forEach(subKey => {
-        if (truthy(value[subKey])
+        if (!!value[subKey]
           && (typeof (value[subKey]) === 'object')
           && (value[subKey].__callback !== undefined)) {
           const callbackId = value[subKey].__callback;
@@ -736,7 +732,7 @@ class ConnectionIPC {
   public async onExit(code: number) {
     log(code === 0 ? 'info' : 'error', 'remote process exited', { code });
     try {
-      await toPromise(cb => this.mSocket.out.end(cb));
+      await toPromise((cb) => this.mSocket.out.end(cb));
     } catch (err) {
       log('warn', 'failed to close connection to fomod installer process', err.message);
     }
@@ -813,10 +809,10 @@ class ConnectionIPC {
     const data: any = JSON.parse(msg, makeJsonRevive((payload) =>
       this.sendMessageInner('Invoke', payload), () => data.id));
 
-    if (data.id === 'parseerror') {
+    if (data.id === 'parseerror'){
       const err = new Error(data.error.message);
       err.stack = data.error.stack;
-      if (truthy(data.error.name)) {
+      if (!!data.error.name){
         err.name = data.error.name;
       }
       Object.keys(this.mAwaitedReplies).forEach(replyId => {
@@ -836,10 +832,10 @@ class ConnectionIPC {
       if (data.error !== null) {
         const err = new Error(data.error.message);
         err.stack = data.error.stack;
-        if (truthy(data.error.name)) {
+        if (!!data.error.name){
           err.name = data.error.name;
         }
-        if (truthy(data.error.data)) {
+        if (data.error.data){
           err['data'] = data.error.data;
         }
         this.mAwaitedReplies[data.id].reject(err);
@@ -965,7 +961,7 @@ function init(context: IExtensionContext): boolean {
         scriptPath, fomodChoices, validate, progressDelegate, coreDelegates);
 
       const state = context.api.store.getState();
-      const dialogState: IInstallerState = state.session.fomod.installer.dialog.state;
+      const dialogState = state.session.fomod.installer.dialog.state;
 
       const choices = (dialogState === undefined)
         ? undefined
@@ -1172,8 +1168,9 @@ function init(context: IExtensionContext): boolean {
 
   context.registerReducer(['session', 'fomod', 'installer', 'dialog'], installerUIReducer);
   context.registerReducer(['settings', 'mods'], settingsReducer);
-
+  /** @ts-expect-error */
   context.registerInstaller('fomod', 20, wrapper('test', testSupportedScripted), wrapper('install', installWrap));
+  /** @ts-expect-error */
   context.registerInstaller('fomod', 100, wrapper('test', testSupportedFallback), wrapper('install', installWrap));
 
   if (process.platform === 'win32') {
@@ -1194,7 +1191,7 @@ function init(context: IExtensionContext): boolean {
     icon: 'inspect',
     placement: 'detail',
     calc: (mod: IMod) => {
-      const choices = getSafe(mod.attributes, ['installerChoices'], undefined);
+      const choices = mod.attributes?.installerChoices;
       if ((choices === undefined) || (choices.type !== 'fomod')) {
         return '<None>';
       }

@@ -16,7 +16,7 @@ class InfoPanel extends ComponentEx<IProps, {}> {
     super(props);
     this.mDefaultInfo = 'Drag and drop your load order entries around to modify the order in which the game loads your mods.';
   }
-  public render() {
+  public override render() {
     const { t, info } = this.props;
 
     const Info = info;

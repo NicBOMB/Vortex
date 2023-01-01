@@ -1,7 +1,6 @@
 import { IExtensionApi } from '../types/IExtensionContext';
 import { IState } from '../types/IState';
 import { connect } from '../util/ComponentEx';
-import { truthy } from '../util/util';
 
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
@@ -28,12 +27,12 @@ class MainPageHeader extends React.Component<IProps, {}> {
 
   public declare context: IComponentContext;
 
-  public shouldComponentUpdate() {
+  public override shouldComponentUpdate() {
     return true;
   }
 
-  public render(): JSX.Element {
-    if (!truthy(this.context.headerPortal())) {
+  public override render(): JSX.Element {
+    if (!this.context.headerPortal()) {
       return null;
     }
     return (this.props.mainPage === this.context.page) ? (

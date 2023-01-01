@@ -10,7 +10,7 @@ import { WithTranslation } from 'react-i18next';
 import { Campaign, nexusModsURL, Section } from '../../../util/util';
 
 class GoPremiumDashlet extends ComponentEx<WithTranslation, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t } = this.props;
     return (
       <Dashlet title='' className='dashlet-go-premium nexus-main-banner'>

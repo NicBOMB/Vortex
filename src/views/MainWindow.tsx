@@ -22,8 +22,6 @@ import { TFunction } from '../util/i18n';
 import { log } from '../util/log';
 import { createQueue, MutexProvider } from '../util/MutexContext';
 import startupSettings from '../util/startupSettings';
-import { getSafe } from '../util/storeHelper';
-import { truthy } from '../util/util';
 import Dialog from './Dialog';
 import DialogContainer from './DialogContainer';
 import DNDContainer from './DNDContainer';
@@ -41,7 +39,7 @@ import * as _ from 'lodash';
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { Button as ReactButton, Nav } from 'react-bootstrap';
-// tslint:disable-next-line:no-submodule-imports
+
 import {addStyle} from 'react-bootstrap/lib/utils/bootstrapUtils';
 import * as Redux from 'redux';
 import { ThunkDispatch } from 'redux-thunk';
@@ -102,7 +100,7 @@ export const MainContext = React.createContext<IComponentContext>({
 });
 
 export class MainWindow extends React.Component<IProps, IMainWindowState> {
-  // tslint:disable-next-line:no-unused-variable
+
   public static childContextTypes: React.ValidationMap<any> = {
     api: PropTypes.object.isRequired,
     menuLayer: PropTypes.object,
@@ -166,7 +164,7 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
     return { api, menuLayer: this.menuLayer, getModifiers: this.getModifiers };
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     if (this.props.objects.length > 0) {
       const def = this.props.objects.sort((lhs, rhs) => lhs.priority - rhs.priority)[0];
       this.setMainPage(def.title, false);
@@ -185,7 +183,7 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
     window.addEventListener('blur', this.unsetFocus);
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     window.removeEventListener('resize', this.updateSize);
     window.removeEventListener('keydown', this.updateModifiers);
     window.removeEventListener('keyup', this.updateModifiers);
@@ -193,7 +191,7 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
     window.removeEventListener('blur', this.unsetFocus);
   }
 
-  public shouldComponentUpdate(nextProps: IProps, nextState: IMainWindowState) {
+  public override shouldComponentUpdate(nextProps: IProps, nextState: IMainWindowState) {
     return this.props.visibleDialog !== nextProps.visibleDialog
       || this.props.tabsMinimized !== nextProps.tabsMinimized
       || this.props.mainPage !== nextProps.mainPage
@@ -210,19 +208,19 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
       ;
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     const page = newProps.objects.find(iter => iter.id === newProps.mainPage);
     if ((page !== undefined) && !page.visible()) {
       this.setMainPage('Dashboard', false);
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { activeProfileId, customTitlebar, onHideDialog,
             nextProfileId, uiBlockers, visibleDialog } = this.props;
     const { focused, hidpi, menuOpen } = this.state;
 
-    const switchingProfile = ((activeProfileId !== nextProfileId) && truthy(nextProfileId));
+    const switchingProfile = ((activeProfileId !== nextProfileId) && !!nextProfileId);
 
     const classes = [];
     classes.push(hidpi ? 'hidpi' : 'lodpi');
@@ -241,7 +239,7 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
       classes.push('no-gpu-acceleration');
     }
 
-    const uiBlocker = truthy(uiBlockers)
+    const uiBlocker = !!uiBlockers
       ? Object.keys(uiBlockers).find(() => true)
       : undefined;
 
@@ -281,7 +279,7 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
 
   private renderWait() {
     const { t, onHideDialog, nextProfileId, profiles, progressProfile, visibleDialog } = this.props;
-    const progress = getSafe(progressProfile, ['deploying'], undefined);
+    const progress = progressProfile.deploying;
     const profile = nextProfileId !== undefined ? profiles[nextProfileId] : undefined;
     const control = (progress !== undefined)
       ? <ProgressBar labelLeft={progress.text} now={progress.percent} style={{ width: '50%' }} />
@@ -473,7 +471,7 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
     );
   }
 
-  private setSidebarRef = ref => {
+  private setSidebarRef = (ref: HTMLElement) => {
     this.sidebarRef = ref;
     if (this.sidebarRef !== null) {
       this.sidebarRef.setAttribute('style',
@@ -523,7 +521,7 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
     );
   }
 
-  private setMenuLayer = (ref) => {
+  private setMenuLayer = (ref: HTMLDivElement) => {
     this.menuLayer = ref;
 
     if (this.menuObserver !== undefined) {
@@ -611,17 +609,17 @@ function emptyFunc() {
 
 function mapStateToProps(state: IState): IConnectedProps {
   return {
-    tabsMinimized: getSafe(state, ['settings', 'window', 'tabsMinimized'], false),
+    tabsMinimized: state?.settings?.window?.tabsMinimized ?? false,
     visibleDialog: state.session.base.visibleDialog || undefined,
     mainPage: state.session.base.mainPage,
     secondaryPage: state.session.base.secondaryPage,
     activeProfileId: state.settings.profiles.activeProfileId,
     nextProfileId: state.settings.profiles.nextProfileId,
     profiles: state.persistent.profiles,
-    progressProfile: getSafe(state.session.base, ['progress', 'profile'], undefined),
+    progressProfile: state.session.base?.progress?.profile,
     customTitlebar: state.settings.window.customTitlebar,
-    userInfo: getSafe(state, ['persistent', 'nexus', 'userInfo'], undefined),
-    APIKey: getSafe(state, ['confidential', 'account', 'nexus', 'APIKey'], ''),
+    userInfo: state?.persistent?.nexus?.userInfo,
+    APIKey: state?.confidential?.account?.nexus?.APIKey ?? '',
     notifications: state.session.notifications.notifications,
     uiBlockers: state.session.base.uiBlockers,
   };

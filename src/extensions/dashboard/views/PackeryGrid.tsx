@@ -52,7 +52,7 @@ class Packery extends React.Component<IProps, {}> {
     this.mChildren = new Set(React.Children.map(props.children, (child: any) => child.key));
   }
 
-  public componentDidUpdate() {
+  public override componentDidUpdate() {
     // TODO: If we layout here without condition packery end up in an endless loop were every
     //   layout triggers didUpdate again
     //   But on startup we need several layout calls before the the layout has actually settled
@@ -62,11 +62,11 @@ class Packery extends React.Component<IProps, {}> {
     }
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mMounted = Date.now();
   }
 
-  public UNSAFE_componentWillReceiveProps(nextProps: typeof Packery.prototype.props) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: typeof Packery.prototype.props) {
     const nextChildren = new Set<string>(
       React.Children.map(nextProps.children, (child: any) => child.key));
     if ((nextProps.totalWidth !== this.props.totalWidth)
@@ -84,12 +84,12 @@ class Packery extends React.Component<IProps, {}> {
     }
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     clearTimeout(this.mRefreshTimer);
     this.mPackery = undefined;
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {children, totalWidth} = this.props;
     const id = shortid();
     return (

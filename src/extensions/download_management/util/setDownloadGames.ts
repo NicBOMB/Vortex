@@ -13,7 +13,6 @@ import { ProcessCanceled, UserCanceled } from '../../../util/CustomErrors';
 import * as fs from '../../../util/fs';
 import getNormalizeFunc from '../../../util/getNormalizeFunc';
 import { log } from '../../../util/log';
-import { truthy } from '../../../util/util';
 import { getGame } from '../../gamemode_management/util/getGame';
 import { setCompatibleGames, setDownloadFilePath } from '../actions/state';
 import { downloadPath, downloadPathForGame } from '../selectors';
@@ -79,7 +78,7 @@ async function setDownloadGames(
 async function moveDownload(state: IState, fileName: string, fromGameId: string, toGameId: string)
     : Promise<string> {
   // removing the main game, have to move the download then
-  const oldPath = truthy(fromGameId)
+  const oldPath = !!fromGameId
     ? downloadPathForGame(state, fromGameId)
     : downloadPath(state);
   const newPath = downloadPathForGame(state, toGameId);

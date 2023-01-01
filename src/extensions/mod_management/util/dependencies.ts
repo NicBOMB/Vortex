@@ -6,10 +6,9 @@ import { IDependency, ILookupResultEx } from '../types/IDependency';
 import { IDownloadHint, IFileListItem, IMod, IModReference, IModRule } from '../types/IMod';
 
 import ConcurrencyLimiter from '../../../util/ConcurrencyLimiter';
-import {log} from '../../../util/log';
-import {activeGameId, lastActiveProfileForGame} from '../../../util/selectors';
-import {getSafe} from '../../../util/storeHelper';
-import { semverCoerce, truthy } from '../../../util/util';
+import { log } from '../../../util/log';
+import { activeGameId } from '../../../util/selectors';
+import { semverCoerce } from '../../../util/util';
 
 import Promise from 'bluebird';
 import * as _ from 'lodash';
@@ -58,8 +57,8 @@ export function findModByRef(reference: IModReference, mods: { [modId: string]: 
 }
 
 function newerSort(lhs: IDownload, rhs: IDownload): number {
-  const lVersion = semver.coerce(getSafe(lhs, ['modInfo', 'version'], undefined));
-  const rVersion = semver.coerce(getSafe(rhs, ['modInfo', 'version'], undefined));
+  const lVersion = semver.coerce(lhs?.modInfo?.version);
+  const rVersion = semver.coerce(rhs?.modInfo?.version);
 
   if ((lVersion !== null) && (rVersion !== null)) {
     return semver.compare(rVersion, lVersion);
@@ -216,7 +215,7 @@ function tagDuplicates(input: IDependencyNode[]): Promise<IDependencyNode[]> {
   // If this turns out to be a real problem, a much more complex recursive algorithm will
   // be necessary but I believe that to be very hypothetical.
 
-  // tslint:disable-next-line:prefer-for-of
+
   for (let i = 0; i < temp.length; ++i) {
     if (!temp[i].dep.redundant) {
       temp[i].collateral.forEach(collateralItem => {
@@ -307,7 +306,7 @@ function gatherDependenciesGraph(
   gameMode: string,
   recommendations: boolean,
 ): Promise<IDependencyNode> {
-  const state = api.getState();
+  const state = api.store.getState();
 
   const download = findDownloadByRef(rule.reference, state.persistent.downloads.files);
   if (download === undefined) {
@@ -326,7 +325,7 @@ function gatherDependenciesGraph(
               ? Promise.resolve(undefined)
               : lookupDownloadHint(api, rule.downloadHint))
     .then(res => {
-      urlFromHint = truthy(res) ? res : undefined;
+      urlFromHint = !!res ? res : undefined;
       if (res !== undefined) {
         log('info', 'url from dependency', { urlFromHint, md5: rule.reference.fileMD5 });
       }

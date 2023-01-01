@@ -1,6 +1,6 @@
 import { dismissNotification, fireNotificationAction } from '../actions/notifications';
 import { suppressNotification } from '../actions/notificationSettings';
-import { INotification, INotificationAction, NotificationType } from '../types/INotification';
+import { INotification, INotificationAction } from '../types/INotification';
 import { IState } from '../types/IState';
 import { ComponentEx, connect, translate } from '../util/ComponentEx';
 
@@ -51,7 +51,7 @@ interface IComponentState {
 
 class NotificationButton extends ComponentEx<IProps, IComponentState> {
   private mButtonRef = React.createRef<Button>();
-  private mUpdateTimer: NodeJS.Timeout = undefined;
+  private mUpdateTimer: NodeJS.Timeout;
   private mUpdateDebouncer: Debouncer;
   private mMounted: boolean = false;
 
@@ -76,13 +76,13 @@ class NotificationButton extends ComponentEx<IProps, IComponentState> {
     this.mUpdateDebouncer = new Debouncer(this.triggerFilter, 200);
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.updateFiltered();
     this.mMounted = true;
     window.addEventListener('resize', this.onResize);
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     window.removeEventListener('resize', this.onResize);
     this.mMounted = false;
     if (this.mUpdateTimer !== undefined) {
@@ -90,7 +90,7 @@ class NotificationButton extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public componentDidUpdate(prevProps: IProps) {
+  public override componentDidUpdate(prevProps: IProps) {
     if (prevProps.notifications !== this.props.notifications) {
       if (prevProps.notifications.length !== this.props.notifications.length) {
         this.mUpdateDebouncer.runNow(() => null);
@@ -101,7 +101,7 @@ class NotificationButton extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, hide, notifications } = this.props;
     const { filtered, resizing } = this.state;
 
@@ -173,13 +173,13 @@ class NotificationButton extends ComponentEx<IProps, IComponentState> {
       return item.displayMS;
     }
 
-    return {
-      warning: 10000,
-      error: 10000,
-      success: 5000,
-      info: 5000,
-      activity: null,
-    }[item.type] || 10000;
+    return new Map()
+      .set("warning", 10000)
+      .set("error", 10000)
+      .set("success", 5000)
+      .set("info", 5000)
+      .set("activity", null)
+      .get(item.type) ?? 10000;
   }
 
   private quickUpdate() {
@@ -229,7 +229,7 @@ class NotificationButton extends ComponentEx<IProps, IComponentState> {
     }
 
     let filtered = notifications.slice().filter(item => item.type !== 'silent');
-    let nextTimeout = null;
+    let nextTimeout: number = null;
     const now = Date.now();
     if (!open) {
       filtered = filtered.filter(item => {
@@ -395,7 +395,7 @@ function mapStateToProps(state: IState): IConnectedProps {
   };
 }
 
-function mapDispatchToProps(dispatch): IActionProps {
+function mapDispatchToProps(dispatch: Function): IActionProps {
   return {
     onDismiss: (id: string) => dispatch(dismissNotification(id)),
     onSuppress: (id: string) => dispatch(suppressNotification(id, true)),

@@ -41,9 +41,8 @@ import { registerSanityCheck, SanityCheck } from './reduxSanity';
 import ReduxWatcher from './ReduxWatcher';
 import runElevatedCustomTool from './runElevatedCustomTool';
 import { activeGameId } from './selectors';
-import { getSafe } from './storeHelper';
 import StyleManager from './StyleManager';
-import { filteredEnvironment, isFunction, setdefault, timeout, truthy, wrapExtCBAsync, wrapExtCBSync } from './util';
+import { filteredEnvironment, timeout, wrapExtCBAsync, wrapExtCBSync } from './util';
 
 import Promise from 'bluebird';
 import { spawn, SpawnOptions } from 'child_process';
@@ -114,31 +113,36 @@ const removeSelfAsProtocolClient = makeRemoteCallSync('remove-as-default-protoco
 
 const showOpenDialog = makeRemoteCall('show-open-dialog',
   (electron, contents, options: Electron.OpenDialogOptions) => {
-    let window: Electron.BrowserWindow = null;
     try {
-      window = electron.BrowserWindow?.fromWebContents?.(contents);
+      const window = electron.BrowserWindow.fromWebContents(contents);
+      if (window != null){
+        return electron.dialog.showOpenDialog(window, options);
+      } else {
+        throw window;
+      }
     } catch (err) {
-      // nop
+      return Promise.reject(err);
     }
-
-    return electron.dialog.showOpenDialog(window, options);
   });
 
 const showErrorBox = makeRemoteCall('show-error-box',
   (electron, contents, title: string, content: string) => {
     electron.dialog.showErrorBox(title, content);
-    return undefined;
+    return Promise.resolve(undefined);
   });
 
 const showMessageBox = makeRemoteCall('show-message-box',
   (electron, contents, options: Electron.MessageBoxOptions) => {
-    let window: Electron.BrowserWindow = null;
     try {
-      window = electron.BrowserWindow?.fromWebContents?.(contents);
+      const window = electron.BrowserWindow.fromWebContents(contents);
+      if (window != null){
+        return electron.dialog.showMessageBox(window, options);
+      } else {
+        throw window;
+      }
     } catch (err) {
-      // nop
+      return Promise.reject(err);
     }
-    return electron.dialog.showMessageBox(window, options);
   });
 
 export interface IRegisteredExtension {
@@ -182,32 +186,31 @@ class ExtEventHandler extends EventEmitter {
     this.mExtension = extension;
   }
 
-  public addListener(event: string | symbol, listener: (...args: any[]) => void): this {
+  public override addListener(event: string | symbol, listener: (...args: any[]) => void): this {
     this.mWrappee.addListener(event, this.makeWrapped(event, listener));
     return this;
   }
 
-  public on(event: string | symbol, listener: (...args: any[]) => void): this {
-    const stack = (new Error()).stack;
+  public override on(event: string | symbol, listener: (...args: any[]) => void): this {
     return this.addListener(event, listener);
   }
 
-  public once(event: string | symbol, listener: (...args: any[]) => void): this {
+  public override once(event: string | symbol, listener: (...args: any[]) => void): this {
     this.mWrappee.once(event, this.makeOnceWrapped(event, listener));
     return this;
   }
 
-  public prependListener(event: string | symbol, listener: (...args: any[]) => void): this {
+  public override prependListener(event: string | symbol, listener: (...args: any[]) => void): this {
     this.mWrappee.prependListener(event, this.makeWrapped(event, listener));
     return this;
   }
 
-  public prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this {
+  public override prependOnceListener(event: string | symbol, listener: (...args: any[]) => void): this {
     this.mWrappee.prependOnceListener(event, this.makeOnceWrapped(event, listener));
     return this;
   }
 
-  public removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
+  public override removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
     if (this.mFuncMap.has(event)) {
       const listeners = this.mFuncMap.get(event);
       const idx = listeners.findIndex(iter => iter.orig === listener);
@@ -219,43 +222,43 @@ class ExtEventHandler extends EventEmitter {
     return this;
   }
 
-  public off(event: string | symbol, listener: (...args: any[]) => void): this {
+  public override off(event: string | symbol, listener: (...args: any[]) => void): this {
     return this.removeListener(event, listener);
   }
 
-  public removeAllListeners(event?: string | symbol): this {
+  public override removeAllListeners(event?: string | symbol): this {
     this.mWrappee.removeAllListeners(event);
     return this;
   }
 
-  public setMaxListeners(n: number): this {
+  public override setMaxListeners(n: number): this {
     this.mWrappee.setMaxListeners(n);
     return this;
   }
 
-  public getMaxListeners(): number {
+  public override getMaxListeners(): number {
     return this.mWrappee.getMaxListeners();
   }
 
-  // tslint:disable-next-line:ban-types
-  public listeners(event: string | symbol): Function[] {
+
+  public override listeners(event: string | symbol): Function[] {
     return this.mWrappee.listeners(event);
   }
 
-  // tslint:disable-next-line:ban-types
-  public rawListeners(event: string | symbol): Function[] {
+
+  public override rawListeners(event: string | symbol): Function[] {
     return this.mWrappee.rawListeners(event);
   }
 
-  public emit(event: string | symbol, ...args: any[]): boolean {
+  public override emit(event: string | symbol, ...args: any[]): boolean {
     return this.mWrappee.emit(event, ...args);
   }
 
-  public eventNames(): Array<string | symbol> {
+  public override eventNames(): Array<string | symbol> {
     return this.mWrappee.eventNames();
   }
 
-  public listenerCount(type: string | symbol): number {
+  public override listenerCount(type: string | symbol): number {
     return this.mWrappee.listenerCount(type);
   }
 
@@ -382,7 +385,6 @@ class ContextProxyHandler implements ProxyHandler<any> {
     this.mApiAdditions = [];
     // TODO: check if this is necessary. Ususally the arrow lambda should
     //   bind this automatically
-    // tslint:disable-next-line:no-this-assignment
     const that = this;
     this.mOptional = new Proxy({}, {
       get(target, key: PropertyKey): any {
@@ -404,7 +406,7 @@ class ContextProxyHandler implements ProxyHandler<any> {
           });
         };
       },
-    });
+    } as ContextProxyHandler);
   }
 
   public endRegistration() {
@@ -449,8 +451,8 @@ class ContextProxyHandler implements ProxyHandler<any> {
       (call: IInitCall) => !call.optional && !fullAPI.has(call.key))
     .forEach((call: IInitCall) => {
       log('debug', 'unsupported api call', { extension: call.extension, api: call.key });
-      setdefault(incompatibleExtensions, call.extension, [])
-        .push({ id: 'unsupported-api' });
+      incompatibleExtensions[call.extension] ??= [];
+      incompatibleExtensions[call.extension].push({ id: 'unsupported-api' });
     });
 
     const findExt = (id: string) => {
@@ -462,11 +464,17 @@ class ContextProxyHandler implements ProxyHandler<any> {
     const testValid = (extId: string, requiredId?: string, version?: string) => {
       const req = findExt(requiredId);
       if (req === undefined) {
-        setdefault(incompatibleExtensions, extId, []).push(
-          { id: 'dependency', args: { dependencyId: requiredId } });
+        incompatibleExtensions[extId] ??= [];
+        incompatibleExtensions[extId].push({
+          id: 'dependency',
+          args: { dependencyId: requiredId }
+        });
       } else if ((version !== undefined) && !semver.satisfies(req.info?.version, version)) {
-        setdefault(incompatibleExtensions, extId, []).push(
-          { id: 'dependency', args: { dependencyId: requiredId, version } });
+        incompatibleExtensions[extId] ??= [];
+        incompatibleExtensions[extId].push({
+          id: 'dependency',
+          args: { dependencyId: requiredId, version }
+        });
       }
     };
 
@@ -479,8 +487,10 @@ class ContextProxyHandler implements ProxyHandler<any> {
           && !semver.satisfies(getApplication().version,
                                call.arguments[0],
                                { includePrerelease: true })) {
-        setdefault(incompatibleExtensions, call.extension, []).push(
-          { id: 'unsupported-version' });
+        incompatibleExtensions[call.extension] ??= [];
+        incompatibleExtensions[call.extension].push({
+          id: 'unsupported-version'
+        });
       }
     });
 
@@ -655,7 +665,7 @@ class EventProxy extends EventEmitter {
     });
   }
 
-  public emit(eventName: string, ...args) {
+  public override emit(eventName: string, ...args) {
     if (!super.emit(eventName, args)
         && (this.mTarget !== undefined)
         && !this.mTarget.isDestroyed()) {
@@ -747,7 +757,7 @@ class ExtensionManager {
   // or coffescript directly but that would require us shipping the corresponding compilers
   private mExtensionFormats: string[] = ['index.js'];
 
-  constructor(initStore?: Redux.Store<any>, eventEmitter?: NodeJS.EventEmitter) {
+  constructor(initStore: ThunkStore<IState>, eventEmitter?: NodeJS.EventEmitter) {
     this.mEventEmitter = eventEmitter;
     if (eventEmitter !== undefined) {
       this.mEventEmitter.setMaxListeners(100);
@@ -761,14 +771,21 @@ class ExtensionManager {
     this.mStartHooks = [];
     this.mToolParameterCBs = [];
     this.mApi = {
+      store: initStore,
+      extension: undefined,
+      showDialog: undefined,
+      closeDialog: undefined,
+      sendNotification: undefined,
+      dismissNotification: undefined,
+      suppressNotification: undefined,
       showErrorNotification: this.showErrorBox,
       selectFile: this.selectFile,
       selectExecutable: this.selectExecutable,
       selectDir: this.selectDir,
       events: this.mEventEmitter,
-      translate: (input, options?) => this.mTranslator !== undefined
+      translate: (input, options?): string => this.mTranslator !== undefined
           ? this.mTranslator.t(input, options)
-          : (Array.isArray(input) ? input[0].toString() : input.toString()) as any,
+          : (Array.isArray(input) ? input[0].toString() : input.toString()),
       laterT: (input, options?) => new TString(input, options, 'common'),
       locale: () => this.mTranslator.language,
       getI18n: () => this.mTranslator,
@@ -876,10 +893,10 @@ class ExtensionManager {
    *
    * @memberOf ExtensionManager
    */
-  public setStore<S extends IState>(store: ThunkStore<S>) {
+  public setStore(store: ThunkStore<IState>) {
     this.mReduxWatcher = new ReduxWatcher(store, this.watcherError);
 
-    this.mExtensionState = getSafe(store.getState(), ['app', 'extensions'], {});
+    this.mExtensionState = store.getState().app.extensions ?? {};
 
     this.mApi.sendNotification = (notification: INotification): string => {
       const noti = { ...notification };
@@ -896,7 +913,7 @@ class ExtensionManager {
       store.dispatch(addNotification(noti));
       return noti.id;
     };
-    // tslint:disable-next-line:only-arrow-functions
+
     this.mApi.showErrorNotification = function(message: string,
                                                details: string | Error | any,
                                                options?: IErrorOptions) {
@@ -961,7 +978,7 @@ class ExtensionManager {
    *
    * @memberOf ExtensionManager
    */
-  public setupApiMain<S>(store: Redux.Store<S>, ipc: WebContents) {
+  public setupApiMain(store: Redux.Store<IState>, ipc: WebContents) {
     this.mApi.showErrorNotification =
         (message: string, details: string | Error, options: IErrorOptions) => {
           try {
@@ -1179,9 +1196,7 @@ class ExtensionManager {
 
   private getModDB = (): Promise<modmetaT.ModDB> => {
     const gameMode = activeGameId(this.mApi.store.getState());
-    const currentKey =
-      getSafe(this.mApi.store.getState(),
-        ['confidential', 'account', 'nexus', 'APIKey'], '');
+    const currentKey = this.mApi.store.getState().confidential.account.nexus.APIKey ?? '';
 
     let init;
 
@@ -1232,7 +1247,7 @@ class ExtensionManager {
 
   private getMetaServerList(): modmetaT.IServer[] {
     const state = this.mApi.store.getState();
-    const servers: { [key: string]: modmetaT.IServer } = getSafe(state, ['settings', 'metaserver', 'servers'], {});
+    const servers = state.settings.metaserver.servers ?? {};
 
     return Object.keys(servers).map(id => servers[id]).slice()
       .concat(Object.values(this.mProgrammaticMetaServers))
@@ -1265,7 +1280,7 @@ class ExtensionManager {
   private stateChangeHandler = (watchPath: string[],
                                 callback: StateChangeCallback,
                                 ext?: IRegisteredExtension) => {
-    if (!isFunction(callback)) {
+    if (!(typeof callback === "function")){
       // TODO we should be throwing an exception here but this didn't fail in the past and I don't
       //   want to break previously ok extensions in a minor update
       // throw new Error('attempt to register invalid change handler');
@@ -1380,7 +1395,8 @@ class ExtensionManager {
     const migrations: { [ext: string]: MigrationFunc[] } = {};
 
     this.mContextProxyHandler.getCalls('registerMigration').forEach(call => {
-      setdefault(migrations, call.extension, []).push(call.arguments[0]);
+      migrations[call.extension] ??= [];
+      migrations[call.extension].push(call.arguments[0]);
     });
 
     const state: IState = this.mApi.store.getState();
@@ -1388,7 +1404,7 @@ class ExtensionManager {
       .filter(ext => ext.dynamic)
       .forEach(ext => {
         try {
-          let oldVersion = getSafe(state.app, ['extensions', ext.name, 'version'], '0.0.0');
+          let oldVersion = state.app.extensions[ext.name].version ?? '0.0.0';
           if (!semver.valid(oldVersion)) {
             log('error', 'invalid version stored for extension',
                 { extension: ext.name, oldVersion });
@@ -1516,7 +1532,7 @@ class ExtensionManager {
 
     return preMD5.then((results: IModLookupResult[]) => {
       if (options.requireURL === true) {
-        results = results.filter(res => truthy(res.value.sourceURI));
+        results = results.filter(res => !!res.value.sourceURI);
       }
       if (results.length !== 0) {
         return results;
@@ -1525,7 +1541,7 @@ class ExtensionManager {
           .then(modDB => modDB.getByReference(reference))
           .filter((mod: ILookupResult) => {
             if (options.requireURL === true) {
-              return truthy(mod.value.sourceURI);
+              return !!mod.value.sourceURI;
             } else {
               return true;
             }
@@ -1650,9 +1666,9 @@ class ExtensionManager {
         preferredValue = Symbol();
       }
 
-      if (!truthy(lhs[attribute]) || rhs[attribute] === preferredValue) {
+      if (!lhs[attribute] || rhs[attribute] === preferredValue) {
         return 1;
-      } else if (!truthy(rhs[attribute]) || lhs[attribute] === preferredValue) {
+      } else if (!rhs[attribute] || lhs[attribute] === preferredValue) {
         return -1;
       } else {
         return 0;
@@ -1743,7 +1759,7 @@ class ExtensionManager {
 
   private runExecutable =
     (executable: string, args: string[], options: IRunOptions): Promise<void> => {
-      if (!truthy(executable)) {
+      if (!executable){
         return Promise.reject(new ProcessCanceled('Executable not set'));
       }
       const interpreter = this.mInterpreters[path.extname(executable).toLowerCase()];
@@ -1792,7 +1808,7 @@ class ExtensionManager {
 
           const child = spawn(runExe, options.shell ? args : args.map(arg => arg.replace(/"/g, '')),
                               spawnOptions);
-          if (truthy(child['exitCode'])) {
+          if (!!child['exitCode']){
             // brilliant, apparently there is no way for me to get at the stdout/stderr when running
             // through a shell if starting the application fails immediately
             return reject(new Error(`Failed to start (exit code ${child['exitCode']})`));
@@ -1808,7 +1824,7 @@ class ExtensionManager {
           let stdOut: string;
           let errOut: string;
           child
-            .on('error', err => {
+            .on('error', (err) => {
               reject(err);
             })
             .on('close', (code) => {
@@ -1999,7 +2015,7 @@ class ExtensionManager {
     };
   }
 
-  // tslint:disable-next-line:member-ordering
+
   private highlightCSS = (() => {
     let highlightCSS: CSSStyleRule;
     let highlightCSSAlt: CSSStyleRule;
@@ -2013,7 +2029,7 @@ class ExtensionManager {
 
       highlightCSS = highlightAfterCSS = null;
 
-      // tslint:disable-next-line:prefer-for-of
+
       for (let i = 0; i < document.styleSheets.length; ++i) {
         if ((document.styleSheets[i].ownerNode as any).id === 'theme') {
           const rules = Array.from((document.styleSheets[i] as any).rules);
@@ -2092,8 +2108,6 @@ class ExtensionManager {
   }
 
   private startIPC(ipcPath: string, onFinished: (err: Error) => void) {
-    let connected: boolean = false;
-
     const finish = (err: Error) => {
       server.close();
       onFinished(err);
@@ -2103,13 +2117,11 @@ class ExtensionManager {
       const conn = new JsonSocket(connRaw);
 
       log('debug', 'ipc client connected');
-      connected = true;
 
-      conn
-        .on('message', data => {
+      conn.on('message', data => {
           const { message, payload } = data;
           if (message === 'log') {
-            // tslint:disable-next-line:no-shadowed-variable
+
             const { level, message, meta } = payload;
             log(level, message, meta);
           } else if (message === 'finished') {
@@ -2207,7 +2219,7 @@ class ExtensionManager {
     const res = fs.readdirSync(extension.path)
       .filter(name => fs.statSync(path.join(extension.path, name)).isDirectory())
       .reduce((prev: { [id: string]: IRegisteredExtension }, name: string) => {
-        if (!getSafe(this.mExtensionState, [name, 'enabled'], true)) {
+        if (!(this.mExtensionState[name].enabled ?? true)){
           log('debug', 'extension disabled', { name });
           return prev;
         }
@@ -2316,7 +2328,7 @@ class ExtensionManager {
     const loadedExtensions = new Set<string>();
     let dynamicallyLoaded = [];
     return staticExtensions
-      .filter(ext => getSafe(this.mExtensionState, [ext, 'enabled'], true))
+      .filter(ext => this.mExtensionState[ext].enabled ?? true)
       .map((name: string) => ({
           name,
           namespace: name,

@@ -4,7 +4,6 @@ import Promise from 'bluebird';
 import * as path from 'path';
 import * as winapiT from 'winapi-bindings';
 import * as fs from './fs';
-import { getSafe } from './storeHelper';
 
 import opn from './opn';
 
@@ -175,10 +174,10 @@ class EpicGamesLauncher implements IGameStore {
               try {
                 const parsed = JSON.parse(data);
                 const gameStoreId = STORE_ID;
-                const gameExec = getSafe(parsed, ['LaunchExecutable'], undefined);
-                const gamePath = getSafe(parsed, ['InstallLocation'], undefined);
-                const name = getSafe(parsed, ['DisplayName'], undefined);
-                const appid = getSafe(parsed, ['AppName'], undefined);
+                const gameExec = parsed.LaunchExecutable;
+                const gamePath = parsed.InstallLocation;
+                const name = parsed.DisplayName;
+                const appid = parsed.AppName;
 
                 // Epic does not seem to clean old manifests. We need
                 //  to stat the executable for each item to ensure that the

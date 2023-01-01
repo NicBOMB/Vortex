@@ -9,13 +9,13 @@ if (process.env.DEBUG_REACT_RENDERS === 'true') {
     trackAllPureComponents: true,
     trackExtraHooks: [
       [require('react-redux'), 'useSelector']
-    ]   
+    ]
   });
 }
 
 const earlyErrHandler = (evt) => {
   const {error} = evt;
-  // tslint:disable-next-line:no-shadowed-variable
+
   const remote = require('@electron/remote');
   remote.dialog.showErrorBox('Unhandled error', error.stack);
   remote.app.exit(1);
@@ -24,9 +24,9 @@ const earlyErrHandler = (evt) => {
 // turn all error logs into a single parameter. The reason is that (at least in production)
 // these only get reported by the main process and due to a "bug" only one parameter gets
 // relayed.
-// tslint:disable-next-line:no-console
+
 const oldErr = console.error;
-// tslint:disable-next-line:no-console
+
 console.error = (...args) => {
   oldErr(args.concat(' ') + '\n' + (new Error()).stack);
 };
@@ -38,11 +38,11 @@ import requireRemap from './util/requireRemap';
 requireRemap();
 
 if (process.env.NODE_ENV === 'development') {
-  // tslint:disable-next-line:no-var-requires
+
   const rebuildRequire = require('./util/requireRebuild').default;
   rebuildRequire();
   process.traceProcessWarnings = true;
-  // tslint:disable-next-line:no-var-requires
+
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
 } else {
@@ -107,11 +107,11 @@ import { ThunkStore } from './types/IExtensionContext';
 import { IState } from './types/IState';
 import { relaunch } from './util/commandLine';
 import { UserCanceled } from './util/CustomErrors';
+import { IPrettifiedError } from './util/message';
 import {} from './util/extensionRequire';
 import getVortexPath, { setVortexPath } from './util/getVortexPath';
 import presetManager from './util/PresetManager';
 import { reduxLogger } from './util/reduxLogger';
-import { getSafe } from './util/storeHelper';
 import { bytesToString, getAllPropertyNames, replaceRecursive } from './util/util';
 
 log('debug', 'renderer process started', { pid: process['pid'] });
@@ -184,7 +184,7 @@ setVortexPath('temp', () => path.join(getVortexPath('userData'), 'temp'));
 let deinitCrashDump: () => void;
 
 if (process.env.CRASH_REPORTING === 'vortex') {
-  // tslint:disable-next-line:no-var-requires
+
   const crashDump: typeof crashDumpT = require('crash-dump').default;
   deinitCrashDump =
     crashDump(path.join(remote.app.getPath('temp'), 'dumps', `crash-renderer-${Date.now()}.dmp`));
@@ -194,7 +194,7 @@ if (process.env.CRASH_REPORTING === 'vortex') {
 if (process.platform === 'win32') {
   nativeErr.InitHook();
   const oldPrep = Error.prepareStackTrace;
-  Error.prepareStackTrace = (error, stack) => {
+  Error.prepareStackTrace = (error: IPrettifiedError, stack) => {
     if ((error['code'] === 'UNKNOWN')
         && (error['nativeCode'] === undefined)) {
       if (error['systemCode'] !== undefined) {
@@ -206,7 +206,7 @@ if (process.platform === 'win32') {
       }
     }
     return oldPrep !== undefined
-      ? oldPrep(error, stack)
+      ? oldPrep(error as Error, stack)
       : error.stack;
   };
 }
@@ -382,7 +382,7 @@ function errorHandler(evt: any) {
     // By logging this error here we ensure that even a suppressed error will be reported to
     // user _if_ it managed to prevent the application start. Of course it would be nicer
     // if there was a proper api for that but it's quite the fringe case I think
-    // tslint:disable-next-line:no-console
+
     console.error(error.stack);
     return true;
   } else {
@@ -402,10 +402,10 @@ window.addEventListener('close', () => {
 
 const eventEmitter: NodeJS.EventEmitter = new EventEmitter();
 
-let enhancer = null;
+let enhancer: any = null;
 
 if (process.env.NODE_ENV === 'development') {
-  // tslint:disable-next-line:no-var-requires
+
   const freeze = require('redux-freeze');
   const devtool = window['__REDUX_DEVTOOLS_EXTENSION__']?.({
       shouldRecordChanges: false,
@@ -417,7 +417,7 @@ if (process.env.NODE_ENV === 'development') {
       forwardToMain,
       ...middleware,
       freeze),
-    devtool || (id => id),
+    devtool || ((id: string) => id),
   );
 } else {
   enhancer = compose(
@@ -465,9 +465,9 @@ function init() {
   extensions.applyExtensionsOfExtensions();
   log('debug', 'renderer connected to store');
 
-  setupNotificationSuppression(id => {
+  setupNotificationSuppression((id) => {
     const state: IState = store.getState();
-    return getSafe(state.settings.notifications, ['suppress', id], false);
+    return state.settings.notifications.suppress[id] ?? false;
   });
 
   let lastHeapSize = 0;
@@ -498,7 +498,7 @@ function init() {
 
   const startupPromise = new Promise(resolve => (startupFinished = resolve));
 
-  // tslint:disable-next-line:no-unused-variable
+  /** @ts-expect-error */
   const globalNotifications = new GlobalNotifications(extensions.getApi());
 
   function startDownloadFromURL(url: string, fileName?: string, install?: boolean) {
@@ -610,9 +610,9 @@ function renderer(extensions: ExtensionManager) {
   }
 
   let i18n: I18next.i18n;
-  let error: Error;
+  let error: Error|undefined;
 
-  webFrame.setZoomFactor(getSafe(store.getState(), ['settings', 'window', 'zoomFactor'], 1));
+  webFrame.setZoomFactor(store.getState().settings.window.zoomFactor ?? 1);
 
   ReactDOM.render(
     <LoadingScreen extensions={extensions} />,
@@ -633,7 +633,7 @@ function renderer(extensions: ExtensionManager) {
     return Object.values(state.session.extensions.installed)
       .filter(ext => ext.type === 'translation');
   })
-    .then(res => {
+    .then((res) => {
       ({ i18n, tFunc, error } = res);
 
       setTFunction(tFunc);

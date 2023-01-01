@@ -2,7 +2,6 @@ import { inspect } from 'util';
 import { IGame } from '../../../types/IGame';
 import { IGameStored } from '../../../types/IState';
 import { log } from '../../../util/log';
-import { truthy } from '../../../util/util';
 import { SITE_ID } from '../../gamemode_management/constants';
 
 /**
@@ -14,7 +13,7 @@ export function nexusGameId(game: IGameStored | IGame, fallbackGameId?: string):
     return undefined;
   }
 
-  if (truthy(game)
+  if (!!game
       && (game.details !== undefined)
       && (game.details.nexusPageId !== undefined)) {
     return game.details.nexusPageId;

@@ -22,7 +22,7 @@ export interface IDownloadGameListProps {
 }
 
 class DownloadGameList extends PureComponentEx<IDownloadGameListProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { currentGames, t, games } = this.props;
     const notSelectedGames = games
       .filter(game => currentGames.indexOf(game.id) === -1)

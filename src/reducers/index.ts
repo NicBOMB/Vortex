@@ -12,7 +12,7 @@ import { UserCanceled } from '../util/CustomErrors';
 import deepMerge from '../util/deepMerge';
 import * as fs from '../util/fs';
 import { log } from '../util/log';
-import { deleteOrNop, getSafe, rehydrate, setSafe } from '../util/storeHelper';
+import { deleteOrNop, rehydrate, setSafe } from '../util/storeHelper';
 
 import { appReducer } from './app';
 import { loReducer } from './loadOrder';
@@ -152,12 +152,11 @@ function hydrateRed(
   ele: any,
   statePath: string,
   replace: boolean,
-  querySanitize: (errors: string[]) => Decision,
-  ) {
+  querySanitize: (errors: string[]) => Decision) {
   const pathArray = statePath.split('.').slice(1);
 
   if (ele.verifiers !== undefined) {
-    const input = getSafe(payload, pathArray, undefined);
+    const input = pathArray.reduce((p,e)=>(p?.[e]),payload);
     const errors: string[] = [];
     let moreCount = 0;
     const sanitized = verify(statePath, ele.verifiers, input, ele.defaults,

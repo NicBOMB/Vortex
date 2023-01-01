@@ -4,7 +4,7 @@ import {IState} from '../../../types/IState';
 import {ComponentEx, connect} from '../../../util/ComponentEx';
 import { bytesToString } from '../../../util/util';
 
-import {speedDataPoints} from '../reducers/state';
+// import {speedDataPoints} from '../reducers/state';
 import {IDownload} from '../types/IDownload';
 
 import { TFunction } from 'i18next';
@@ -25,12 +25,8 @@ type IProps = IBaseProps & IConnectedProps;
  * download speed dashlet
  */
 class DownloadsDashlet extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
-    const {t, files, speeds} = this.props;
-    const data = this.convertData(speeds);
-
-    const activeDownloads = Object.keys(files).filter(
-      (key: string) => files[key].state === 'started');
+  public override render(): JSX.Element {
+    const {t, speeds} = this.props;
 
     const progress = this.downloadProgress();
 
@@ -45,7 +41,7 @@ class DownloadsDashlet extends ComponentEx<IProps, {}> {
       );
     } else {
       content = (
-        <div style={{ textAlign: '-webkit-center', position: 'relative', height: '100%' }} >
+        <div style={{ textAlign: 'center', position: 'relative', height: '100%' }} >
             <RadialProgress
               style={{ height: '100%' }}
               totalRadius={100}
@@ -95,18 +91,6 @@ class DownloadsDashlet extends ComponentEx<IProps, {}> {
         class: files[file].state === 'paused' ? 'paused' : 'running',
       }));
   }
-
-  private valueFormatter = (value: number) => {
-    return bytesToString(value) + '/s';
-  }
-
-  private labelFormatter = (name: string) => {
-    return `${speedDataPoints - parseInt(name, 10)}s ago`;
-  }
-
-  private convertData(speeds: number[]): any {
-    return speeds.map((value: number, idx: number) => ({ name: idx.toString(), speed: value }));
-  }
 }
 
 function mapStateToProps(state: IState): IConnectedProps {
@@ -117,4 +101,4 @@ function mapStateToProps(state: IState): IConnectedProps {
 }
 
 export default connect(mapStateToProps)(
-  DownloadsDashlet) as React.ComponentClass<{}>;
+  DownloadsDashlet) as unknown as React.ComponentClass<{}>;

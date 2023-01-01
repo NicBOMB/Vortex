@@ -1,8 +1,5 @@
 import {setStateVersion} from '../actions/app';
 import {IState} from '../types/IState';
-
-import {getSafe} from './storeHelper';
-
 import * as Redux from 'redux';
 import { getApplication } from './application';
 
@@ -13,7 +10,7 @@ interface IMigrator {
 const settingsMigrator: { [oldVersion: string]: IMigrator } = {};
 
 function updateStore(store: Redux.Store<IState>): Redux.Store<IState> {
-  const oldVersion = getSafe(store.getState(), ['app', 'version'], '');
+  const oldVersion = store.getState()?.app?.version ?? '';
   const newVersion = getApplication().version;
   if (oldVersion !== newVersion) {
     const migrator = settingsMigrator[newVersion];

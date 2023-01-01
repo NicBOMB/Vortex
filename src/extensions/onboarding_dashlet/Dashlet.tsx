@@ -3,7 +3,6 @@ import { Button } from 'react-bootstrap';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
-import { setOpenMainPage } from '../../actions';
 import Dashlet from '../../controls/Dashlet';
 import Icon from '../../controls/Icon';
 import { IState } from '../../types/api';

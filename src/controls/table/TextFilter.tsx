@@ -4,7 +4,7 @@ import * as React from 'react';
 import { FormControl } from 'react-bootstrap';
 
 export class TextFilterComponent extends React.Component<IFilterProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     let { filter } = this.props;
     if (typeof(filter) !== 'string') {
       filter = undefined;

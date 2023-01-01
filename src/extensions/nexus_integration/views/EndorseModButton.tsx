@@ -1,4 +1,3 @@
-import Icon from '../../../controls/Icon';
 import Spinner from '../../../controls/Spinner';
 import { IconButton } from '../../../controls/TooltipControls';
 import { ComponentEx } from '../../../util/ComponentEx';
@@ -20,7 +19,7 @@ export interface IProps {
  * @class EndorseModButton
  */
 class EndorseModButton extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {endorsedStatus, modId, t } = this.props;
 
     if (endorsedStatus === 'pending') {

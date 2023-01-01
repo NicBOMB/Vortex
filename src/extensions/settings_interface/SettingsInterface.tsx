@@ -11,7 +11,6 @@ import { ComponentEx, connect, translate } from '../../util/ComponentEx';
 import getVortexPath from '../../util/getVortexPath';
 import lazyRequire from '../../util/lazyRequire';
 import { log } from '../../util/log';
-import { truthy } from '../../util/util';
 
 import { IAvailableExtension, IExtensionDownloadInfo } from '../extension_manager/types';
 import { readExtensibleDir } from '../extension_manager/util';
@@ -101,15 +100,15 @@ class SettingsInterfaceImpl extends ComponentEx<IProps, {}> {
     this.mInitialTitlebar = props.customTitlebar;
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     (this.props.startup as any).attach(this);
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     (this.props.startup as any).detach(this);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, autoDeployment, autoEnable, autoInstall, autoStart, currentLanguage,
             customTitlebar, desktopNotifications, foregroundDL, languages, profilesVisible,
             hideTopLevelCategory, onSetForegroundDL, relativeTimes, startup, startMinimized,
@@ -437,11 +436,6 @@ class SettingsInterfaceImpl extends ComponentEx<IProps, {}> {
     onSetCustomTitlebar(!customTitlebar);
   }
 
-  private toggleAdvanced = () => {
-    const { advanced, onSetAdvancedMode } = this.props;
-    onSetAdvancedMode(!advanced);
-  }
-
   private restart = () => {
     relaunch();
   }
@@ -517,7 +511,7 @@ const SettingsInterfaceMapped = translate(['common'])(
       SettingsInterfaceImpl));
 
 function isValidLanguageCode(langId: string) {
-  if (!truthy(langId)) {
+  if (!langId) {
     return false;
   }
   try {

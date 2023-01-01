@@ -14,7 +14,7 @@ import { DNDContainer, MainPage } from '../../../views/api';
 
 import { setGameLoadOrderRendererOptions } from '../actions/settings';
 
-import { IGameLoadOrderEntry, IItemRendererOptions, ILoadOrder,
+import { IGameLoadOrderEntry, IItemRendererOptions, LoadOrder, ILoadOrder,
   ILoadOrderDisplayItem, SortType, UpdateType } from '../types/types';
 
 import DraggableList from './DraggableList';
@@ -47,7 +47,7 @@ interface IConnectedProps {
   loadOrder: ILoadOrder;
 
   // All available mods for this gameMode.
-  mods: types.IMod[];
+  mods: types.IModTable[""];
 
   // The profile we're managing this load order for.
   profile: types.IProfile;
@@ -62,7 +62,7 @@ interface IConnectedProps {
 interface IActionProps {
   onSetLoadOrderRendererOptions: (gameId: string, options: IItemRendererOptions) => void;
   onSetDeploymentNecessary: (gameId: string, necessary: boolean) => void;
-  onSetOrder: (profileId: string, loadOrder: ILoadOrder) => void;
+  onSetOrder: (profileId: string, loadOrder: LoadOrder) => void;
 }
 
 interface ILoadOrderState {
@@ -178,7 +178,7 @@ class LoadOrderPage extends ComponentEx<IProps, IComponentState> {
     ];
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (this.state.updating === true) {
       return;
     }
@@ -192,7 +192,7 @@ class LoadOrderPage extends ComponentEx<IProps, IComponentState> {
     }
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     const renderer = this.getItemRenderer();
     if (renderer !== this.state.itemRenderer) {
       this.nextState.itemRenderer = renderer;
@@ -202,11 +202,11 @@ class LoadOrderPage extends ComponentEx<IProps, IComponentState> {
     this.nextState.loading = false;
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.resetState();
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { loading } = this.state;
     return (loading)
       ? this.renderWait()
@@ -233,7 +233,7 @@ class LoadOrderPage extends ComponentEx<IProps, IComponentState> {
     const hasLOEntry = (modId) => loKeys.includes(modId);
     const setNewOrder = (newList: ILoadOrderDisplayItem[]) => {
       const locked = loKeys.filter(key => !!loadOrder[key]?.locked);
-      const newOrder: ILoadOrder = newList.reduce((accum, entry, idx) => {
+      const newOrder = newList.reduce((accum: {[key: string]: { pos: number; enabled: boolean; prefix?: string; data?: any; locked?: boolean; external?: boolean; }}, entry, idx) => {
         if (loKeys.length === 0) {
           // First run
           accum[entry.id] = {
@@ -473,12 +473,11 @@ class LoadOrderPage extends ComponentEx<IProps, IComponentState> {
         : activeGameEntry.gameArtURL,
     });
 
-    const modState = Object.keys(mods).filter(mod =>
-      util.getSafe(profile, ['modState', mod, 'enabled'], false));
+    const modState = Object.keys(mods).filter((mod) => profile?.modState?.[mod]?.enabled ?? false);
 
     const filtered = (!!activeGameEntry.filter)
-      ? activeGameEntry.filter(modState.map(id => mods[id])).map(mod => mapToDisplay(mod))
-      : modState.map(mod => mapToDisplay(mods[mod]));
+      ? activeGameEntry.filter(modState.map((id) => mods[profile.gameId][id])).map((mod) => mapToDisplay(mod))
+      : modState.map(mod => mapToDisplay(mods[profile.gameId][mod]));
 
     const en = this.state.enabled.filter(mod =>
       filtered.find(entry => entry.id === mod.id) !== undefined);
@@ -511,23 +510,21 @@ class LoadOrderPage extends ComponentEx<IProps, IComponentState> {
   }
 }
 
-const empty = {};
 const defaultOpts: IItemRendererOptions = { listViewType: 'full', displayCheckboxes: true };
 function mapStateToProps(state: types.IState, ownProps: IProps): IConnectedProps {
   const profile = selectors.activeProfile(state) || undefined;
-  let loadOrder: ILoadOrder = {};
+  let loadOrder: LoadOrder;
 
   let itemRendererOptions: IItemRendererOptions = defaultOpts;
   if (!!profile?.gameId) {
-    loadOrder = util.getSafe(state, ['persistent', 'loadOrder', profile.id], empty);
-    itemRendererOptions = util.getSafe(state,
-      ['settings', 'loadOrder', 'rendererOptions', profile.gameId], defaultOpts);
+    loadOrder = state?.persistent?.loadOrder?.[profile.id];
+    itemRendererOptions = state?.settings?.loadOrder?.rendererOptions?.[profile.gameId] ?? defaultOpts;
   }
 
   return {
     itemRendererOptions,
     loadOrder,
-    mods: util.getSafe(state, ['persistent', 'mods', profile.gameId], []),
+    mods: state?.persistent?.mods?.[profile.gameId] ?? {},
     profile,
     needToDeploy: selectors.needToDeploy(state),
   };
@@ -540,7 +537,7 @@ function mapDispatchToProps(dispatch: any): IActionProps {
     onSetDeploymentNecessary: (gameId, necessary) =>
       dispatch(actions.setDeploymentNecessary(gameId, necessary)),
     onSetOrder: (profileId, loadOrder) => {
-      dispatch(actions.setLoadOrder(profileId, (loadOrder as any)));
+      dispatch(actions.setLoadOrder(profileId, loadOrder));
     },
   };
 }

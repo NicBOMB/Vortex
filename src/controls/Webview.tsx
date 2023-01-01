@@ -13,7 +13,6 @@
  */
 
 import { log } from '../util/log';
-import { truthy } from '../util/util';
 import { closeBrowserView, makeBrowserView, positionBrowserView, updateViewURL } from '../util/webview';
 
 import { ipcRenderer } from 'electron';
@@ -60,7 +59,7 @@ function BrowserView(props: IBrowserViewProps) {
   const bounds = React.useRef<Electron.Rectangle>();
 
   const updateViewBounds = React.useCallback(() => {
-    if (truthy(container.current)) {
+    if (!!container.current){
       const rect = container.current.getBoundingClientRect();
 
       bounds.current = {
@@ -78,7 +77,7 @@ function BrowserView(props: IBrowserViewProps) {
   React.useEffect(() => {
     let wasVisible: boolean = true;
     const overlapTest = setInterval(() => {
-      if (truthy(bounds.current)) {
+      if (!!bounds.current){
         // janky way of estimating a position that would be overlapped
         const x = bounds.current.x + bounds.current.width / 2;
         const y1 = bounds.current.y + (bounds.current.height * 0.33);
@@ -157,15 +156,15 @@ export class WebviewOverlay extends React.Component<IWebviewProps & IWebView, { 
     };
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IWebviewProps & IWebView) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IWebviewProps & IWebView) {
     if (this.props.src !== newProps.src) {
       this.setState({ src: newProps.src });
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {events} = this.props;
-    return truthy(this.props.src) ? (
+    return !!this.props.src ? (
       <BrowserView
         src={this.state.src}
         events={{
@@ -232,7 +231,7 @@ export class WebviewOverlay extends React.Component<IWebviewProps & IWebView, { 
 export class WebviewEmbed extends React.Component<IWebviewProps & IWebView, {}> {
   private mNode: HTMLWebViewElement;
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.mNode = ReactDOM.findDOMNode(this) as HTMLWebViewElement;
     this.mNode.addEventListener('did-start-loading', this.startLoad);
     this.mNode.addEventListener('did-stop-loading', this.stopLoad);
@@ -256,7 +255,7 @@ export class WebviewEmbed extends React.Component<IWebviewProps & IWebView, {}> 
     this.mNode.addEventListener('leave-html-full-screen', this.leaveFullscreen);
   }
 
-  public componentWillUnmount() {
+  public override componentWillUnmount() {
     this.mNode.removeEventListener('did-start-loading', this.startLoad);
     this.mNode.removeEventListener('did-stop-loading', this.stopLoad);
     this.mNode.removeEventListener('console-message', this.logMessage);
@@ -265,7 +264,7 @@ export class WebviewEmbed extends React.Component<IWebviewProps & IWebView, {}> 
     this.mNode.removeEventListener('leave-html-full-screen', this.leaveFullscreen);
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     return React.createElement('webview', {
       ...omit(this.props, ['onLoading', 'onNewWindow', 'onFullscreen', 'events']),
       allowpopups: 'true',
@@ -287,13 +286,6 @@ export class WebviewEmbed extends React.Component<IWebviewProps & IWebView, {}> 
     const { onLoading } = this.props;
     if (onLoading !== undefined) {
       onLoading(false);
-    }
-  }
-
-  private newWindow = (evt) => {
-    const { onNewWindow } = this.props;
-    if (onNewWindow !== undefined) {
-      onNewWindow(evt.url, evt.disposition);
     }
   }
 

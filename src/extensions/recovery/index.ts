@@ -13,7 +13,6 @@ import { IDeploymentManifest } from '../../types/api';
 import { UserCanceled } from '../../util/CustomErrors';
 import * as fs from '../../util/fs';
 import { log } from '../../util/log';
-import { getSafe } from '../../util/storeHelper';
 import { getManifest } from '../mod_management/util/activationStore';
 import Workarounds from './Workarounds';
 
@@ -89,8 +88,8 @@ async function resetToManifest(api: IExtensionApi) {
       return;
     }
 
-    const mods = getSafe(state, ['persistent', 'mods', profile.gameId], {});
-    const isEnabled = modId => getSafe(profile, ['modState', modId, 'enabled'], false);
+    const mods = state?.persistent?.mods[profile.gameId] ?? {};
+    const isEnabled = (modId) => (profile?.modState?.[modId]?.enabled ?? false);
     Object.keys(mods)
       .forEach(modId => {
         if (isEnabled(modId) !== enabledMods.has(modId)) {

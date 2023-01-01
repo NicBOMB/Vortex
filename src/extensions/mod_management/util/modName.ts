@@ -1,5 +1,3 @@
-import {getSafe} from '../../../util/storeHelper';
-
 import {IMod, IModReference} from '../types/IMod';
 
 export interface INameOptions {
@@ -9,14 +7,15 @@ export interface INameOptions {
 
 export function modNameFromAttributes(mod: { [key: string]: any }, options?: INameOptions): string {
   const fields = [];
-  fields.push(
-    getSafe(mod, ['customFileName'], '')
-    || getSafe(mod, ['logicalFileName'], '')
-    || getSafe(mod, ['fileName'], '')
-    || getSafe(mod, ['name'], ''));
+  fields.push(mod?.customFileName
+    ?? mod?.logicalFileName
+    ?? mod?.fileName
+    ?? mod?.name
+    ?? ''
+  );
 
   if (options?.version) {
-    fields.push(`(v${getSafe(mod, ['version'], '?')})`);
+    fields.push(`(v${mod?.version ?? '?'})`);
   }
 
   if (options?.variant && (mod?.variant !== undefined)) {

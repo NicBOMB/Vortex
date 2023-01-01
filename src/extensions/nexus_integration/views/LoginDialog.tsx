@@ -111,7 +111,7 @@ class LoginDialog extends ComponentEx<IProps, ILoginDialogState> {
     });
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (newProps.visible && !this.props.visible) {
       this.nextState.troubleshoot = false;
       this.nextState.apiKeyInput = '';
@@ -126,7 +126,7 @@ class LoginDialog extends ComponentEx<IProps, ILoginDialogState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { troubleshoot } = this.state;
     const { t, loginId, visible } = this.props;
 

@@ -1,5 +1,3 @@
-import Promise from 'bluebird';
-
 type Callback = (err: Error) => void;
 
 /**

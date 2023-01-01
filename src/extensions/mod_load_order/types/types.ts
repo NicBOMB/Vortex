@@ -1,7 +1,9 @@
 import * as Promise from 'bluebird';
 import { IActionDefinitionEx } from '../../../controls/ActionControl';
 import { IMod } from '../../../types/IState';
-import { ICollection } from '../types/collections';
+import { LoadOrder, ILoadOrderEntry } from '../../../types/IState';
+
+export { LoadOrder, ILoadOrderEntry };
 
 export type SortType = 'ascending' | 'descending';
 
@@ -29,7 +31,7 @@ export interface IInfoPanelProps {
   refresh: () => void;
 }
 
-export interface ILoadOrderEntry<T = any> {
+export interface ILoadOrderView {
   // The position/index/priority for this entry.
   pos: number;
 
@@ -42,7 +44,7 @@ export interface ILoadOrderEntry<T = any> {
   prefix?: string;
 
   // custom data passed along with the load order entry
-  data?: T;
+  data?: any;
 
   // If the load order entry is locked to its current position/index/priority.
   locked?: boolean;
@@ -53,7 +55,7 @@ export interface ILoadOrderEntry<T = any> {
 }
 
 export interface ILoadOrder {
-  [modId: string]: ILoadOrderEntry;
+  [modId: string]: ILoadOrderView;
 }
 
 // A set of configurable options which item renderers

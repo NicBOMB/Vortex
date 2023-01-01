@@ -21,9 +21,6 @@ export interface INotification {
    * the notification system generates its own.
    * Manually set an id if you intend to programatically stop
    * the notification
-   *
-   * @type {NotificationType}
-   * @memberOf INotification
    */
   id?: string;
   /**
@@ -40,9 +37,6 @@ export interface INotification {
    *                user should be aware of the operation)
    *   - 'info': neutral information notification
    *   - 'error': Error notification (something went wrong)
-   *
-   * @type {NotificationType}
-   * @memberOf INotification
    */
   type: NotificationType;
 

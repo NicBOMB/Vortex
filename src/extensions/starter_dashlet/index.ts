@@ -6,8 +6,6 @@ import { IExtensionApi, IExtensionContext } from '../../types/IExtensionContext'
 import { ITestResult } from '../../types/ITestResult';
 import { IStarterInfo } from '../../util/StarterInfo'
 import { activeGameId } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
-import { truthy } from '../../util/util';
 
 import memoize from 'memoize-one';
 
@@ -39,14 +37,12 @@ function testPrimaryTool(api: IExtensionApi): Promise<ITestResult> {
   if (gameMode === undefined) {
     return Promise.resolve(undefined);
   }
-  const primaryToolId = getSafe(state,
-    ['settings', 'interface', 'primaryTool', gameMode], undefined);
+  const primaryToolId = state?.settings?.interface?.primaryTool?.[gameMode];
 
-  if (truthy(primaryToolId)) {
+  if (!!primaryToolId){
     // We have a primary tool defined - ensure it's still valid.
-    const primaryTool = getSafe(state,
-      [ 'settings', 'gameMode', 'discovered', gameMode, 'tools', primaryToolId ], undefined);
-    if ((primaryTool === undefined) || (!truthy(primaryTool.path))) {
+    const primaryTool = state?.settings?.gameMode?.discovered?.[gameMode]?.tools?.[primaryToolId];
+    if (primaryTool?.path === undefined){
       notifyInvalid();
       api.store.dispatch(setPrimaryTool(gameMode, undefined));
     } else {
@@ -106,7 +102,7 @@ function init(context: IExtensionContext): boolean {
 
 function validateTools(api: IExtensionApi, starters: IStarterInfo[], gameMode: string) {
   const state = api.getState();
-  const discovery: IDiscoveryResult = getSafe(state, ['settings', 'gameMode', 'discovered', gameMode], {});
+  const discovery: IDiscoveryResult = state?.settings?.gameMode?.discovered?.[gameMode] ?? {};
   if (discovery?.path === undefined) {
     return Promise.resolve([]);
   }

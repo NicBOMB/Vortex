@@ -1,4 +1,4 @@
-// tslint:disable-next-line:no-var-requires
+
 const Module = require('module');
 
 import * as path from 'path';
@@ -26,8 +26,8 @@ class ChildProcessProxy {
 }
 
 function patchedLoad(orig) {
-  // tslint:disable-next-line:only-arrow-functions
-  return function(request: string, parent, ...rest) {
+
+  return function anon(request: string, parent, ...rest) {
     if ((request === 'fs')
         && ((parent.filename.indexOf('graceful-fs') !== -1)
             || (parent.filename.indexOf('rimraf') !== -1))) {
@@ -40,7 +40,7 @@ function patchedLoad(orig) {
       return libxmljs;
     }
 
-    let res = orig.apply(this, [request, parent, ...rest]);
+    let res = orig.apply(anon, [request, parent, ...rest]);
 
     if ((request === 'child_process') && !res.__isProxied) {
       res = new Proxy(res, new ChildProcessProxy());

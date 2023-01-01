@@ -1,4 +1,3 @@
-import Promise from 'bluebird';
 import * as React from 'react';
 import { ListGroup } from 'react-bootstrap';
 import {
@@ -47,13 +46,13 @@ class DraggableList extends ComponentEx<IProps, IDraggableListState> {
     this.mDraggableClass = makeDraggable(props.itemTypeId);
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IProps) {
     if (this.props.items !== newProps.items) {
       this.nextState.ordered = newProps.items.slice(0);
     }
   }
 
-  public render(): JSX.Element {
+  public override render() {
     const { connectDropTarget, id, isLocked, itemRenderer, style, className } = this.props;
 
     const { ordered } = this.state;

@@ -29,7 +29,7 @@ class MainOverlay extends ComponentEx<IProps, {}> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { open, overlayRef } = this.props;
     const classes = [ 'overlay' ];
     if (open) {

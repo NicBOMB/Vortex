@@ -10,6 +10,7 @@ import { makeExeId } from '../reducers/session';
 import { getGameStores } from '../extensions/gamemode_management/util/getGame';
 
 import { ProcessCanceled, UserCanceled } from '../util/CustomErrors';
+import { IGame } from '../types/IGame';
 import { GameEntryNotFound, GameStoreNotFound, IGameStore } from '../types/IGameStore';
 import { IGameStoreEntry } from '../types/IGameStoreEntry';
 import { IExtensionApi } from '../types/IExtensionContext';
@@ -32,7 +33,7 @@ class GameStoreHelper {
   public getGameStore(storeId: string): IGameStore {
     const gameStores = this.getStores();
     const gameStore = gameStores.find(store => store.id === storeId);
-    if ((gameStores.length) > 0 && (gameStore === undefined)) {
+    if (gameStore === undefined){
       // The game stores are guaranteed to have loaded at this point,
       //  yet the store Id we're looking for is not in the store array.
       throw new GameStoreNotFound(storeId);
@@ -111,7 +112,7 @@ class GameStoreHelper {
     }
   }
 
-  public find = toBlue(async (query: IStoreQuery): Promise<IGameStoreEntry[]> => {
+  public find = toBlue(async (query: IGame["queryArgs"]): Promise<IGameStoreEntry[]> => {
     const results: IGameStoreEntry[] = [];
     for (const storeId of Object.keys(query)) {
       let prioOffset = 0;
@@ -221,7 +222,7 @@ class GameStoreHelper {
     const startStore = () => (askConsent)
       ? askConsentDialog()
           .then(() => launchStore())
-          .catch(err => Bluebird.resolve())
+          .catch(() => Bluebird.resolve())
       : launchStore();
 
     // Start up the store.
@@ -321,7 +322,7 @@ class GameStoreHelper {
     const entryInfo = (entry: IGameStoreEntry): string =>
       (searchType === 'id') ? entry.appid : entry.name;
 
-    const wrapNamePattern = (gameName) => {
+    const wrapNamePattern = (gameName: string) => {
       if (searchType !== 'name') {
         // Not a name searchType.
         return gameName;
@@ -344,8 +345,8 @@ class GameStoreHelper {
       : new RegExp(wrapNamePattern(pattern));
 
     const matcher = (Array.isArray(pattern))
-      ? entry => pattern.indexOf(entryInfo(entry)) !== -1
-      : entry => entryInfo(entry) === pattern;
+      ? (entry: IGameStoreEntry) => pattern.indexOf(entryInfo(entry)) !== -1
+      : (entry: IGameStoreEntry) => entryInfo(entry) === pattern;
 
     const name = (Array.isArray(pattern))
       ? pattern.join(' - ')
@@ -410,20 +411,20 @@ class GameStoreHelper {
 
 // const instance: GameStoreHelper = new GameStoreHelper();
 
-const instance: GameStoreHelper = new Proxy({}, {
-  get(target, name) {
+const instance: GameStoreHelper = new Proxy({} as {inst: GameStoreHelper}, {
+  get(target, name: keyof GameStoreHelper) {
     if (target['inst'] === undefined) {
       target['inst'] = new GameStoreHelper();
     }
     return target['inst'][name];
   },
-  set(target, name, value) {
+  set(target, name: keyof GameStoreHelper, value) {
     if (target['inst'] === undefined) {
       target['inst'] = new GameStoreHelper();
     }
     target['inst'][name] = value;
     return true;
   },
-}) as any;
+}) as any; // 'any' type is problematic here
 
 export default instance;

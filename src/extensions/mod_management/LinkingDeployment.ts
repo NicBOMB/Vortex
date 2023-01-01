@@ -1,13 +1,12 @@
-import {addNotification} from '../../actions/notifications';
-import {IExtensionApi} from '../../types/IExtensionContext';
+import { addNotification } from '../../actions/notifications';
+import { IExtensionApi } from '../../types/IExtensionContext';
 import { DirectoryCleaningMode, IGame } from '../../types/IGame';
 import { IState } from '../../types/IState';
 import { getGame, UserCanceled } from '../../util/api';
 import * as fs from '../../util/fs';
-import {Normalize} from '../../util/getNormalizeFunc';
-import {log} from '../../util/log';
+import { Normalize } from '../../util/getNormalizeFunc';
+import { log } from '../../util/log';
 import { activeGameId } from '../../util/selectors';
-import { truthy } from '../../util/util';
 
 import {
   IDeployedFile,
@@ -163,8 +162,6 @@ abstract class LinkingActivator implements IDeploymentMethod {
     const game: IGame = getGame(gameId);
     const directoryCleaning = game.directoryCleaning || 'tag';
     const dirTags = directoryCleaning === 'tag';
-
-    const initialDeployment = {...this.mContext.previousDeployment};
 
     return Promise.map(removed, key =>
         this.removeDeployedFile(installationPath, dataPath, key, true)
@@ -338,7 +335,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
   public purge(installPath: string, dataPath: string, gameId?: string,
                onProgress?: (num: number, total: number) => void): Promise<void> {
     log('debug', 'purging', { installPath, dataPath });
-    if (!truthy(dataPath)) {
+    if (!dataPath){
       // previously we reported an issue here, but we want the ability to have mod types
       // that don't actually deploy
       return Promise.resolve();
@@ -379,7 +376,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
     const changes: IFileChange[] = [];
 
     return Promise.map(activation ?? [], fileEntry => {
-      const fileDataPath = (truthy(fileEntry.target)
+      const fileDataPath = (!!fileEntry.target
         ? [dataPath, fileEntry.target, fileEntry.relPath]
         : [dataPath, fileEntry.relPath]
         ).join(path.sep);
@@ -558,7 +555,7 @@ abstract class LinkingActivator implements IDeploymentMethod {
         changeMap[change.filePath] = change;
       }
     }
-  
+
     return Object.values(changeMap);
   }
 

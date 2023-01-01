@@ -54,7 +54,7 @@ class LoadOrderCollections extends ComponentEx<IProps, IBaseState> {
     });
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t } = this.props;
     const { loadOrder } = this.state;
     return (!!loadOrder && Object.keys(loadOrder).length !== 0)
@@ -73,11 +73,11 @@ class LoadOrderCollections extends ComponentEx<IProps, IBaseState> {
     ) : this.renderPlaceholder();
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     this.genLoadOrder();
   }
 
-  public componentDidUpdate(prevProps: IProps) {
+  public override componentDidUpdate(prevProps: IProps) {
     const currentRules = JSON.stringify(this.props.collection.rules);
     const prevRules = JSON.stringify(prevProps.collection.rules);
     const currentLO = JSON.stringify(this.props.loadOrder);
@@ -172,13 +172,13 @@ function mapStateToProps(state: types.IState, ownProps: IProps): IConnectedProps
   const profile = selectors.activeProfile(state) || undefined;
   let loadOrder: LoadOrder = [];
   if (!!profile?.gameId) {
-    loadOrder = util.getSafe(state, ['persistent', 'loadOrder', profile.id], []);
+    loadOrder = state?.persistent?.loadOrder?.[profile.id] ?? [];
   }
 
   return {
     gameId: profile?.gameId,
     loadOrder,
-    mods: util.getSafe(state, ['persistent', 'mods', profile.gameId], {}),
+    mods: state?.persistent?.mods?.[profile.gameId] ?? {},
     profile,
   };
 }

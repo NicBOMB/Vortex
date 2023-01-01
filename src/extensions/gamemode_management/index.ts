@@ -22,7 +22,6 @@ import { showError } from '../../util/message';
 import opn from '../../util/opn';
 import ReduxProp from '../../util/ReduxProp';
 import { activeGameId, activeProfile } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
 
 import { batchDispatch } from '../../util/util';
 
@@ -119,11 +118,11 @@ function refreshGameInfo(store: Redux.Store<IState>, gameId: string): Promise<vo
 
   const filterResult = (key: string, provider: IProvider) => {
     if (expectedKeys[key] !== undefined) {
-      return getSafe(expectedKeys, [key, 'provider'], undefined) === provider.id;
+      return expectedKeys?.[key]?.provider === provider.id;
     } else {
       // for unexpected keys, use the result if the key wasn't provided before or
       // if this provider has higher priority
-      const provId = getSafe(gameInfo, [key, 'provider'], provider.id);
+      const provId = gameInfo?.[key]?.provider ?? provider.id;
       const previousProvider = gameInfoProviders.find(prov => prov.id === provId);
       return previousProvider.priority <= provider.priority;
     }
@@ -587,7 +586,7 @@ function init(context: IExtensionContext): boolean {
 
   const openGameFolder = (instanceIds: string[]) => {
     const discoveredGames = context.api.store.getState().settings.gameMode.discovered;
-    let gamePath = getSafe(discoveredGames, [instanceIds[0], 'path'], undefined);
+    let gamePath = discoveredGames?.[instanceIds[0]]?.path;
 
     if (gamePath !== undefined) {
       if (!gamePath.endsWith(path.sep)) {
@@ -599,7 +598,7 @@ function init(context: IExtensionContext): boolean {
 
   const openModFolder = (instanceIds: string[]) => {
     const discoveredGames = context.api.store.getState().settings.gameMode.discovered;
-    const discovered = getSafe(discoveredGames, [instanceIds[0]], undefined);
+    const discovered = discoveredGames?.[instanceIds[0]];
     if (discovered !== undefined) {
       try {
         let targetPath = getGame(instanceIds[0]).getModPaths(discovered.path)[''];
@@ -834,8 +833,8 @@ function init(context: IExtensionContext): boolean {
     context.api.onStateChange(['settings', 'profiles', 'activeProfileId'],
       (prev: string, current: string) => {
         const state = store.getState();
-        const oldGameId = getSafe(state, ['persistent', 'profiles', prev, 'gameId'], undefined);
-        const newGameId = getSafe(state, ['persistent', 'profiles', current, 'gameId'], undefined);
+        const oldGameId = state?.persistent?.profiles?.[prev]?.gameId;
+        const newGameId = state?.persistent?.profiles?.[current]?.gameId;
         log('debug', 'active profile id changed', { prev, current, oldGameId, newGameId });
         const prom = (oldGameId !== newGameId)
           ? changeGameMode(oldGameId, newGameId, current)
@@ -849,8 +848,6 @@ function init(context: IExtensionContext): boolean {
 
           if ((oldGameId !== newGameId)
               && (game.name !== undefined)) {
-            const t = context.api.translate;
-
             context.api.sendNotification({
               type: 'info',
               title: 'Switched game mode',

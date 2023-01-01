@@ -1,6 +1,6 @@
 import { setDownloadModInfo, setModAttribute } from '../../actions';
 import { IDialogResult, showDialog } from '../../actions/notifications';
-import { IExtensionApi, IExtensionContext, ILookupResult } from '../../types/IExtensionContext';
+import { IExtensionApi, IExtensionContext } from '../../types/IExtensionContext';
 import { IModLookupResult } from '../../types/IModLookupResult';
 import { IState } from '../../types/IState';
 import { getApplication } from '../../util/application';
@@ -10,29 +10,26 @@ import Debouncer from '../../util/Debouncer';
 import * as fs from '../../util/fs';
 import getVortexPath from '../../util/getVortexPath';
 import LazyComponent from '../../util/LazyComponent';
-import lazyRequire from '../../util/lazyRequire';
 import { log, LogLevel } from '../../util/log';
-import { prettifyNodeErrorMessage, showError } from '../../util/message';
+import { showError } from '../../util/message';
 import opn from '../../util/opn';
 import presetManager from '../../util/PresetManager';
 import { activeGameId, downloadPathForGame, gameById, knownGames } from '../../util/selectors';
-import { currentGame, getSafe } from '../../util/storeHelper';
-import { batchDispatch, decodeHTML, nexusModsURL, Section, toPromise, truthy } from '../../util/util';
+import { currentGame } from '../../util/storeHelper';
+import { batchDispatch, decodeHTML, nexusModsURL, Section } from '../../util/util';
 
 import { ICategoryDictionary } from '../category_management/types/ICategoryDictionary';
 import { DownloadIsHTML } from '../download_management/DownloadManager';
 import { IGameStored } from '../gamemode_management/types/IGameStored';
 import { IMod, IModRepoId } from '../mod_management/types/IMod';
-import metaLookupMatch from '../mod_management/util/metaLookupMatch';
 
-import { DownloadState, IDownload } from '../download_management/types/IDownload';
+import { IDownload } from '../download_management/types/IDownload';
 import { IResolvedURL } from '../download_management/types/ProtocolHandlers';
 import { SITE_ID } from '../gamemode_management/constants';
 import { isDownloadIdValid, isIdValid } from '../mod_management/util/modUpdateState';
 
-import { setUserAPIKey } from './actions/account';
 import { setNewestVersion, setUserInfo } from './actions/persistent';
-import { addFreeUserDLItem, removeFreeUserDLItem, setLoginError, setLoginId } from './actions/session';
+import { addFreeUserDLItem, removeFreeUserDLItem } from './actions/session';
 import { setAssociatedWithNXMURLs } from './actions/settings';
 import { accountReducer } from './reducers/account';
 import { persistentReducer } from './reducers/persistent';
@@ -42,10 +39,8 @@ import { INexusAPIExtension } from './types/INexusAPIExtension';
 import { convertNXMIdReverse, nexusGameId } from './util/convertGameId';
 import { fillNexusIdByMD5, guessFromFileName, queryResetSource } from './util/guessModID';
 import retrieveCategoryList from './util/retrieveCategories';
-import { getPageURL } from './util/sso';
 import Tracking from './util/tracking';
 import { makeFileUID } from './util/UIDs';
-import DashboardBanner from './views/DashboardBanner';
 import FreeUserDLDialog from './views/FreeUserDLDialog';
 import GoPremiumDashlet from './views/GoPremiumDashlet';
 import LoginDialog from './views/LoginDialog';
@@ -68,7 +63,7 @@ import { bringToFront, endorseThing, ensureLoggedIn, getCollectionInfo, getInfo,
 import { checkModVersion } from './util/checkModsVersion';
 import transformUserInfo from './util/transformUserInfo';
 
-import NexusT, { IDateTime, IDownloadURL, IFileInfo, IModFile, IModFileQuery,
+import NexusT, { IDownloadURL, IFileInfo, IModFile, IModFileQuery,
   IModInfo, IRevision, IRevisionQuery, IValidateKeyResponse, NexusError, RateLimitError, TimeoutError,
 } from '@nexusmods/nexus-api';
 import Promise from 'bluebird';
@@ -148,9 +143,9 @@ class Disableable {
         return obj[prop](hash, gameId);
       };
     } else if (revalidateFuncs.has(prop)) {
-      // tslint:disable-next-line:no-this-assignment
+
       const that = this;
-      // tslint:disable-next-line:only-arrow-functions
+
       return function(...args) {
         const now = Date.now();
         if (now > that.mLastValidation + REVALIDATION_FREQUENCY) {
@@ -163,13 +158,13 @@ class Disableable {
           const key = sel.apiKey(that.mApi.getState());
           const prom: Promise<IValidateKeyResponse> = (key === undefined)
             ? Promise.resolve(undefined as IValidateKeyResponse)
-            : Promise.resolve(truthy(obj.getValidationResult())
+            : Promise.resolve(!!obj.getValidationResult()
               ? obj.revalidate()
               : obj.setKey(key));
 
           return prom
             .then((userInfo) => {
-              if (truthy(userInfo)) {
+              if (!!userInfo){
                 that.mApi.store.dispatch(setUserInfo(transformUserInfo(userInfo)));
                 that.mApi.events.emit('did-login', null);
               }
@@ -298,9 +293,8 @@ function retrieveCategories(api: IExtensionApi, isUpdate: boolean) {
       return;
     }
 
-    const APIKEY = getSafe(api.store.getState(),
-      ['confidential', 'account', 'nexus', 'APIKey'], '');
-    if (!truthy(APIKEY)) {
+    const APIKEY = api.store.getState()?.confidential?.account?.nexus?.APIKey ?? '';
+    if (!APIKEY){
       showError(api.store.dispatch,
         'An error occurred retrieving categories',
         'You are not logged in to Nexus Mods!', { allowReport: false });
@@ -390,10 +384,8 @@ function remapCategory(state: IState, category: number, fromGame: string, toGame
     return category;
   }
 
-  const fromCategory =
-    getSafe(state, ['persistent', 'categories', fromGame, category, 'name'], undefined);
-  const toGameCategories: Array<{ name: string }> =
-    getSafe(state, ['persistent', 'categories', toGame], undefined);
+  const fromCategory = state?.persistent?.categories?.[fromGame]?.[category]?.name;
+  const toGameCategories: ICategoryDictionary = state?.persistent?.categories?.[toGame];
 
   if ((fromCategory === undefined) || (toGameCategories === undefined)) {
     return category;
@@ -447,7 +439,7 @@ function processAttributes(state: IState, input: any, quick: boolean): Promise<a
                         ?? input.download?.modInfo?.nexus?.ids?.revisionNumber;
 
     if (!quick) {
-      if (truthy(gameId) && truthy(modId) && truthy(fileId)) {
+      if (!!gameId && !!modId && !!fileId) {
         // not entirely sure how this is possible
         if (Array.isArray(gameId)) {
           gameId = gameId[0];
@@ -459,7 +451,7 @@ function processAttributes(state: IState, input: any, quick: boolean): Promise<a
               { gameId, modId, fileId, error: err.message });
             return undefined;
           });
-      } else if (truthy(revisionNumber) || truthy(revisionId)) {
+      } else if (!!revisionNumber || !!revisionId){
         fetchPromise = getCollectionInfo(nexus, collectionSlug, revisionNumber, revisionId);
       }
     }
@@ -502,7 +494,7 @@ function processAttributes(state: IState, input: any, quick: boolean): Promise<a
       isPrimary: nexusFileInfo?.is_primary,
       modName,
       logicalFileName: input.meta?.logicalFileName ?? fileName,
-      changelog: truthy(nexusChangelog) ? { format: 'html', content: nexusChangelog } : undefined,
+      changelog: !!nexusChangelog ? { format: 'html', content: nexusChangelog } : undefined,
       uploadedTimestamp: nexusFileInfo?.uploaded_timestamp
                       ?? toTimestamp(nexusCollectionInfo?.createdAt),
       updatedTimestamp: toTimestamp(nexusCollectionInfo?.updatedAt),
@@ -814,13 +806,13 @@ function checkModsWithMissingMeta(api: IExtensionApi) {
         }
         if ((source === 'nexus') && (mod.archiveId !== undefined)) {
           const ids = download.modInfo?.nexus?.ids ?? {};
-          if (!truthy(attributes.modId) && truthy(ids?.modId)) {
+          if (!attributes.modId && !!ids?.modId) {
             actions.push(setModAttribute(gameId, modId, 'modId', ids.modId));
           }
-          if (!truthy(attributes.fileId) && truthy(ids?.fileId)) {
+          if (!attributes.fileId && !!ids?.fileId){
             actions.push(setModAttribute(gameId, modId, 'fileId', ids.fileId));
           }
-          if (!truthy(attributes.downloadGame) && truthy(ids?.gameId)) {
+          if (!attributes.downloadGame && !!ids?.gameId){
             actions.push(setModAttribute(gameId, modId, 'downloadGame', ids.gameId));
           }
         }
@@ -911,7 +903,7 @@ function once(api: IExtensionApi, callbacks: Array<(nexus: NexusT) => void>) {
 
     updateKey(api, nexus, apiKey);
 
-    registerFunc(getSafe(state, ['settings', 'nexus', 'associateNXM'], undefined));
+    registerFunc(state?.settings?.nexus?.associateNXM);
 
     api.registerRepositoryLookup('nexus', true, makeRepositoryLookup(api, nexus));
 
@@ -1037,7 +1029,7 @@ function fixIds(api: IExtensionApi, instanceIds: string[]) {
   const gameMode = activeGameId(state);
   const mods = state.persistent.mods[gameMode];
   const downloads = state.persistent.downloads.files;
-  return Promise.all(instanceIds.map(id => {
+  return Promise.all(instanceIds.map((id) => {
     if (idValid(id, mods, downloads)) {
       return Promise.resolve();
     }
@@ -1047,9 +1039,8 @@ function fixIds(api: IExtensionApi, instanceIds: string[]) {
     let isDownload = false;
     const mod = mods[id];
     if (mod !== undefined) {
-      fileName = getSafe(mod.attributes, ['fileName'],
-        getSafe(mod.attributes, ['name'], undefined));
-    } else if (getSafe(downloads, [id], undefined) !== undefined) {
+      fileName = mod.attributes?.[fileName] ?? mod.attributes?.name;
+    } else if (downloads?.[id] !== undefined){
       isDownload = true;
       const download = downloads[id];
       fileName = download.localPath;
@@ -1233,10 +1224,9 @@ function makeNXMProtocol(api: IExtensionApi, onAwaitLink: AwaitLinkCB) {
       return Promise.reject(err);
     }
 
-    const userInfo: any = getSafe(state, ['persistent', 'nexus', 'userInfo'], undefined);
+    const userInfo: any = state?.persistent?.nexus?.userInfo;
     if ((url.userId !== undefined) && (url.userId !== userInfo?.userId)) {
-      const userName: string =
-        getSafe(state, ['persistent', 'nexus', 'userInfo', 'name'], undefined);
+      const userName: string = state?.persistent?.nexus?.userInfo?.name;
       api.showErrorNotification('Invalid download links',
         'The link was not created for this account ({{userName}}). '
         + 'You have to be logged into nexusmods.com with the same account that you use in Vortex.',
@@ -1316,7 +1306,7 @@ function init(context: IExtensionContextExt): boolean {
                          instanceIds => {
     const state: IState = context.api.store.getState();
     const gameMode = activeGameId(state);
-    const mod: IMod = getSafe(state.persistent.mods, [gameMode, instanceIds[0]], undefined);
+    const mod = state.persistent.mods?.[gameMode]?.[instanceIds[0]];
     if (mod !== undefined) {
       const gameId = mod.attributes?.downloadGame !== undefined
         ? mod.attributes?.downloadGame
@@ -1331,9 +1321,7 @@ function init(context: IExtensionContextExt): boolean {
                               gameId, mod.attributes?.modId, mod.attributes?.source);
       }
     } else {
-      const ids = getSafe(state.persistent.downloads,
-                          ['files', instanceIds[0], 'modInfo', 'nexus', 'ids'],
-                          undefined);
+      const ids = state.persistent.downloads?.files?.[instanceIds[0]]?.modInfo?.nexus?.ids;
       if (ids !== undefined) {
         if (ids.collectionSlug !== undefined) {
           context.api.events.emit('open-collection-page',
@@ -1350,13 +1338,9 @@ function init(context: IExtensionContextExt): boolean {
     const state: IState = context.api.store.getState();
     const gameMode = activeGameId(state);
 
-    let modSource = getSafe(state.persistent.mods,
-                            [gameMode, instanceIds[0], 'attributes', 'source'],
-                            undefined);
+    let modSource = state.persistent.mods?.[gameMode]?.[instanceIds[0]]?.attributes?.source;
     if (modSource === undefined) {
-      modSource = getSafe(state.persistent.downloads,
-                          ['files', instanceIds[0], 'modInfo', 'source'],
-                          undefined);
+      modSource = state.persistent.downloads?.files?.[instanceIds[0]]?.modInfo?.source;
     }
 
     return modSource === 'nexus';
@@ -1432,16 +1416,15 @@ function init(context: IExtensionContextExt): boolean {
     );
   }, {
     props: {
-      isPremium: state => getSafe(state, ['persistent', 'nexus', 'userInfo', 'isPremium'], false),
+      isPremium: (state: IState) => state?.persistent?.nexus?.userInfo?.isPremium,
     },
     condition: (props: any): boolean => !props.isPremium,
   });
 
   context.registerBanner('main-toolbar', toolbarBanner(context.api.translate), {
     props: {
-      isPremium: state => getSafe(state, ['persistent', 'nexus', 'userInfo', 'isPremium'], false),
-      isSupporter: state =>
-        getSafe(state, ['persistent', 'nexus', 'userInfo', 'isSupporter'], false),
+      isPremium: (state) => state?.persistent?.nexus?.userInfo?.isPremium,
+      isSupporter: (state) => state?.persistent?.nexus?.userInfo?.isSupporter,
     },
     condition: (props: any): boolean => !props.isPremium && !props.isSupporter,
   });
@@ -1477,8 +1460,8 @@ function init(context: IExtensionContextExt): boolean {
   */
 
   context.registerDashlet('Go Premium', 1, 2, 200, GoPremiumDashlet, (state: IState) =>
-    (getSafe(state, ['persistent', 'nexus', 'userInfo', 'isPremium'], undefined) !== true)
-    && (getSafe(state, ['persistent', 'nexus', 'userInfo', 'isSupporter'], undefined) !== true),
+    (state?.persistent?.nexus?.userInfo?.isPremium !== true)
+    && (state?.persistent?.nexus?.userInfo?.isSupporter !== true),
     undefined, {
     fixed: false,
     closable: false,

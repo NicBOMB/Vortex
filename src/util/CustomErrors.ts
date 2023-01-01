@@ -1,5 +1,29 @@
 import { log } from './log';
 
+/**
+ * Node.js generates system errors when exceptions occur within its runtime environment.
+ * These usually occur when an application violates an operating system constraint.
+ * For example, a system error will occur if an application attempts to read a file that does not exist.
+*/
+export class SystemError extends Error {
+  /** If present, the address to which a network connection failed */
+  address: string
+  /** The string error code */
+  code: string
+  /** If present, the file path destination when reporting a file system error */
+  dest: string
+  /** The system-provided error number */
+  errno: number
+  /** If present, extra details about the error condition */
+  info: Object
+  /** If present, the file path when reporting a file system error */
+  path: string
+  /** If present, the network connection port that is not available */
+  port: number
+  /** The name of the system call that triggered the error */
+  syscall: string
+}
+
 export class NotSupportedError extends Error {
   constructor() {
     super('Not supported');

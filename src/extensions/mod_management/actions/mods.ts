@@ -2,8 +2,6 @@ import safeCreateAction from '../../../actions/safeCreateAction';
 
 import { IMod, IModReference, IModRule, ModState } from '../types/IMod';
 
-import * as reduxAct from 'redux-act';
-
 export const addMod = safeCreateAction('ADD_MOD',
   (gameId: string, mod: IMod) => ({ gameId, mod }));
 

@@ -210,8 +210,6 @@ function validateInstall(extPath: string, info?: IExtension): Promise<ExtensionT
     let validAsTheme: boolean = true;
     let validAsTranslation: boolean = true;
     let validAsExtension: boolean = true;
-
-    const guessedType: ExtensionType = undefined;
     // if we don't know the type we can only check if _any_ extension type applies
     return validateTheme(extPath)
       .catch(DataInvalid, () => validAsTheme = false)

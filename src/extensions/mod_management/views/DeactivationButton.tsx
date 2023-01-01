@@ -8,7 +8,6 @@ import { ComponentEx, connect, translate } from '../../../util/ComponentEx';
 import { TemporaryError, UserCanceled } from '../../../util/CustomErrors';
 import { showError } from '../../../util/message';
 import { activeGameId } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
 
 import { IDeploymentMethod } from '../types/IDeploymentMethod';
 import { NoDeployment } from '../util/exceptions';
@@ -40,11 +39,9 @@ export interface IBaseProps {
 
 type IProps = IBaseProps & IConnectedProps & IActionProps;
 
-const nop = () => undefined;
-
 class DeactivationButton extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
-    const { t, activator, buttonType } = this.props;
+  public override render(): JSX.Element {
+    const { t, activator } = this.props;
 
     return (
       <ToolbarIcon
@@ -134,7 +131,7 @@ class DeactivationButton extends ComponentEx<IProps, {}> {
 
 function mapStateToProps(state: IState, ownProps: IProps): IConnectedProps {
   const gameId = activeGameId(state);
-  const activatorId = getSafe(state, ['settings', 'mods', 'activator', gameId], undefined);
+  const activatorId = state?.settings?.mods?.activator?.[gameId];
   let activator: IDeploymentMethod;
   if (activatorId !== undefined) {
     activator = ownProps.getActivators().find((act: IDeploymentMethod) => act.id === activatorId);

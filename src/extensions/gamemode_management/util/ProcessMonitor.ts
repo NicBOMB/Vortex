@@ -5,8 +5,6 @@ import { IExtensionApi } from '../../../types/IExtensionContext';
 import { IState } from '../../../types/IState';
 import { log } from '../../../util/log';
 import { currentGame, currentGameDiscovery } from '../../../util/selectors';
-import { getSafe } from '../../../util/storeHelper';
-import { setdefault } from '../../../util/util';
 
 import { BrowserWindow } from 'electron';
 import * as path from 'path';
@@ -48,12 +46,7 @@ class ProcessMonitor {
   }
 
   public end(): void {
-    if (this.mTimer === undefined) {
-      // not running
-      return;
-    }
     clearTimeout(this.mTimer);
-    this.mTimer = undefined;
     this.mActive = false;
     log('debug', 'stop process monitor');
   }
@@ -83,7 +76,8 @@ class ProcessMonitor {
 
     const byName: { [exeId: string]: winapi.ProcessEntry[] } =
       processes.reduce((prev: { [exeId: string]: winapi.ProcessEntry[] }, entry) => {
-        setdefault(prev, entry.exeFile.toLowerCase(), []).push(entry);
+        prev[entry.exeFile.toLowerCase()] ??= [];
+        prev[entry.exeFile.toLowerCase()].push(entry);
         return prev;
       }, {});
     const state = this.mStore.getState();
@@ -105,9 +99,8 @@ class ProcessMonitor {
 
     const game = currentGame(state);
     const gameDiscovery = currentGameDiscovery(state);
-    const gameExe = getSafe(gameDiscovery, ['executable'], undefined)
-                 || getSafe(game, ['executable'], undefined);
-    const gamePath = getSafe(gameDiscovery, ['path'], undefined);
+    const gameExe = gameDiscovery?.executable ?? game?.executable;
+    const gamePath = gameDiscovery?.path;
     if ((gameExe === undefined) || (gamePath === undefined)) {
       // How in the world can we manage to get the executable for the game
       //  but not the path from the discovery object ?
@@ -157,7 +150,7 @@ class ProcessMonitor {
     update(gameExePath, true, true);
 
     const discoveredTools: { [toolId: string]: IDiscoveredTool } =
-      getSafe(state, ['settings', 'gameMode', 'discovered', game.id, 'tools'], {});
+      state?.settings?.gameMode?.discovered?.[game.id]?.tools ?? {};
 
     Object.keys(discoveredTools).forEach(toolId => {
       if (discoveredTools[toolId].path === undefined) {

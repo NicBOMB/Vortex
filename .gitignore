@@ -7,12 +7,13 @@ dist_web
 out
 doc
 coverage
-.vscode/.BROWSE.VC.DB*
+.vscode
 *.VC.db
 app/bundledPlugins
 attachments
 sourcemaps
 .env
+**/*.kate-swp
 
 # User-specific files
 *.suo

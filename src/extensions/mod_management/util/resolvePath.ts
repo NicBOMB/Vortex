@@ -1,6 +1,5 @@
 import getVortexPath from '../../../util/getVortexPath';
 import makeCI from '../../../util/makeCaseInsensitive';
-import { getSafe } from '../../../util/storeHelper';
 
 import * as path from 'path';
 import format from 'string-template';
@@ -27,7 +26,7 @@ function resolvePath(key: PathKey, paths: {[gameId: string]: any},
   if (key !== 'base') {
     formatKeys.base = resolvePath('base', paths, gameMode);
   }
-  const actualPath = getSafe(paths, [gameMode, key], pathDefaults[key]);
+  const actualPath = paths?.[gameMode]?.[key] ?? pathDefaults[key];
   return format(actualPath, formatKeys);
 }
 

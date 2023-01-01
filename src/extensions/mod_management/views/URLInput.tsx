@@ -10,7 +10,7 @@ import { IMod } from '../types/IMod';
 
 function isURLValid(url: string) {
   try {
-    // tslint:disable-next-line:no-unused-expression
+
     new URL(url);
   } catch (e) {
     return false;

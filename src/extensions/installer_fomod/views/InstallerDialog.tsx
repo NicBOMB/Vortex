@@ -5,7 +5,6 @@ import { IconButton } from '../../../controls/TooltipControls';
 import ZoomableImage from '../../../controls/ZoomableImage';
 import { connect, PureComponentEx, translate } from '../../../util/ComponentEx';
 import { pushSafe, removeValue } from '../../../util/storeHelper';
-import { truthy } from '../../../util/util';
 
 import {
   GroupType, IGroup, IHeaderImage, IInstallerState, IInstallStep,
@@ -18,7 +17,7 @@ import * as _ from 'lodash';
 import * as path from 'path';
 import * as React from 'react';
 import {
-  Button, Checkbox, ControlLabel, Form, FormGroup, Pager,
+  Button, Checkbox, ControlLabel, Form, FormGroup,
   ProgressBar, Radio,
 } from 'react-bootstrap';
 import { pathToFileURL } from 'url';
@@ -56,7 +55,7 @@ class Group extends React.PureComponent<IGroupProps, IGroupState> {
     };
   }
 
-  public componentDidUpdate(oldProps: IGroupProps, oldState: IGroupState) {
+  public override componentDidUpdate(oldProps: IGroupProps, oldState: IGroupState) {
     const {group, onSelect} = this.props;
     const {confirmedUpdate, localUpdate, sentUpdate, selectedPlugins} = this.state;
     const valid: string = this.validateFunc(group.type)(selectedPlugins);
@@ -69,7 +68,7 @@ class Group extends React.PureComponent<IGroupProps, IGroupState> {
     }
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: IGroupProps) {
+  public override UNSAFE_componentWillReceiveProps(newProps: IGroupProps) {
     if (!_.isEqual(this.props.group, newProps.group)) {
       // based on the rules of the fomod, us selecting an option may make other options
       // unavailable. However, for usability reasons, we don't undo user selections if the user
@@ -91,7 +90,7 @@ class Group extends React.PureComponent<IGroupProps, IGroupState> {
     }
   }
 
-  public UNSAFE_componentWillMount() {
+  public override UNSAFE_componentWillMount() {
     const { group, onSelect } = this.props;
     const { selectedPlugins } = this.state;
     this.mValidate = this.validateFunc(group.type);
@@ -100,7 +99,7 @@ class Group extends React.PureComponent<IGroupProps, IGroupState> {
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const {disabled, group} = this.props;
     const {selectedPlugins} = this.state;
 
@@ -344,7 +343,7 @@ class InstallerDialog extends PureComponentEx<IProps, IDialogState> {
     super(props);
     this.state = this.initDescription(props);
   }
-  public UNSAFE_componentWillReceiveProps(nextProps: IProps) {
+  public override UNSAFE_componentWillReceiveProps(nextProps: IProps) {
     if (
       // when initiating the dialog
       ((this.props.installerState === undefined) && (nextProps.installerState !== undefined))
@@ -357,10 +356,10 @@ class InstallerDialog extends PureComponentEx<IProps, IDialogState> {
       this.setState(this.initDescription(nextProps));
     }
   }
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, installerInfo, installerState } = this.props;
     const { currentDescription, waiting } = this.state;
-    if (!truthy(installerInfo) || !truthy(installerState)) {
+    if (!installerInfo || !installerState){
       return null;
     }
     const idx = installerState.currentStep;
@@ -466,7 +465,7 @@ class InstallerDialog extends PureComponentEx<IProps, IDialogState> {
 
     const image = currentImage || installerInfo.image.path;
 
-    if (!truthy(dataPath) || !truthy(image)) {
+    if (!dataPath || !image){
       return null;
     }
 
@@ -488,7 +487,7 @@ class InstallerDialog extends PureComponentEx<IProps, IDialogState> {
       waiting: false,
     });
 
-    if (!truthy(props.installerState)) {
+    if (!props.installerState){
       return ret({});
     }
     const { currentStep, installSteps } = props.installerState;

@@ -41,7 +41,7 @@ export interface IProps {
 class GameRow extends ComponentEx<IProps, {}> {
   private mRef = null;
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, active, container, discovery,
             game, getBounds, onRefreshGameInfo, type } = this.props;
 
@@ -161,10 +161,6 @@ class GameRow extends ComponentEx<IProps, {}> {
   private openLocation = () => {
     const { discovery } = this.props;
     opn(discovery.path).catch(() => null);
-  }
-
-  private changeLocation = () => {
-    this.props.onBrowseGameLocation(this.props.game.id);
   }
 
   private priorityButtons = (action: IActionDefinition) =>

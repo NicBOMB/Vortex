@@ -5,7 +5,7 @@ import Select from 'react-select';
 import { DownloadState } from '../types/IDownload';
 
 export class DownloadSelectionFilterComponent extends React.Component<IFilterProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, filter } = this.props;
 
     const selectionFilters = [ 'Failed', 'Finished', 'In Progress'];

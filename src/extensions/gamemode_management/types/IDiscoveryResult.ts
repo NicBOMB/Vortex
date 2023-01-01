@@ -21,6 +21,7 @@ export interface IDiscoveryResult {
     [id: string]: IDiscoveredTool;
   };
   environment?: { [key: string]: string };
+  envCustomized?: boolean;
 
   hidden?: boolean;
 

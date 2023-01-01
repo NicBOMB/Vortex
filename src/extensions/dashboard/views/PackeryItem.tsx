@@ -82,14 +82,14 @@ class PackeryItem extends ComponentEx<IPackeryItemProps, IPackeryItemState> {
     });
   }
 
-  public UNSAFE_componentWillReceiveProps(newProps: React.PropsWithChildren<IPackeryItemProps>) {
+  public override UNSAFE_componentWillReceiveProps(newProps: React.PropsWithChildren<IPackeryItemProps>) {
     if (!newProps.fixed && (newProps.packery !== this.props.packery)) {
       this.mPackeryItem = undefined;
       this.makeDraggable(newProps);
     }
   }
 
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { closable, editable, height, id, totalWidth, width } = this.props;
     const { resizing } = this.state;
 

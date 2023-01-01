@@ -32,7 +32,7 @@ interface IActionProps {
 type IProps = IBaseProps & IActionProps & IConnectedProps;
 
 class Settings extends ComponentEx<IProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, onCreateManualBackup } = this.props;
 
     return (
@@ -142,7 +142,6 @@ class Settings extends ComponentEx<IProps, {}> {
         filePath = path.join(basePath, selected + '.json');
       }
       if (filePath !== undefined) {
-        const fileName = path.basename(filePath);
         const stats: fs.Stats = await fs.statAsync(filePath);
         const confirm = await onShowDialog('question', 'Confirm', {
           bbcode:

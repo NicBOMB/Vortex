@@ -15,8 +15,8 @@ function monkeyPatch(clazz: any, functionName: string, wrapper: (orig, ...args: 
 
 function fallbackDateFormat(locales?: string | string[], options?: Intl.DateTimeFormatOptions) {
   // adapted from https://github.com/GoogleChrome/lighthouse/issues/1056
-  let formatter;
-  let tz;
+  let formatter: Intl.DateTimeFormat;
+  let tz: Intl.ResolvedDateTimeFormatOptions["timeZone"];
   try {
     // the Intl.DateTimeFormat constructor will itself throw an exception if options contains
     // an invalid timezone. This is of course usage error but whatevs.
@@ -31,18 +31,18 @@ function fallbackDateFormat(locales?: string | string[], options?: Intl.DateTime
     options.timeZone = 'UTC';
     formatter = new Intl.DateTimeFormat(locales, options);
   }
-  return formatter.format(this);
+  return formatter.format;
 }
 
 function applyMonkeyPatches() {
   monkeyPatch(Date, 'toLocaleString',
-    function(orig, locales?: string | string[], options?: Intl.DateTimeFormatOptions) {
+    function anon(orig, locales?: string | string[], options?: Intl.DateTimeFormatOptions) {
       try {
-        return orig.apply(this, [locales, options]);
+        return orig.apply(anon, [locales, options]);
       } catch (err) {
         if ((err instanceof RangeError)
             && (err.message.indexOf('Unsupported time zone specified') !== -1)) {
-          return fallbackDateFormat.apply(this, [locales, {
+          return fallbackDateFormat.apply(anon, [locales, {
             day: 'numeric', month: 'numeric', year: 'numeric',
             hour: 'numeric', minute: 'numeric', second: 'numeric',
             timeZoneName: 'short',
@@ -55,13 +55,13 @@ function applyMonkeyPatches() {
     });
 
   monkeyPatch(Date, 'toLocaleDateString',
-    function(orig, locales?: string | string[], options?: Intl.DateTimeFormatOptions) {
+    function anon(orig, locales?: string | string[], options?: Intl.DateTimeFormatOptions) {
       try {
-        return orig.apply(this, [locales, options]);
+        return orig.apply(anon, [locales, options]);
       } catch (err) {
         if ((err instanceof RangeError)
             && (err.message.indexOf('Unsupported time zone specified') !== -1)) {
-          return fallbackDateFormat.apply(this, [locales, {
+          return fallbackDateFormat.apply(anon, [locales, {
             day: 'numeric', month: 'numeric', year: 'numeric',
             ...options,
           }]);
@@ -72,13 +72,13 @@ function applyMonkeyPatches() {
   });
 
   monkeyPatch(Date, 'toLocaleTimeString',
-    function(orig, locales?: string | string[], options?: Intl.DateTimeFormatOptions) {
+    function anon(orig, locales?: string | string[], options?: Intl.DateTimeFormatOptions) {
       try {
-        return orig.apply(this, [locales, options]);
+        return orig.apply(anon, [locales, options]);
       } catch (err) {
         if ((err instanceof RangeError)
             && (err.message.indexOf('Unsupported time zone specified') !== -1)) {
-          return fallbackDateFormat.apply(this, [locales, {
+          return fallbackDateFormat.apply(anon, [locales, {
             hour: 'numeric', minute: 'numeric', second: 'numeric',
             timeZoneName: 'short',
             ...options,
@@ -92,7 +92,7 @@ function applyMonkeyPatches() {
   const path: typeof pathT = require('path');
   const oldJoin = path.join;
   const oldResolve = path.resolve;
-  // tslint:disable-next-line:only-arrow-functions
+
   path.join = function(...paths: string[]) {
     try {
       return oldJoin(...paths);

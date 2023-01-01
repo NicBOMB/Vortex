@@ -3,7 +3,6 @@ import { DialogActions, DialogType, IConditionResult, IDialogContent,
 
 import { IState } from '../types/IState';
 import { ComponentEx, connect, translate } from '../util/ComponentEx';
-import { truthy } from '../util/util';
 
 import Icon from './Icon';
 
@@ -56,14 +55,14 @@ class Dropzone extends ComponentEx<IProps, IComponentState> {
     });
   }
 
-  public componentDidMount() {
+  public override componentDidMount() {
     // styling is considerably different depending on whether this is
     // a stand-alone control or a wrapper for other controls
     this.mWrapperMode = React.Children.count(this.props.children) > 0;
   }
 
-  public render(): JSX.Element {
-    const { t, clickable, dragOverlay, style } = this.props;
+  public override render() {
+    const { clickable, dragOverlay, style } = this.props;
 
     const classes = [ 'dropzone' ];
     if (!this.mWrapperMode) {
@@ -215,7 +214,7 @@ class Dropzone extends ComponentEx<IProps, IComponentState> {
   }
 
   private onClick = () => {
-    const { t, accept, dialogDefault, dialogHint } = this.props;
+    const { accept, dialogDefault, dialogHint } = this.props;
 
     const clickMode = accept[0];
 
@@ -231,7 +230,7 @@ class Dropzone extends ComponentEx<IProps, IComponentState> {
       .then(result => {
           if (result.action === 'Download') {
             let inputUrl = result.input.url;
-            if (!truthy(url.parse(inputUrl).protocol)) {
+            if (!url.parse(inputUrl).protocol){
               // no protocol specified
               inputUrl = 'https://' + inputUrl;
             }

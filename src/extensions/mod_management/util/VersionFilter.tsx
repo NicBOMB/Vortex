@@ -6,7 +6,7 @@ import * as React from 'react';
 import Select from 'react-select';
 
 export class VersionFilterComponent extends React.Component<IFilterProps, {}> {
-  public render(): JSX.Element {
+  public override render(): JSX.Element {
     const { t, filter } = this.props;
 
     const options = [

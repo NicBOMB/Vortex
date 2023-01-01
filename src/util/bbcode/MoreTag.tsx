@@ -3,11 +3,11 @@ import * as React from 'react';
 import More from '../../controls/More';
 
 class MoreTag extends Tag {
-  public toHTML(): string[] {
+  public override toHTML(): string[] {
     return [];
   }
 
-  public toReact() {
+  public override toReact() {
     const { id, name, wikiId } = Object.keys(this.params).reduce((prev: any, par) => {
       prev[par] = this.params[par].replace(/^["']|["']$/g, '');
       return prev;

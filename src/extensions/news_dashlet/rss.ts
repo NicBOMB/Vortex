@@ -3,47 +3,23 @@ import { IncomingMessage } from 'http';
 import { get } from 'https';
 import * as url from 'url';
 
-export interface IEnclosure {
-  length: string;
-  type: string;
-  url: string;
-}
-
-export interface IFeedMessage {
-  guid: string;
-  title: string;
-  summary: string;
-  description: string;
-  categories?: string[];
-  link: string;
-  titleRendered?: React.ReactChild[];
-  descriptionShortened?: React.ReactChild;
-  descriptionRendered?: React.ReactChild[];
-  enclosures: IEnclosure[];
-  'nexusmods:downloads'?: { '#': string };
-  'nexusmods:endorsements'?: { '#': string };
-  'nexusmods:comments'?: { '#': string };
-  'nexusmods:summary'?: { '#': string };
-}
-
-function retrieve(rssUrl: string): Promise<IFeedMessage[]> {
-  return new Promise<IFeedMessage[]>((resolve, reject) => {
+function retrieve(rssUrl: string): Promise<FeedParser.Item[]> {
+  return new Promise<FeedParser.Item[]>((resolve, reject) => {
     get({
       ...url.parse(rssUrl),
       headers: { 'User-Agent': 'Vortex', Cookie: 'rd=true' },
 
     } as any, (res: IncomingMessage) => {
       const { statusCode } = res;
-      const contentType = res.headers['content-type'];
 
       let err: string;
       if (statusCode !== 200) {
         err = `Request Failed. Status Code: ${statusCode}`;
       }
 
-      const parser = new FeedParser();
+      const parser = new FeedParser({});
 
-      const result: IFeedMessage[] = [];
+      const result: FeedParser.Item[] = [];
 
       parser.on('error', error => {
         res.destroy();

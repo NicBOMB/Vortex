@@ -5,8 +5,7 @@ import * as fs from '../../util/fs';
 import getVortexPath from '../../util/getVortexPath';
 import { log } from '../../util/log';
 import { jsonRequest, rawRequest } from '../../util/network';
-import { getSafe } from '../../util/storeHelper';
-import { INVALID_FILENAME_RE, truthy } from '../../util/util';
+import { INVALID_FILENAME_RE } from '../../util/util';
 
 import { addLocalDownload, setDownloadModInfo } from '../download_management/actions/state';
 import { AlreadyDownloaded } from '../download_management/DownloadManager';
@@ -21,7 +20,6 @@ import Promise from 'bluebird';
 import * as _ from 'lodash';
 import SevenZip from 'node-7z';
 import * as path from 'path';
-import { SemVer } from 'semver';
 import { generate as shortid } from 'shortid';
 
 const caches: {
@@ -78,11 +76,11 @@ function applyExtensionInfo(id: string, bundled: boolean, values: any, fallback:
 }
 
 export function selectorMatch(ext: IAvailableExtension, selector: ISelector): boolean {
-  if (selector === undefined) {
+  if (selector === undefined){
     return false;
-  } else if (truthy(selector.modId)) {
+  } else if (!!selector.modId){
     return ext.modId === selector.modId;
-  } else if (truthy(selector.githubRawPath)) {
+  } else if (!!selector.githubRawPath){
     return (ext.github === selector.github) && (ext.githubRawPath === selector.githubRawPath);
   } else {
     return (ext.github === selector.github);
@@ -221,17 +219,17 @@ export function downloadAndInstallExtension(api: IExtensionApi,
 
   let dlPromise: Promise<string[]>;
 
-  if (truthy(ext.modId)) {
+  if (!!ext.modId){
     dlPromise = downloadFromNexus(api, ext);
-  } else if (truthy(ext.githubRawPath)) {
+  } else if (!!ext.githubRawPath){
     dlPromise = downloadGithubRaw(api, ext);
-  } else if (truthy(ext.githubRelease)) {
+  } else if (!!ext.githubRelease){
     dlPromise = downloadGithubRelease(api, ext);
   } else {
     dlPromise = Promise.reject(new ProcessCanceled('Failed to download'));
   }
 
-  const sourceName: string = truthy(ext.modId)
+  const sourceName: string = !!ext.modId
     ? 'nexusmods.com'
     : 'github.com';
 
@@ -243,7 +241,7 @@ export function downloadAndInstallExtension(api: IExtensionApi,
         return Promise.reject(new ProcessCanceled('No download found'));
       }
       api.store.dispatch(setDownloadModInfo(dlIds[0], 'internal', true));
-      download = getSafe(state, ['persistent', 'downloads', 'files', dlIds[0]], undefined);
+      download = state?.persistent?.downloads?.files?.[dlIds[0]];
       if (download === undefined) {
         return Promise.reject(new Error('Download not found'));
       }

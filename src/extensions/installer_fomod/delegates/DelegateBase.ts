@@ -1,4 +1,4 @@
-import {IExtensionApi} from '../../../types/IExtensionContext';
+import { IExtensionApi } from '../../../types/IExtensionContext';
 
 class DelegateBase {
   private mApi;

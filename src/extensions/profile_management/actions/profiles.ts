@@ -1,7 +1,5 @@
-import safeCreateAction from '../../../actions/safeCreateAction';
-
 import Bluebird from 'bluebird';
-import * as reduxAct from 'redux-act';
+import safeCreateAction from '../../../actions/safeCreateAction';
 import { IExtensionApi } from '../../../types/IExtensionContext';
 import { batchDispatch } from '../../../util/util';
 import { IProfile } from '../types/IProfile';
@@ -20,18 +18,23 @@ export const willRemoveProfile = safeCreateAction('WILL_REMOVE_PROFILE', profile
  */
 export const setModEnabled = safeCreateAction(
   'SET_MOD_ENABLED',
-  (profileId: string, modId: string, enable: boolean) => ({profileId, modId, enable}));
+  (profileId: string, modId: string, enable: boolean) => ({profileId, modId, enable})
+);
 
 export const forgetMod = safeCreateAction(
   'FORGET_PROFILE_MOD',
-  (profileId: string, modId: string) => ({ profileId, modId }));
+  (profileId: string, modId: string) => ({ profileId, modId })
+);
 
 export const setFeature = safeCreateAction(
   'SET_PROFILE_FEATURE',
-  (profileId: string, featureId: string, value: any) => ({profileId, featureId, value}));
+  (profileId: string, featureId: string, value: any) => ({profileId, featureId, value})
+);
 
-export const setProfileActivated =
-  safeCreateAction('SET_PROFILE_ACTIVATED', (active: string) => active);
+export const setProfileActivated = safeCreateAction(
+  'SET_PROFILE_ACTIVATED',
+  (active: string) => active
+);
 
 export interface IEnableOptions {
   installed?: boolean;

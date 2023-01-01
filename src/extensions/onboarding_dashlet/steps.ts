@@ -1,3 +1,22 @@
+import { IExtensionContext, IExtensionApi, ThunkStore } from '../../types/IExtensionContext';
+import { IState, ISettings } from '../../types/IState';
+
+export interface IOnboardingSettingsOverride extends ISettings {
+  onboardingsteps: { [key: string]: IStep };
+}
+
+export interface IOnboardingStateOverride extends IState {
+  settings: IOnboardingSettingsOverride;
+}
+
+export interface IOnboardingApiOverride extends IExtensionApi {
+  store: ThunkStore<IOnboardingStateOverride>
+}
+
+export interface IOnboardingContextOverride extends IExtensionContext {
+  api: IOnboardingApiOverride
+}
+
 export const STEPS: IStep[] = [
   {
     title: 'Manage your game',

@@ -3,7 +3,6 @@ import * as fs from './fs';
 import { log } from './log';
 
 import Promise from 'bluebird';
-import { createHash } from 'crypto';
 import { file } from 'tmp';
 
 export function writeFileAtomic(filePath: string, input: string | Buffer) {

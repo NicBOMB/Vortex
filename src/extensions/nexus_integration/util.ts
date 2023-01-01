@@ -26,8 +26,7 @@ import { calcDuration, prettifyNodeErrorMessage, showError } from '../../util/me
 import { jsonRequest } from '../../util/network';
 import opn from '../../util/opn';
 import { activeGameId } from '../../util/selectors';
-import { getSafe } from '../../util/storeHelper';
-import { toPromise, truthy } from '../../util/util';
+import { toPromise } from '../../util/util';
 import { AlreadyDownloaded, DownloadIsHTML, RedownloadMode } from '../download_management/DownloadManager';
 import { SITE_ID } from '../gamemode_management/constants';
 import { gameById, knownGames } from '../gamemode_management/selectors';
@@ -430,7 +429,7 @@ function startDownloadMod(api: IExtensionApi,
           },
         },
         fileName ?? nexusFileInfo.file_name,
-        (err, downloadId) => (truthy(err)
+        (err, downloadId) => (!!err
           ? reject(contextify(err))
           : resolve(downloadId)),
         redownload, { allowInstall });
@@ -482,7 +481,7 @@ function startDownloadMod(api: IExtensionApi,
         return Promise.reject(err);
       }
       if (err.message === 'Provided key and expire time isn\'t correct for this user/file.') {
-        const userName = getSafe(state, ['persistent', 'nexus', 'userInfo', 'name'], undefined);
+        const userName = state.persistent.nexus.userInfo.name;
         const t = api.translate;
         api.sendNotification({
           id: url.fileId.toString(),
@@ -721,15 +720,14 @@ export function endorseThing(
   endorsedStatus: string) {
   const { store } = api;
   const gameMode = activeGameId(store.getState());
-  const mod: IMod = getSafe(store.getState(), ['persistent', 'mods', gameMode, modId], undefined);
+  const mod: IMod = store.getState().persistent.mods[gameMode]?.[modId];
 
   if (mod === undefined) {
     log('warn', 'tried to endorse unknown mod', { gameId, modId });
     return;
   }
 
-  const APIKEY = getSafe(store.getState(),
-    ['confidential', 'account', 'nexus', 'APIKey'], '');
+  const APIKEY = store.getState().confidential.account.nexus.APIKey;
   if (APIKEY === '') {
     showError(store.dispatch,
       'An error occurred endorsing a mod',
@@ -778,10 +776,9 @@ function endorseModImpl(api: IExtensionApi, nexus: Nexus, gameMode: string,
   const gameId = mod.attributes?.downloadGame;
 
   const nexusModId: number = parseInt(mod.attributes.modId, 10);
-  const version: string = getSafe(mod.attributes, ['version'], undefined)
-                        || getSafe(mod.attributes, ['modVersion'], undefined);
+  const version: string = mod.attributes.version ?? mod.attributes.modVersion;
 
-  if (!truthy(version)) {
+  if (!version){
     api.sendNotification({
       type: 'info',
       message: api.translate('You can\'t endorse a mod that has no version set.'),
@@ -821,15 +818,12 @@ function processInstallError(api: IExtensionApi,
   }
 }
 
-function nexusLink(state: IState, mod: IMod, gameMode: string) {
-  const gameId = nexusGameId(
-    gameById(state, getSafe(mod.attributes, ['downloadGame'], undefined) || gameMode));
-  if (mod.attributes?.collectionSlug !== undefined) {
-    return `https://www.nexusmods.com/${gameId}/mods/${mod.attributes?.collectionSlug}`;
-  } else {
-    const nexusModId: number = parseInt(getSafe(mod.attributes, ['modId'], undefined), 10);
-    return `https://www.nexusmods.com/${gameId}/mods/${nexusModId}`;
-  }
+function nexusLink(state: IState, mod: IMod, gameId: string) {
+  return `https://www.nexusmods.com/${
+    nexusGameId(gameById(state, mod.attributes.downloadGame || gameId))
+  }/mods/${
+    mod.attributes["collectionSlug"] ?? parseInt(mod.id, 10)
+  }`;
 }
 
 export function refreshEndorsements(store: Redux.Store<any>, nexus: Nexus) {
@@ -851,18 +845,17 @@ export function refreshEndorsements(store: Redux.Store<any>, nexus: Nexus) {
         const modId = state.session.extensions.installed[extId].modId;
 
         if (modId !== undefined) {
-          const endorsed = getSafe(endorseMap, [SITE_ID, modId], 'Undecided');
+          const endorsed = endorseMap[SITE_ID]?.[modId];
           store.dispatch(setExtensionEndorsed(extId, endorsed));
         }
       });
       const allMods = state.persistent.mods;
       Object.keys(allMods).forEach(gameId => {
         Object.keys(allMods[gameId]).forEach(modId => {
-          const dlGame = getSafe(allMods, [gameId, modId, 'attributes', 'downloadGame'], gameId);
-          const nexModId = getSafe(allMods, [gameId, modId, 'attributes', 'modId'], undefined);
-          const oldEndorsed =
-            getSafe(allMods, [gameId, modId, 'attributes', 'endorsed'], 'Undecided');
-          const endorsed = getSafe(endorseMap, [dlGame, nexModId], 'Undecided');
+          const dlGame = allMods?.[gameId]?.[modId]?.attributes?.downloadGame ?? gameId;
+          const nexModId = allMods[gameId]?.[modId]?.attributes?.modId;
+          const oldEndorsed = allMods?.[gameId]?.[modId]?.attributes?.endorsed ?? 'Undecided';
+          const endorsed = endorseMap?.[dlGame]?.[nexModId] ?? 'Undecided';
           if (endorsed !== oldEndorsed) {
             store.dispatch(setModAttribute(gameId, modId, 'endorsed', endorsed));
           }
@@ -875,7 +868,7 @@ function filterByUpdateList(store: Redux.Store<any>,
                             nexus: Nexus,
                             gameId: string,
                             input: IMod[]): Promise<IMod[]> {
-  const getGameId = (mod: IMod) => getSafe(mod.attributes, ['downloadGame'], undefined) || gameId;
+  const getGameId = (mod: IMod) => mod.attributes?.["downloadGame"] ?? gameId;
 
   // all game ids for which we have mods installed
   const gameIds = Array.from(new Set(input.map(getGameId)));
@@ -886,7 +879,7 @@ function filterByUpdateList(store: Redux.Store<any>,
   // for each game, stores the update time of the least recently updated mod
   const minAge: IMinAgeMap = input.reduce((prev: IMinAgeMap, mod: IMod) => {
     const modGameId = getGameId(mod);
-    const lastUpdate = getSafe(mod.attributes, ['lastUpdateTime'], undefined);
+    const lastUpdate = mod.attributes?.['lastUpdateTime'];
     if ((lastUpdate !== undefined)
         && ((prev[modGameId] === undefined) || (prev[modGameId] > lastUpdate))) {
       prev[modGameId] = lastUpdate;
@@ -924,10 +917,10 @@ function filterByUpdateList(store: Redux.Store<any>,
             // long enough
             return true;
           }
-          const lastUpdate = getSafe(mod.attributes, ['lastUpdateTime'], 0);
+          const lastUpdate = mod.attributes?.['lastUpdateTime'] ??  0;
           // check anything for updates that is either in the update list and has been updated as
           // well as anything that has last been checked before the range of the update list
-          return (lastUpdate < getSafe(updateMap, [modGameId, mod.attributes.modId], 1))
+          return (lastUpdate < (updateMap?.[modGameId]?.[mod.attributes.modId] ?? 1))
               || ((now - lastUpdate) > 28 * ONE_DAY);
         });
       });
@@ -1016,11 +1009,6 @@ function checkForModUpdatesImpl(store: Redux.Store<any>, nexus: Nexus,
   const updatedIds: string[] = [];
   const updatesMissed: IMod[] = [];
 
-  const verP = ['attributes', 'version'];
-  const fileIdP = ['attributes', 'fileId'];
-  const newWerP = ['attributes', 'newestVersion'];
-  const newFileIdP = ['attributes', 'newestFileId'];
-
   return Promise.map(modsList, (mod: IMod) => {
     if (!forceFull && !filtered.has(mod.id)) {
       store.dispatch(setModAttribute(gameId, mod.id, 'lastUpdateTime', now - 15 * ONE_MINUTE));
@@ -1029,41 +1017,35 @@ function checkForModUpdatesImpl(store: Redux.Store<any>, nexus: Nexus,
 
     return checkModVersion(store, nexus, gameId, mod)
       .then(() => {
-        const modNew = getSafe(store.getState(),
-          ['persistent', 'mods', gameId, mod.id], undefined);
-
-        const newestVerChanged =
-          getSafe(modNew, newWerP, undefined) !== getSafe(mod, newWerP, undefined);
-        const verChanged =
-          getSafe(modNew, newWerP, undefined) !== getSafe(modNew, verP, undefined);
-        const newestFileIdChanged =
-          getSafe(modNew, newFileIdP, undefined) !== getSafe(mod, newFileIdP, undefined);
-        const fileIdChanged =
-          getSafe(modNew, newFileIdP, undefined) !== getSafe(modNew, fileIdP, undefined);
+        const modNew = store.getState()?.persistent?.mods?.[gameId]?.[mod.id];
+        const newestVerChanged = modNew?.attributes?.newestVersion !== mod?.attributes?.newestVersion;
+        const verChanged = modNew?.attributes?.newestVersion !== modNew?.attributes?.version;
+        const newestFileIdChanged = modNew?.attributes?.newestFileId !== mod?.attributes?.newestFileId;
+        const fileIdChanged = modNew?.attributes?.newestFileId !== modNew?.attributes?.fileId;
 
         const updateFound = (newestVerChanged && verChanged)
           || (newestFileIdChanged && fileIdChanged);
 
         if (updateFound) {
           updatedIds.push(mod.id);
-          if (truthy(forceFull) && !filtered.has(mod.id)) {
+          if (!!forceFull && !filtered.has(mod.id)) {
             log('warn', '[update check] Mod update would have been missed with regular check', {
               modId: mod.id,
-              lastUpdateTime: getSafe(mod, ['attributes', 'lastUpdateTime'], 0),
-              'before.newestVersion': getSafe(mod, newWerP, ''),
-              'before.newestFileId': getSafe(mod, newFileIdP, ''),
-              'after.newestVersion': getSafe(modNew, newWerP, ''),
-              'after.newestFileId': getSafe(modNew, newFileIdP, ''),
+              lastUpdateTime: mod?.attributes?.lastUpdateTime ?? 0,
+              'before.newestVersion': mod?.attributes?.newestVersion ?? '',
+              'before.newestFileId': mod?.attributes?.newestVersion ?? '',
+              'after.newestVersion': modNew?.attributes?.newestVersion ?? '',
+              'after.newestFileId': modNew?.attributes?.newestVersion ?? '',
             });
             updatesMissed.push(mod);
           } else {
             log('info', '[update check] Mod update detected', {
               modId: mod.id,
-              lastUpdateTime: getSafe(mod, ['attributes', 'lastUpdateTime'], 0),
-              'before.newestVersion': getSafe(mod, newWerP, ''),
-              'before.newestFileId': getSafe(mod, newFileIdP, ''),
-              'after.newestVersion': getSafe(modNew, newWerP, ''),
-              'after.newestFileId': getSafe(modNew, newFileIdP, ''),
+              lastUpdateTime: mod?.attributes?.lastUpdateTime ?? 0,
+              'before.newestVersion': mod?.attributes?.newestVersion ?? '',
+              'before.newestFileId': mod?.attributes?.newestVersion ?? '',
+              'after.newestVersion': modNew?.attributes?.newestVersion ?? '',
+              'after.newestFileId': modNew?.attributes?.newestVersion ?? '',
             });
           }
 
@@ -1137,15 +1119,11 @@ export function checkModVersionsImpl(
   const now = Date.now();
 
   const modsList: IMod[] = Object.keys(mods)
-    .map(modId => mods[modId])
-    .filter(mod => getSafe(mod.attributes, ['source'], undefined) === 'nexus')
-    .filter(mod =>
-      (now - (getSafe(mod.attributes, ['lastUpdateTime'], 0) || 0)) > UPDATE_CHECK_DELAY)
-    ;
+    .map((modId) => mods[modId])
+    .filter((mod) => (mod.attributes.source === 'nexus'))
+    .filter((mod) => (now - (mod.attributes?.lastUpdateTime ?? 0)) > UPDATE_CHECK_DELAY);
 
   log('info', '[update check] checking mods for update (nexus)', { count: modsList.length });
-
-  const updatedIds: string[] = [];
 
   return refreshEndorsements(store, nexus)
     .then(() => Promise.all([
@@ -1249,7 +1227,6 @@ export function updateKey(api: IExtensionApi, nexus: Nexus, key: string): Promis
       return false;
     })
     .catch(err => {
-      const t = api.translate;
       api.showErrorNotification(err.code === 'ESOCKETTIMEDOUT'
         ? 'Connection to nexusmods.com timed out, please check your internet connection'
         : 'Failed to log in',
