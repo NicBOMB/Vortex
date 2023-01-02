@@ -1,5 +1,6 @@
 import memoizeOne from 'memoize-one';
 import * as React from 'react';
+import { Button } from 'react-bootstrap';
 import * as ReactDOM from 'react-dom';
 import ReactMarkdown from 'react-markdown';
 import { FlexLayout, Icon, tooltip, types } from 'vortex-api';
@@ -86,6 +87,7 @@ function InstructionsOverlay(props: IInstructionsOverlayProps) {
     const { left, top } = ref.current.style;
     applyPos({ x: parsePos(left), y: parsePos(top) });
     container.style.pointerEvents = 'none';
+    evt.stopPropagation();
   }, [applyPos]);
 
   const startDrag = React.useCallback((evt: React.DragEvent<HTMLDivElement>) => {
@@ -117,6 +119,10 @@ function InstructionsOverlay(props: IInstructionsOverlayProps) {
     props.onClose(overlayId);
   }, [props.onClose, overlayId]);
 
+  const toggleOpen = React.useCallback(() => {
+    setOpen(old => !old);
+  }, []);
+
   const className = `instructions-overlay ${overlay?.options?.className ?? ''}`;
 
   const overlayComponentProps = {
@@ -134,14 +140,22 @@ function InstructionsOverlay(props: IInstructionsOverlayProps) {
       <FlexLayout type='column'>
         <FlexLayout.Fixed style={{ height: '5%' }}>
           <FlexLayout className='instructions-overlay-header' type='row'>
+            {/*
             <FlexLayout.Fixed className='drag-icon-container' draggable onDragStart={startDrag}>
               <Icon name='drag-handle' />
             </FlexLayout.Fixed>
-            <FlexLayout.Flex className='instructions-overlay-title' onClick={toggle}>
-              {overlay?.options?.showIcon === false ? null : <Icon name='dialog-info' />}
+            */}
+            <FlexLayout.Flex draggable onDragStart={startDrag} className='instructions-overlay-title'>
+              {overlay?.options?.showIcon ? <Icon name='dialog-info' /> : null}
               <h4>{t(overlay?.options?.containerTitle ?? 'Instructions')}</h4>
             </FlexLayout.Flex>
-            <FlexLayout.Fixed className='instructions-overlay-close'>
+            <FlexLayout.Fixed className='instructions-overlay-buttons'>
+              <tooltip.IconButton
+                className='btn-embed'
+                icon={open ? 'collapse-overlay' : 'expand-overlay'}
+                tooltip={open ? t('Collapse') : t('Expand')}
+                onClick={toggleOpen}
+              />
               <tooltip.IconButton
                 className='btn-embed'
                 icon='close'
@@ -156,21 +170,20 @@ function InstructionsOverlay(props: IInstructionsOverlayProps) {
         </FlexLayout.Fixed>
         <FlexLayout.Fixed style={{ overflowY: 'auto' }}>
           {open
-            ? typeof(overlay.content) === 'string' ?
-                (
-                  <ReactMarkdown
-                    className='instructions-overlay-content'
-                  >
-                    {overlay.content}
-                  </ReactMarkdown>
-                )
-              :  <overlay.content {...overlayComponentProps}/>
+            ? typeof (overlay.content) === 'string' ?
+              (
+                <ReactMarkdown
+                  className='instructions-overlay-content'
+                >
+                  {overlay.content}
+                </ReactMarkdown>
+              )
+              : <overlay.content {...overlayComponentProps} />
             : null}
         </FlexLayout.Fixed>
       </FlexLayout>
     </div>,
-  ],
-    container,
+  ], container,
   );
 }
 

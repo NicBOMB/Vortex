@@ -59,7 +59,7 @@ import deriveModInstallName from './modIdManager';
 import { STAGING_DIR_TAG } from './stagingDirectory';
 
 import { HTTPError } from '@nexusmods/nexus-api';
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import * as _ from 'lodash';
 import { IHashResult, ILookupResult, IReference, IRule } from 'modmeta-db';
 import Zip = require('node-7z');
@@ -159,7 +159,7 @@ class InstallManager {
   private mInstallers: IModInstaller[] = [];
   private mGetInstallPath: (gameId: string) => string;
   private mTask: Zip;
-  private mQueue: Promise<void>;
+  private mQueue: Bluebird<void>;
   private mDependencyInstalls: { [modId: string]: () => void } = {};
   private mDependencyDownloadsLimit: ConcurrencyLimiter =
     new ConcurrencyLimiter(3);
@@ -169,20 +169,20 @@ class InstallManager {
 
   constructor(api: IExtensionApi, installPath: (gameId: string) => string) {
     this.mGetInstallPath = installPath;
-    this.mQueue = Promise.resolve();
+    this.mQueue = Bluebird.resolve();
 
     api.onAsync(
       'install-from-dependencies',
       (dependentId: string, rules: IModRule[], recommended: boolean) => {
         const profile = activeProfile(api.store.getState());
         if (profile === undefined) {
-          return Promise.reject(new ProcessCanceled('No game active'));
+          return Bluebird.reject(new ProcessCanceled('No game active'));
         }
         const { mods } = api.store.getState().persistent;
         const collection = mods[profile.gameId]?.[dependentId];
 
         if (collection === undefined) {
-          return Promise.resolve();
+          return Bluebird.resolve();
         }
 
         const instPath = this.mGetInstallPath(profile.gameId);
@@ -205,7 +205,7 @@ class InstallManager {
 
     api.onAsync('cancel-dependency-install', (modId: string) => {
       this.mDependencyInstalls[modId]?.();
-      return Promise.resolve();
+      return Bluebird.resolve();
     });
   }
 
@@ -236,21 +236,21 @@ class InstallManager {
                   extractList?: IFileListItem[], unattended?: boolean,
                   installChoices?: any,
                   progress?: (entries: string[], percent: number) => void)
-                  : Promise<IInstallResult> {
+                  : Bluebird<IInstallResult> {
     if (this.mTask === undefined) {
       this.mTask = new Zip();
     }
 
-    let extractProm: Promise<any>;
+    let extractProm: Bluebird<any>;
     if (FILETYPES_AVOID.includes(path.extname(archivePath).toLowerCase())) {
-      extractProm = Promise.reject(new ArchiveBrokenError('file type on avoidlist'));
+      extractProm = Bluebird.reject(new ArchiveBrokenError('file type on avoidlist'));
     } else {
       extractProm = this.mTask.extractFull(archivePath, tempPath, {ssc: false},
                                     progress,
                                     () => this.queryPassword(api.store) as any)
           .catch((err: Error) => this.isCritical(err.message)
-            ? Promise.reject(new ArchiveBrokenError(err.message))
-            : Promise.reject(err));
+            ? Bluebird.reject(new ArchiveBrokenError(err.message))
+            : Bluebird.reject(err));
     }
 
     const fileList: string[] = [];
@@ -262,11 +262,11 @@ class InstallManager {
             log('warn', 'extraction reported error', { code, errors: errors.join('; ') });
             const critical = errors.find(this.isCritical);
             if (critical !== undefined) {
-              return Promise.reject(new ArchiveBrokenError(critical));
+              return Bluebird.reject(new ArchiveBrokenError(critical));
             }
             return this.queryContinue(api, errors, archivePath);
           } else {
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
         })
         .then(() => walk(tempPath,
@@ -279,7 +279,7 @@ class InstallManager {
                              // management...
                              fileList.push(path.relative(tempPath, iterPath) + path.sep);
                            }
-                           return Promise.resolve();
+                           return Bluebird.resolve();
                          }))
         .then(() => {
           if (!!extractList && extractList.length > 0) {
@@ -379,16 +379,16 @@ class InstallManager {
 
     this.mQueue = this.mQueue
       .then(() => withContext('Installing', baseName, () => ((forceGameId !== undefined)
-        ? Promise.resolve(forceGameId)
+        ? Bluebird.resolve(forceGameId)
         : queryGameId(api.store, downloadGameIds, modId))
       .tap(gameId => {
         installGameId = gameId;
         if (installGameId === undefined) {
-          return Promise.reject(
+          return Bluebird.reject(
             new ProcessCanceled('You need to select a game before installing this mod'));
         }
-        if (installGameId !== currentProfile.gameId) {
-          const state = api.store.getState();
+        if (installGameId !== currentProfile?.gameId) {
+          const state = api.getState();
           const installProfileId = lastActiveProfileForGame(state, installGameId);
           installProfile = profileById(state, installProfileId);
         }
@@ -410,7 +410,7 @@ class InstallManager {
         if (installGameId === 'site') {
           // install an already-downloaded extension
           return api.emitAndAwait('install-extension-from-download', archiveId)
-            .then(() => Promise.reject(new UserCanceled()));
+            .then(() => Bluebird.reject(new UserCanceled()));
         }
         installContext = new InstallContext(gameId, api, allowAutoDeploy);
         installContext.startIndicator(baseName);
@@ -442,6 +442,7 @@ class InstallManager {
         let replacementChoice: ReplaceChoice = undefined;
         const checkNameLoop = () => {
           if (replacementChoice === 'replace') {
+            log('debug', '(nameloop) replacement choice "replace"', { testModId: testModId ?? '<undefined>' });
             return Promise.resolve(testModId);
           }
           const modNameMatches = this.checkModNameExists(testModId, api, installGameId);
@@ -450,6 +451,7 @@ class InstallManager {
             ? modNameMatches
             : Array.from(new Set([].concat(modNameMatches, variantMatches)));
           if (existingIds.length === 0) {
+            log('debug', '(nameloop) no existing ids', { testModId: testModId ?? '<undefined>' });
             return Promise.resolve(testModId);
           } else {
             return this.queryUserReplace(api, existingIds, installGameId, ++variantCounter)
@@ -474,7 +476,7 @@ class InstallManager {
       .then(newModId => {
         if (newModId === undefined) {
           // this shouldn't be possible, how would checkNameLoop return undefined?
-          return Promise.reject(new Error('failed to generate mod id'));
+          return Bluebird.reject(new Error('failed to generate mod id'));
         }
         modId = newModId;
         log('debug', 'mod id for newly installed mod', { archivePath, modId });
@@ -515,7 +517,7 @@ class InstallManager {
           return this.queryIgnoreDependent(
             api.store, installGameId, broken.map(id => dependentRule[id]));
         } else {
-          return Promise.resolve();
+          return Bluebird.resolve();
         }
       })
       .then(() => {
@@ -538,7 +540,7 @@ class InstallManager {
                 rules = existingMod.rules || [];
                 overrides = existingMod.fileOverrides;
                 fullInfo.previous = existingMod.attributes;
-                return Promise.resolve();
+                return Bluebird.resolve();
               } else if (action === REPLACE_ACTION) {
                 rules = existingMod.rules || [];
                 overrides = existingMod.fileOverrides;
@@ -546,7 +548,7 @@ class InstallManager {
                 // we need to remove the old mod before continuing. This ensures
                 // the mod is deactivated and undeployed (so we're not leave dangling
                 // links) and it ensures we do a clean install of the mod
-                return new Promise<void>((resolve, reject) => {
+                return new Bluebird<void>((resolve, reject) => {
                   api.events.emit('remove-mod', installGameId, existingMod.id,
                                   (error: Error) => {
                     if (error !== null) {
@@ -563,7 +565,7 @@ class InstallManager {
               }
             });
         } else {
-          return Promise.resolve();
+          return Bluebird.resolve();
         }
       })
       .then(() => {
@@ -587,7 +589,7 @@ class InstallManager {
                 return result;
               });
         } else {
-          return Promise.resolve(result);
+          return Bluebird.resolve(result);
         }
       })
       .then((result) => this.processInstructions(api, archivePath, tempPath, destinationPath,
@@ -598,7 +600,7 @@ class InstallManager {
           log('debug', 'removing temporary path', tempPath);
           return fs.removeAsync(tempPath);
         } else {
-          return Promise.resolve();
+          return Bluebird.resolve();
         }
       })
       .then(() => filterModInfo(fullInfo, destinationPath))
@@ -659,7 +661,7 @@ class InstallManager {
                 + 'please close Vortex and remove it manually.',
                 innerErr, innerErr.code !== 'ENOTEMPTY', { destinationPath });
             })
-          : Promise.resolve();
+          : Bluebird.resolve();
 
         if (installContext !== undefined) {
           const pretty = prettifyNodeErrorMessage(err);
@@ -790,12 +792,12 @@ class InstallManager {
   }
 
   public installDependencies(api: IExtensionApi, profile: IProfile, gameId: string, modId: string,
-                             allowAutoDeploy: boolean): Promise<void> {
+                             allowAutoDeploy: boolean): Bluebird<void> {
     const state: IState = api.store.getState();
     const mod: IMod = state.persistent.mods[gameId]?.[modId];
 
     if (mod === undefined) {
-      return Promise.reject(new ProcessCanceled(`Invalid mod specified "${modId}"`));
+      return Bluebird.reject(new ProcessCanceled(`Invalid mod specified "${modId}"`));
     }
 
     this.repairRules(api, mod, gameId);
@@ -819,12 +821,12 @@ class InstallManager {
                                 profile: IProfile,
                                 gameId: string,
                                 modId: string)
-                                : Promise<void> {
+                                : Bluebird<void> {
     const state = api.store.getState();
     const mod = state?.persistent?.mods?.[gameId]?.[modId];
 
     if (mod === undefined) {
-      return Promise.reject(new ProcessCanceled(`Invalid mod specified "${modId}"`));
+      return Bluebird.reject(new ProcessCanceled(`Invalid mod specified "${modId}"`));
     }
 
     this.repairRules(api, mod, gameId);
@@ -845,7 +847,7 @@ class InstallManager {
     );
   }
 
-  private augmentRules(api: IExtensionApi, gameId: string, mod: IMod): Promise<IRule[]> {
+  private augmentRules(api: IExtensionApi, gameId: string, mod: IMod): Bluebird<IRule[]> {
     const rules = (mod.rules ?? []).slice();
 
     return api.lookupModMeta({
@@ -859,9 +861,10 @@ class InstallManager {
       })
   }
 
-  private withDependenciesContext<T>(contextName: string, func: () => Promise<T>): Promise<T> {
+  private withDependenciesContext<T>(contextName: string, func: () => Bluebird<T>): Bluebird<T> {
     const context = getBatchContext(contextName, '', true);
     context.set('depth', context.get('depth', 0) + 1);
+    context.set('remember-instructions', null);
 
     return func()
       .finally(() => {
@@ -879,23 +882,23 @@ class InstallManager {
         || (ref.logicalFileName !== undefined);
   }
 
-  private setModSize(api: IExtensionApi, modId: string, gameId: string): Promise<void> {
+  private setModSize(api: IExtensionApi, modId: string, gameId: string): Bluebird<void> {
     const state = api.getState();
     const stagingFolder = installPathForGame(state, gameId);
     const mod = state.persistent.mods[gameId]?.[modId];
     if (mod?.installationPath === undefined) {
       log('debug', 'failed to calculate modSize', 'mod is not in state');
-      return Promise.resolve();
+      return Bluebird.resolve();
     }
     const modPath = path.join(stagingFolder, mod.installationPath);
     return calculateFolderSize(modPath)
     .then((totalSize) => {
       api.store.dispatch(setModAttribute(gameId, mod.id, 'modSize', totalSize));
-      return Promise.resolve();
+      return Bluebird.resolve();
     })
     .catch(err => {
       log('debug', 'failed to calculate modSize', err);
-      return Promise.resolve();
+      return Bluebird.resolve();
     });
   }
 
@@ -943,7 +946,7 @@ class InstallManager {
                        forceInstaller?: string,
                        installChoices?: any,
                        extractList?: IFileListItem[],
-                       unattended?: boolean): Promise<IInstallResult> {
+                       unattended?: boolean): Bluebird<IInstallResult> {
     const fileList: string[] = [];
     let phase = 'Extracting';
 
@@ -953,16 +956,16 @@ class InstallManager {
       }
     };
     log('debug', 'extracting mod archive', { archivePath, tempPath });
-    let extractProm: Promise<any>;
+    let extractProm: Bluebird<any>;
     if (FILETYPES_AVOID.includes(path.extname(archivePath).toLowerCase())) {
-      extractProm = Promise.reject(new ArchiveBrokenError('file type on avoidlist'));
+      extractProm = Bluebird.reject(new ArchiveBrokenError('file type on avoidlist'));
     } else {
       extractProm = this.mTask.extractFull(archivePath, tempPath, {ssc: false},
                                     progress,
                                     () => this.queryPassword(api.store) as any)
           .catch((err: Error) => this.isCritical(err.message)
-            ? Promise.reject(new ArchiveBrokenError(err.message))
-            : Promise.reject(err));
+            ? Bluebird.reject(new ArchiveBrokenError(err.message))
+            : Bluebird.reject(err));
     }
 
     return extractProm
@@ -976,17 +979,17 @@ class InstallManager {
             log('warn', 'extraction reported error', { code, errors: errors.join('; ') });
             const critical = errors.find(this.isCritical);
             if (critical !== undefined) {
-              return Promise.reject(new ArchiveBrokenError(critical));
+              return Bluebird.reject(new ArchiveBrokenError(critical));
             }
             return this.queryContinue(api, errors, archivePath);
           } else {
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
         })
         .catch(ArchiveBrokenError, err => {
           if (archiveExtLookup.has(path.extname(archivePath).toLowerCase())) {
             // hmm, it was supposed to support the file type though...
-            return Promise.reject(err);
+            return Bluebird.reject(err);
           }
 
           if ([STAGING_DIR_TAG, DOWNLOADS_DIR_TAG].indexOf(path.basename(archivePath)) !== -1) {
@@ -999,7 +1002,7 @@ class InstallManager {
               message: archivePath,
             }, [
                 { label: 'Ok' },
-              ]).then(() => Promise.reject(new ProcessCanceled('Not a mod')));
+              ]).then(() => Bluebird.reject(new ProcessCanceled('Not a mod')));
           }
 
           // this is really a completely separate process from the "regular" mod installation
@@ -1012,7 +1015,7 @@ class InstallManager {
               { label: 'Create Mod' },
             ]).then((result) => {
               if (result.action === 'Cancel') {
-                return Promise.reject(new UserCanceled());
+                return Bluebird.reject(new UserCanceled());
               }
 
               return fs.ensureDirAsync(tempPath)
@@ -1030,7 +1033,7 @@ class InstallManager {
                              // management...
                              fileList.push(path.relative(tempPath, iterPath) + path.sep);
                            }
-                           return Promise.resolve();
+                           return Bluebird.resolve();
                          }))
         .finally(() => {
           // process.noAsar = false;
@@ -1075,39 +1078,44 @@ class InstallManager {
         });
   }
 
-  private determineModType(gameId: string, installInstructions: IInstruction[]): Promise<string> {
+  private determineModType(gameId: string, installInstructions: IInstruction[]): Bluebird<string> {
     log('info', 'determine mod type', { gameId });
     const game = getGame(gameId);
     if (game === undefined) {
-      return Promise.reject(new Error(`Invalid game "${gameId}"`));
+      return Bluebird.reject(new Error(`Invalid game "${gameId}"`));
     }
     const modTypes: IModType[] = game.modTypes;
     const sorted = modTypes.sort((lhs, rhs) => lhs.priority - rhs.priority);
     let found = false;
 
-    return Promise.mapSeries(sorted, (type: IModType): Promise<string> => {
+    return Bluebird.mapSeries(sorted, (type: IModType): Bluebird<string> => {
       if (found) {
-        return Promise.resolve<string>(null);
+        return Bluebird.resolve<string>(null);
       }
 
-      return type.test(installInstructions)
-      .then(matches => {
-        if (matches) {
-          found = true;
-          return Promise.resolve(type.typeId);
-        } else {
-          return Promise.resolve(null);
-        }
-      });
+      try {
+        return type.test(installInstructions)
+          .then(matches => {
+            if (matches) {
+              found = true;
+              return Promise.resolve(type.typeId);
+            } else {
+              return Promise.resolve(null);
+            }
+          });
+      } catch (err) {
+        log('error', 'invalid mod type', { typeId: type.typeId, error: err.message });
+        return Promise.resolve(null);
+      }
     }).then(matches => matches.find(match => match !== null) || '');
   }
 
   private queryContinue(api: IExtensionApi,
                         errors: string[],
-                        archivePath: string): Promise<void> {
+                        archivePath: string): Bluebird<void> {
     const terminal = errors.find(err => err.indexOf('Can not open the file as archive') !== -1);
 
-    return new Promise<void>((resolve, reject) => {
+    return new Bluebird<void>((resolve, reject) => {
       const actions = [
         { label: 'Cancel', action: () => reject(new UserCanceled()) },
         { label: 'Delete', action: () => {
@@ -1142,8 +1150,8 @@ class InstallManager {
     });
   }
 
-  private queryPassword(store: ThunkStore<any>): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
+  private queryPassword(store: ThunkStore<any>): Bluebird<string> {
+    return new Bluebird<string>((resolve, reject) => {
       store
           .dispatch(showDialog(
               'info', 'Password Protected',
@@ -1246,16 +1254,16 @@ class InstallManager {
   }
 
   private processMKDir(instructions: IInstruction[],
-                       destinationPath: string): Promise<void> {
-    return Promise.each(instructions,
+                       destinationPath: string): Bluebird<void> {
+    return Bluebird.each(instructions,
                         instruction => fs.ensureDirAsync(path.join(
                             destinationPath, instruction.destination)))
         .then(() => undefined);
   }
 
   private processGenerateFiles(generatefile: IInstruction[],
-                               destinationPath: string): Promise<void> {
-    return Promise.each(generatefile, gen => {
+                               destinationPath: string): Bluebird<void> {
+    return Bluebird.each(generatefile, gen => {
       const outputPath = path.join(destinationPath, gen.destination);
       return fs.ensureDirAsync(path.dirname(outputPath))
         // data buffers are sent to us base64 encoded
@@ -1266,8 +1274,8 @@ class InstallManager {
   private processSubmodule(api: IExtensionApi, submodule: IInstruction[],
                            destinationPath: string,
                            gameId: string, modId: string,
-                           choices: any, unattended: boolean): Promise<void> {
-    return Promise.each(submodule,
+                           choices: any, unattended: boolean): Bluebird<void> {
+    return Bluebird.each(submodule,
       mod => {
         const tempPath = destinationPath + '.' + shortid() + '.installing';
         log('debug', 'install submodule', { modPath: mod.path, tempPath, destinationPath });
@@ -1296,46 +1304,46 @@ class InstallManager {
   }
 
   private processAttribute(api: IExtensionApi, attribute: IInstruction[],
-                           gameId: string, modId: string): Promise<void> {
+                           gameId: string, modId: string): Bluebird<void> {
     attribute.forEach(attr => {
       api.store.dispatch(setModAttribute(gameId, modId, attr.key, attr.value));
     });
-    return Promise.resolve();
+    return Bluebird.resolve();
   }
 
   private processEnableAllPlugins(api: IExtensionApi, enableAll: IInstruction[],
-                                  gameId: string, modId: string): Promise<void> {
+                                  gameId: string, modId: string): Bluebird<void> {
     if (enableAll.length > 0) {
       api.store.dispatch(setModAttribute(gameId, modId, 'enableallplugins', true));
     }
-    return Promise.resolve();
+    return Bluebird.resolve();
   }
 
   private processSetModType(api: IExtensionApi, types: IInstruction[],
-                            gameId: string, modId: string): Promise<void> {
+                            gameId: string, modId: string): Bluebird<void> {
     if (types.length > 0) {
       api.store.dispatch(setModType(gameId, modId, types[types.length - 1].value));
       if (types.length > 1) {
         log('error', 'got more than one mod type, only the last was used', { types });
       }
     }
-    return Promise.resolve();
+    return Bluebird.resolve();
   }
 
   private processRule(api: IExtensionApi, rules: IInstruction[],
-                      gameId: string, modId: string): Promise<void> {
+                      gameId: string, modId: string): Bluebird<void> {
     rules.forEach(rule => {
       api.store.dispatch(addModRule(gameId, modId, rule.rule));
     });
-    return Promise.resolve();
+    return Bluebird.resolve();
   }
 
   private processIniEdits(api: IExtensionApi,
                           iniEdits: IInstruction[],
                           destinationPath: string,
-                          gameId: string, modId: string): Promise<void> {
+                          gameId: string, modId: string): Bluebird<void> {
     if (iniEdits.length === 0) {
-      return Promise.resolve();
+      return Bluebird.resolve();
     }
 
     const byDest: { [dest: string]: IInstruction[] } = iniEdits.reduce(
@@ -1346,7 +1354,7 @@ class InstallManager {
     }, {});
 
     return fs.ensureDirAsync(path.join(destinationPath, INI_TWEAKS_PATH))
-      .then(() => Promise.map(Object.keys(byDest), destination => {
+      .then(() => Bluebird.map(Object.keys(byDest), destination => {
       const bySection: {[section: string]: IInstruction[]} =
           byDest[destination].reduce((prev: { [section: string]: IInstruction[] }, value) => {
             prev[value.section] ??= [];
@@ -1383,12 +1391,12 @@ class InstallManager {
       // this is the signal that the installer has already reported what went
       // wrong. Not necessarily a "user canceled" but the error handling happened
       // in the installer so we don't know what happened.
-      return Promise.reject(new UserCanceled());
+      return Bluebird.reject(new UserCanceled());
     }
 
     if ((result.instructions === undefined) ||
         (result.instructions.length === 0)) {
-      return Promise.reject(new ProcessCanceled('Empty archive or no options selected'));
+      return Bluebird.reject(new ProcessCanceled('Empty archive or no options selected'));
     }
 
     const invalidInstructions = this.validateInstructions(result.instructions);
@@ -1413,7 +1421,7 @@ class InstallManager {
         },
         allowReport,
       });
-      return Promise.reject(new ProcessCanceled('Invalid installer instructions'));
+      return Bluebird.reject(new ProcessCanceled('Invalid installer instructions'));
     }
 
     const instructionGroups = this.transformInstructions(result.instructions);
@@ -1438,7 +1446,7 @@ class InstallManager {
           message: modId,
         });
       if (fatal !== undefined) {
-        return Promise.reject(new ProcessCanceled('Installer script failed'));
+        return Bluebird.reject(new ProcessCanceled('Installer script failed'));
       }
     }
 
@@ -1509,8 +1517,8 @@ class InstallManager {
 
   private queryIgnoreDependent(store: ThunkStore<any>, gameId: string,
                                dependents: Array<{ owner: string, rule: IModRule }>)
-                               : Promise<void> {
-    return new Promise<void>((resolve, reject) => {
+                               : Bluebird<void> {
+    return new Bluebird<void>((resolve, reject) => {
       store.dispatch(showDialog(
           'question', 'Updating may break dependencies',
           {
@@ -1544,8 +1552,8 @@ class InstallManager {
     });
   }
 
-  private userVersionChoice(oldMod: IMod, store: ThunkStore<any>): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
+  private userVersionChoice(oldMod: IMod, store: ThunkStore<any>): Bluebird<string> {
+    return new Bluebird<string>((resolve, reject) => {
       store.dispatch(showDialog(
           'question', modName(oldMod),
           {
@@ -1572,7 +1580,7 @@ class InstallManager {
   }
 
   private queryUserReplace(api: IExtensionApi, modIds: string[], gameId: string, counter: number) {
-    return new Promise<IReplaceChoice>((resolve, reject) => {
+    return new Bluebird<IReplaceChoice>((resolve, reject) => {
       const state: IState = api.store.getState();
       const mods: IMod[] = Object.values(state.persistent.mods[gameId])
         .filter(mod => modIds.includes(mod.id));
@@ -1637,12 +1645,12 @@ class InstallManager {
         .then(result => {
           if (result.action === 'Cancel') {
             context?.set?.('canceled', true);
-            return Promise.reject(new UserCanceled());
+            return Bluebird.reject(new UserCanceled());
           } else {
             if (result.input.remember) {
               context.set('variant-name', result.input.variant);
             }
-            return Promise.resolve(result.input.variant);
+            return Bluebird.resolve(result.input.variant);
           }
         });
       };
@@ -1683,7 +1691,7 @@ class InstallManager {
         .then(result => {
           if (result.action === 'Cancel') {
             context?.set?.('canceled', true);
-            return Promise.reject(new UserCanceled());
+            return Bluebird.reject(new UserCanceled());
           } else if (result.input.variant) {
             return queryVariantNameDialog(result.input.remember)
               .then(variant => ({
@@ -1728,7 +1736,7 @@ class InstallManager {
           { label: 'Continue' },
         ]);
 
-      let choices: Promise<{ action: string, variant?: string, remember: boolean }>;
+      let choices: Bluebird<{ action: string, variant?: string, remember: boolean }>;
 
       const checkRoVRemember: ICheckbox[] = [];
       if (context !== undefined) {
@@ -1764,7 +1772,7 @@ class InstallManager {
             if ((variant !== undefined) && (counter > 1)) {
               variant += `.${counter}`;
             }
-            choices = Promise.resolve({
+            choices = Bluebird.resolve({
               action,
               variant,
               remember: true,
@@ -1873,18 +1881,18 @@ class InstallManager {
     gameId: string,
     archivePath: string,
     offsetIn?: number,
-    ): Promise<ISupportedInstaller> {
+    ): Bluebird<ISupportedInstaller> {
     const offset = offsetIn || 0;
     if (offset >= this.mInstallers.length) {
-      return Promise.resolve(undefined);
+      return Bluebird.resolve(undefined);
     }
-    return Promise.resolve(this.mInstallers[offset].testSupported(fileList, gameId, archivePath))
+    return Bluebird.resolve(this.mInstallers[offset].testSupported(fileList, gameId, archivePath))
       .then((testResult: ISupportedResult) => {
           if (testResult === undefined) {
             log('error', 'Buggy installer', this.mInstallers[offset].id);
           }
           return (testResult?.supported === true)
-            ? Promise.resolve({
+            ? Bluebird.resolve({
               installer: this.mInstallers[offset],
               requiredFiles: testResult.requiredFiles,
             })
@@ -1913,17 +1921,17 @@ class InstallManager {
                       wasCanceled: () => boolean,
                       referenceTag?: string,
                       campaign?: string,
-                      fileName?: string): Promise<string> {
-    const call = (input: string | (() => Promise<string>)): Promise<string> =>
+                      fileName?: string): Bluebird<string> {
+    const call = (input: string | (() => Bluebird<string>)): Bluebird<string> =>
       (input !== undefined) && (typeof(input) === 'function')
-      ? input() : Promise.resolve(input as string);
+      ? input() : Bluebird.resolve(input as string);
 
     let resolvedSource: string;
     let resolvedReferer: string;
 
     return call(lookupResult.sourceURI).then(res => resolvedSource = res)
       .then(() => call(lookupResult.referer).then(res => resolvedReferer = res))
-      .then(() => new Promise<string>((resolve, reject) => {
+      .then(() => new Bluebird<string>((resolve, reject) => {
         if (wasCanceled()) {
           return reject(new UserCanceled(false));
         } else if (!resolvedSource){
@@ -1959,7 +1967,7 @@ class InstallManager {
   private downloadMatching(api: IExtensionApi, lookupResult: IModInfoEx,
                            pattern: string, referenceTag: string,
                            wasCanceled: () => boolean, campaign: string,
-                           fileName?: string): Promise<string> {
+                           fileName?: string): Bluebird<string> {
     const modId: string = lookupResult?.details?.modId;
     const fileId: string = lookupResult?.details?.fileId;
     if ((modId === undefined) && (fileId === undefined)) {
@@ -1973,18 +1981,18 @@ class InstallManager {
       lookupResult.source, gameId, modId, fileId, pattern, campaign, referenceTag)
       .then((results: Array<{ error: Error, dlId: string }>) => {
         if ((results === undefined) || (results.length === 0)) {
-          return Promise.reject(new NotFound(`source not supported "${lookupResult.source}"`));
+          return Bluebird.reject(new NotFound(`source not supported "${lookupResult.source}"`));
         } else {
           if (!results[0]){
-            return Promise.reject(
+            return Bluebird.reject(
               new ProcessCanceled('Download failed', { alreadyReported: true }));
           } else {
             const successResult = results.find(iter => iter.error === null);
             if (successResult === undefined) {
-              return Promise.reject(results[0].error);
+              return Bluebird.reject(results[0].error);
             } else {
               api.store.dispatch(setDownloadModInfo(results[0].dlId, 'referenceTag', referenceTag));
-              return Promise.resolve(results[0].dlId);
+              return Bluebird.resolve(results[0].dlId);
             }
           }
         }
@@ -1996,7 +2004,7 @@ class InstallManager {
     api: IExtensionApi,
     lookupResult: IModInfoEx,
     wasCanceled: () => boolean,
-    fileName: string): Promise<string> {
+    fileName: string): Bluebird<string> {
     const referenceTag = requirement['tag'];
     const { campaign } = requirement['repo'] ?? {};
 
@@ -2012,7 +2020,7 @@ class InstallManager {
             // the exact file specified by the curator
             return undefined;
           } else {
-            return Promise.reject(err);
+            return Bluebird.reject(err);
           }
         })
         .then(res => (res === undefined)
@@ -2022,14 +2030,14 @@ class InstallManager {
       return this.downloadURL(api, lookupResult, wasCanceled, referenceTag, campaign, fileName)
         .catch(err => {
           if ((err instanceof UserCanceled) || (err instanceof ProcessCanceled)) {
-            return Promise.reject(err);
+            return Bluebird.reject(err);
           }
           // with +prefer versions, if the exact version isn't available, an update is acceptable
           if (requirement.versionMatch.endsWith('+prefer')) {
             return this.downloadMatching(api, lookupResult, requirement.versionMatch,
               referenceTag, wasCanceled, campaign, fileName);
           } else {
-            return Promise.reject(err);
+            return Bluebird.reject(err);
           }
         });
     }
@@ -2124,12 +2132,12 @@ class InstallManager {
                                      gameId: string,
                                      sourceModId: string,
                                      recommended: boolean,
-                                     downloadAndInstall: (dep: IDependency) => Promise<string>,
+                                     downloadAndInstall: (dep: IDependency) => Bluebird<string>,
                                      abort: AbortController)
-                                     : Promise<IDependency[]> {
-    const res: Promise<IDependency[]> = Promise.map(dependencies, (dep: IDependency) => {
+                                     : Bluebird<IDependency[]> {
+    const res: Bluebird<IDependency[]> = Bluebird.map(dependencies, (dep: IDependency) => {
       if (abort.signal.aborted) {
-        return Promise.reject(new UserCanceled());
+        return Bluebird.reject(new UserCanceled());
       }
       log('debug', 'installing as dependency', {
         ref: JSON.stringify(dep.reference),
@@ -2163,15 +2171,15 @@ class InstallManager {
         .catch(err => {
           if (dep.extra?.onlyIfFulfillable) {
             this.dropUnfulfilled(api, dep, gameId, sourceModId, recommended);
-            return Promise.resolve(undefined);
+            return Bluebird.resolve(undefined);
           } else {
-            return Promise.reject(err);
+            return Bluebird.reject(err);
           }
         })
         // don't cancel the whole process if one dependency fails to install
         .catch(ProcessCanceled, err => {
           if ((err.extraInfo !== undefined) && err.extraInfo.alreadyReported) {
-            return Promise.resolve(undefined);
+            return Bluebird.resolve(undefined);
           }
           const refName = renderModReference(dep.reference, undefined);
           api.showErrorNotification('Failed to install dependency',
@@ -2185,7 +2193,7 @@ class InstallManager {
               errorMessage: err.message,
             },
           });
-          return Promise.resolve(undefined);
+          return Bluebird.resolve(undefined);
         })
         .catch(DownloadIsHTML, () => {
           const refName = renderModReference(dep.reference, undefined);
@@ -2196,7 +2204,7 @@ class InstallManager {
               id: `failed-install-dependency-${refName}`,
               message: refName,
             });
-          return Promise.resolve(undefined);
+          return Bluebird.resolve(undefined);
         })
         .catch(NotFound, err => {
           const refName = renderModReference(dep.reference, undefined);
@@ -2205,17 +2213,17 @@ class InstallManager {
             message: refName,
             allowReport: false,
           });
-          return Promise.resolve(undefined);
+          return Bluebird.resolve(undefined);
         })
         .catch(err => {
           const refName = renderModReference(dep.reference, undefined);
           const notiId = `failed-install-dependency-${refName}`;
           if (err instanceof UserCanceled) {
             if (err.skipped) {
-              return Promise.resolve();
+              return Bluebird.resolve();
             } else {
               abort.abort();
-              return Promise.reject(err);
+              return Bluebird.reject(err);
             }
           } else if (err.code === 'Z_BUF_ERROR') {
             api.showErrorNotification(
@@ -2232,7 +2240,7 @@ class InstallManager {
               id: notiId,
               allowReport: false,
             });
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
 
           if (err.name === 'HTTPError') {
@@ -2252,7 +2260,7 @@ class InstallManager {
               replace: pretty.replace,
             });
           }
-          return Promise.resolve(undefined);
+          return Bluebird.resolve(undefined);
         })
         .then((updatedDependency: IDependency) => {
           log('debug', 'done installing dependency', {
@@ -2295,7 +2303,7 @@ class InstallManager {
                                 sourceModId: string,
                                 dependencies: IDependency[],
                                 recommended: boolean,
-                                silent: boolean): Promise<IDependency[]> {
+                                silent: boolean): Bluebird<IDependency[]> {
     const state: IState = api.getState();
     let downloads: { [id: string]: IDownload } = state.persistent.downloads.files;
 
@@ -2303,7 +2311,7 @@ class InstallManager {
     const stagingPath = installPathForGame(state, gameId);
 
     if (sourceMod?.installationPath === undefined) {
-      return Promise.resolve([]);
+      return Bluebird.resolve([]);
     }
 
     let queuedDownloads: IModReference[] = [];
@@ -2325,13 +2333,13 @@ class InstallManager {
       queuedDownloads = [];
     };
 
-    const queueDownload = (dep: IDependency): Promise<string> => {
-      return Promise.resolve(this.mDependencyDownloadsLimit.do<string>(() => {
+    const queueDownload = (dep: IDependency): Bluebird<string> => {
+      return Bluebird.resolve(this.mDependencyDownloadsLimit.do<string>(() => {
         if (dep.reference.tag !== undefined) {
           queuedDownloads.push(dep.reference);
         }
         return abort.signal.aborted
-          ? Promise.reject(new UserCanceled(false))
+          ? Bluebird.reject(new UserCanceled(false))
           : this.downloadDependencyAsync(
               dep.reference,
               api,
@@ -2346,16 +2354,16 @@ class InstallManager {
               .catch(err => {
                 const idx = queuedDownloads.indexOf(dep.reference);
                 queuedDownloads.splice(idx, 1);
-                return Promise.reject(err);
+                return Bluebird.reject(err);
               });
           }));
     };
 
-    const resumeDownload = (dep: IDependency): Promise<string> => {
-      return Promise.resolve(this.mDependencyDownloadsLimit.do<string>(() =>
+    const resumeDownload = (dep: IDependency): Bluebird<string> => {
+      return Bluebird.resolve(this.mDependencyDownloadsLimit.do<string>(() =>
         abort.signal.aborted
-          ? Promise.reject(new UserCanceled(false))
-          : new Promise((resolve, reject) => {
+          ? Bluebird.reject(new UserCanceled(false))
+          : new Bluebird((resolve, reject) => {
             api.events.emit('resume-download',
               dep.download,
               (err) => err !== null ? reject(err) : resolve(dep.download),
@@ -2364,14 +2372,16 @@ class InstallManager {
     };
 
     const installDownload = (dep: IDependency, downloadId: string)
-        : Promise<string> => {
-      return Promise.resolve(this.mDependencyInstallsLimit.do(() => {
+        : Bluebird<string> => {
+      return Bluebird.resolve(this.mDependencyInstallsLimit.do(() => {
         return abort.signal.aborted
-          ? Promise.reject(new UserCanceled(false))
+          ? Bluebird.reject(new UserCanceled(false))
           : this.withInstructions(api,
                               modName(sourceMod),
                               renderModReference(dep.reference),
-                              dep.extra?.['instructions'], () =>
+                              dep.reference.tag ?? downloadId,
+                              dep.extra?.['instructions'],
+                              recommended, () =>
           this.installModAsync(dep.reference, api, downloadId,
             { choices: dep.installerChoices }, dep.fileList,
             gameId, silent))
@@ -2379,13 +2389,13 @@ class InstallManager {
             if (err instanceof UserCanceled) {
               err.skipped = true;
             }
-            return Promise.reject(err);
+            return Bluebird.reject(err);
           });
         }));
     };
 
     const doDownload = (dep: IDependency) => {
-      let dlPromise = Promise.resolve(dep.download);
+      let dlPromise = Bluebird.resolve(dep.download);
 
       if ((dep.download === undefined) || (downloads[dep.download] === undefined)) {
         if (dep.extra?.localPath !== undefined) {
@@ -2401,7 +2411,7 @@ class InstallManager {
           dlPromise = fs.statAsync(targetPath)
             .then(() => Object.keys(downloads)
                 .find(dlId => downloads[dlId].localPath === fileName))
-            .catch(err => new Promise((resolve, reject) => {
+            .catch(err => new Bluebird((resolve, reject) => {
               api.events.emit('import-downloads',
                 [path.join(stagingPath, sourceMod.installationPath, dep.extra.localPath)],
                 (dlIds: string[]) => {
@@ -2416,44 +2426,44 @@ class InstallManager {
             }));
         } else {
           dlPromise = (dep.lookupResults[0]?.value?.sourceURI ?? '') === ''
-            ? Promise.reject(new ProcessCanceled('Failed to determine download url'))
+            ? Bluebird.reject(new ProcessCanceled('Failed to determine download url'))
             : queueDownload(dep);
         }
       } else if (dep.download === null) {
-        dlPromise = Promise.reject(new ProcessCanceled('Failed to determine download url'));
+        dlPromise = Bluebird.reject(new ProcessCanceled('Failed to determine download url'));
       } else if (downloads[dep.download].state === 'paused') {
         dlPromise = resumeDownload(dep);
       }
       return dlPromise
         .catch(AlreadyDownloaded, err => {
           if (err.downloadId !== undefined) {
-            return Promise.resolve(err.downloadId);
+            return Bluebird.resolve(err.downloadId);
           } else {
             const downloadId = Object.keys(downloads)
               .find(dlId => downloads[dlId].localPath === err.fileName);
             if (downloadId !== undefined) {
-              return Promise.resolve(downloadId);
+              return Bluebird.resolve(downloadId);
             }
           }
-          return Promise.reject(new NotFound(`download for ${renderModReference(dep.reference)}`));
+          return Bluebird.reject(new NotFound(`download for ${renderModReference(dep.reference)}`));
         })
         .then((downloadId: string) => {
           if ((downloadId !== undefined) && (downloads[downloadId]?.state === 'paused')) {
             return resumeDownload(dep);
           } else {
-            return Promise.resolve(downloadId);
+            return Bluebird.resolve(downloadId);
           }
         })
         .then((downloadId: string) => {
           downloads = api.getState().persistent.downloads.files;
 
           if ((downloadId === undefined) || (downloads[downloadId] === undefined)) {
-            return Promise.reject(
+            return Bluebird.reject(
               new NotFound(`download for ${renderModReference(dep.reference)}`));
           }
           if (downloads[downloadId].state !== 'finished') {
             // download not actually finished, may be paused
-            return Promise.reject(new UserCanceled(true));
+            return Bluebird.reject(new UserCanceled(true));
           }
 
           if ((dep.reference.tag !== undefined)
@@ -2467,7 +2477,7 @@ class InstallManager {
             dep.reference = this.updateModRule(api, gameId, sourceModId, dep, {
               ...dep.reference,
               tag: downloads[downloadId].modInfo.referenceTag,
-            }, recommended).reference;
+            }, recommended)?.reference;
 
             // now at this point there may in fact already be a mod for the updated reference tag
             if ((dep.mod === undefined) && (dep.reference !== undefined)) {
@@ -2479,7 +2489,7 @@ class InstallManager {
             log('info', 'downloaded as dependency', { downloadId });
           }
 
-          let queryWrongMD5 = Promise.resolve();
+          let queryWrongMD5 = Bluebird.resolve();
           if ((dep.mod === undefined)
               && (dep.reference.versionMatch !== undefined)
               && !isFuzzyVersion(dep.reference.versionMatch)
@@ -2506,8 +2516,8 @@ class InstallManager {
               { label: 'Use file anyway' },
             ])
             .then(result => (result.action === 'Retry')
-              ? Promise.reject(new ProcessCanceled('retry invalid download'))
-              : Promise.resolve());
+              ? Bluebird.reject(new ProcessCanceled('retry invalid download'))
+              : Bluebird.resolve());
           }
 
           return (dep.mod === undefined)
@@ -2515,12 +2525,12 @@ class InstallManager {
                 .then(() => installDownload(dep, downloadId))
                 .catch(err => {
                   if (dep['reresolveDownloadHint'] === undefined) {
-                    return Promise.reject(err);
+                    return Bluebird.reject(err);
                   }
                   const newState = api.getState();
                   const download = newState.persistent.downloads.files[downloadId];
 
-                  let removeProm = Promise.resolve();
+                  let removeProm = Bluebird.resolve();
                   if (download !== undefined) {
                     const fullPath: string =
                     path.join(downloadPathForGame(newState, download.game[0]), download.localPath);
@@ -2531,7 +2541,7 @@ class InstallManager {
                     .then(() => dep['reresolveDownloadHint']())
                     .then(() => doDownload(dep));
                 })
-            : Promise.resolve(dep.mod.id);
+            : Bluebird.resolve(dep.mod.id);
         });
     };
 
@@ -2545,7 +2555,7 @@ class InstallManager {
 
     const phaseList = Object.values(phases);
 
-    const res: Promise<IDependency[]> = Promise.reduce(phaseList,
+    const res: Bluebird<IDependency[]> = Bluebird.reduce(phaseList,
       (prev: IDependency[], depList: IDependency[], idx: number) => {
         if (depList.length === 0) {
           return prev;
@@ -2555,7 +2565,7 @@ class InstallManager {
                                                doDownload, abort)
           .then((updated: IDependency[]) => {
             if (idx === phaseList.length - 1) {
-              return Promise.resolve(updated);
+              return Bluebird.resolve(updated);
             }
             return toPromise(cb => api.events.emit('deploy-mods', cb))
               .then(() => updated);
@@ -2592,14 +2602,14 @@ class InstallManager {
   }
 
   private updateRules(api: IExtensionApi, gameId: string, sourceModId: string,
-                      dependencies: IDependency[], recommended: boolean): Promise<void> {
+                      dependencies: IDependency[], recommended: boolean): Bluebird<void> {
     dependencies.forEach(dep => {
       const updatedRef: IModReference = { ...dep.reference };
       updatedRef.idHint = dep.mod?.id;
 
       this.updateModRule(api, gameId, sourceModId, dep, updatedRef, recommended);
     });
-    return Promise.resolve();
+    return Bluebird.resolve();
   }
 
   private doInstallDependencyList(api: IExtensionApi,
@@ -2610,7 +2620,7 @@ class InstallManager {
                                   dependencies: IDependency[],
                                   silent: boolean) {
     if (dependencies.length === 0) {
-      return Promise.resolve();
+      return Bluebird.resolve();
     }
 
     interface IDependencySplit {
@@ -2647,7 +2657,7 @@ class InstallManager {
     }
 
     if (success.length === 0) {
-      return Promise.resolve();
+      return Bluebird.resolve();
     }
 
     const context = getBatchContext('install-dependencies', '', true);
@@ -2659,7 +2669,7 @@ class InstallManager {
             .then(updated => this.updateRules(api, gameId, modId,
               [].concat(existing, updated), false));
         } else {
-          return Promise.resolve();
+          return Bluebird.resolve();
         }
       });
   }
@@ -2668,11 +2678,11 @@ class InstallManager {
                          context: IBatchContext,
                          name: string,
                          success: IDependency[],
-                         error: IDependencyError[]): Promise<IDialogResult> {
+                         error: IDependencyError[]): Bluebird<IDialogResult> {
     const remember = context.get<boolean>('remember', null);
 
     if (!!remember){
-      return Promise.resolve<IDialogResult>({
+      return Bluebird.resolve<IDialogResult>({
         action: remember ? 'Install' : 'Don\'t Install',
         input: {},
       });
@@ -2769,7 +2779,7 @@ class InstallManager {
                                   rules: IModRule[],
                                   installPath: string,
                                   silent: boolean)
-                                  : Promise<void> {
+                                  : Bluebird<void> {
     return this.mDependencyQueue(() => {
       const filteredRules = (rules ?? []).filter(
         (rule: IModRule) => ['recommends', 'requires'].includes(rule.type)
@@ -2777,7 +2787,7 @@ class InstallManager {
 
       if (filteredRules.length === 0) {
         api.events.emit('did-install-dependencies', gameId, modId, false);
-        return Promise.resolve();
+        return Bluebird.resolve();
       }
 
       const notificationId = `${installPath}_activity`;
@@ -2827,11 +2837,11 @@ class InstallManager {
     api: IExtensionApi, modName: string,
     success: IDependency[], error: IDependencyError[],
     remember: boolean | null)
-    : Promise<IDialogResult> {
+    : Bluebird<IDialogResult> {
     if (remember === true) {
-      return Promise.resolve({ action: 'Install All', input: {} });
+      return Bluebird.resolve({ action: 'Install All', input: {} });
     } else if (remember === false) {
-      return Promise.resolve({ action: 'Skip', input: {} });
+      return Bluebird.resolve({ action: 'Skip', input: {} });
     }
     let bbcode: string = '';
     if (success.length > 0) {
@@ -2873,7 +2883,7 @@ class InstallManager {
 
   private installRecommendationsQuerySelect(
     api: IExtensionApi, modName: string, success: IDependency[])
-    : Promise<IDialogResult> {
+    : Bluebird<IDialogResult> {
     let bbcode: string = '';
     if (success.length > 0) {
       bbcode += '{{modName}} recommends the installation of additional mods. '
@@ -2921,7 +2931,7 @@ class InstallManager {
                                      rules: IRule[],
                                      installPath: string,
                                      silent: boolean)
-                                     : Promise<void> {
+                                     : Bluebird<void> {
     return this.mDependencyQueue(() => {
       // TODO a lot of code duplication with installDependenciesImpl
       const filteredRules = (rules ?? []).filter(
@@ -2929,7 +2939,7 @@ class InstallManager {
           && !rule.ignored);
 
       if (filteredRules.length === 0) {
-        return Promise.resolve();
+        return Bluebird.resolve();
       }
 
       const notificationId = `${installPath}_activity`;
@@ -2945,7 +2955,7 @@ class InstallManager {
         .then((dependencies) => {
           api.store.dispatch(stopActivity('dependencies', 'gathering'));
           if (dependencies.length === 0) {
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
 
           interface IDependencySplit {
@@ -2970,12 +2980,14 @@ class InstallManager {
 
           // all recommendations already installed
           if ((success.length === 0) && (error.length === 0)) {
-            return Promise.resolve();
+            return Bluebird.resolve();
           }
 
           const context = getBatchContext('install-recommendations', '', true);
+          context.set<number>('num-instructions',
+            success.filter(succ => succ.extra?.['instructions'] !== undefined).length);
           const remember = context.get<boolean>('remember', null);
-          let queryProm: Promise<IDependency[]> = Promise.resolve(success);
+          let queryProm: Bluebird<IDependency[]> = Bluebird.resolve(success);
 
           if (!silent || (error.length > 0)) {
             queryProm = this.installRecommendationsQueryMain(api, name, success, error, remember)
@@ -3030,28 +3042,64 @@ class InstallManager {
   private withInstructions<T>(api: IExtensionApi,
                               sourceName: string,
                               title: string,
+                              id: string,
                               instructions: string,
-                              cb: () => Promise<T>)
-                              : Promise<T> {
+                              recommendations: boolean,
+                              cb: () => Bluebird<T>)
+                              : Bluebird<T> {
     if (!instructions){
       return cb();
     }
 
-    return api.showDialog('info', 'Installation notes for {{title}}', {
-      text: 'The curator of "{{sourceName}}" has provided additional instructions '
-          + 'for installing "{{title}}". You can view these instructions now or '
-          + 'check them later from the instructions column in the collections view.',
-      parameters: {
-        title,
-        sourceName,
-      },
-    }, [
-      { label: 'Later' },
-      { label: 'Show', action: () => {
-        api.ext.showOverlay?.('install-instructions', title, instructions);
-      } },
-    ])
-    .then(() => cb());
+    if (recommendations) {
+      return Bluebird.resolve((async () => {
+          const context = getBatchContext('install-recommendations', '');
+          let action = context.get<string>('remember-instructions');
+          const remaining = context.get<number>('num-instructions') - 1;
+
+          if ((action === null) || (action === undefined)) {
+            let checkboxes: ICheckbox[];
+            if (remaining > 0) {
+              checkboxes = [
+                {
+                  id: 'remember',
+                  value: false,
+                  text: 'Do this for all remaining instructions ({{remaining}} more)'
+                },
+              ];
+            }
+            const result = await api.showDialog('info', title, {
+              text: instructions,
+              checkboxes,
+              parameters: {
+                remaining,
+              },
+            }, [
+              { label: 'Skip' },
+              { label: 'Install' },
+            ]);
+
+            if (result.input['remember']) {
+              context.set('remember-instructions', result.action);
+            }
+            action = result.action;
+          }
+
+          context.set<number>('num-instructions', remaining);
+
+          if (action === 'Install') {
+            return cb();
+          } else {
+            return Bluebird.reject(new UserCanceled(true));
+          }
+        })());
+    } else {
+      api.ext.showOverlay?.(`install-instructions-${id}`, title, instructions, undefined, {
+        id,
+      });
+
+      return cb();
+    }
   }
 
   private installModAsync(requirement: IReference,
@@ -3060,8 +3108,8 @@ class InstallManager {
                           modInfo?: any,
                           fileList?: IFileListItem[],
                           forceGameId?: string,
-                          silent?: boolean): Promise<string> {
-    return new Promise<string>((resolve, reject) => {
+                          silent?: boolean): Bluebird<string> {
+    return new Bluebird<string>((resolve, reject) => {
       const state = api.store.getState();
       const download: IDownload = state.persistent.downloads.files[downloadId];
       if (download === undefined) {
@@ -3081,28 +3129,28 @@ class InstallManager {
     });
   }
 
-  private fixDestination(source: string, destination: string): Promise<string> {
+  private fixDestination(source: string, destination: string): Bluebird<string> {
     // if the source is an existing file an the destination is an existing directory,
     // copyAsync or renameAsync will not work, they expect the destination to be the
     // name of the output file.
     return fs.statAsync(source)
       .then(sourceStat => sourceStat.isDirectory()
-        ? Promise.resolve(destination)
+        ? Bluebird.resolve(destination)
         : fs.statAsync(destination)
           .then(destStat => destStat.isDirectory()
             ? path.join(destination, path.basename(source))
             : destination))
-      .catch(() => Promise.resolve(destination));
+      .catch(() => Bluebird.resolve(destination));
   }
 
-  private transferFile(source: string, destination: string, move: boolean): Promise<void> {
+  private transferFile(source: string, destination: string, move: boolean): Bluebird<void> {
     return fs.ensureDirAsync(path.dirname(destination))
       .then(() => this.fixDestination(source, destination))
       .then(fixedDest => move
         ? fs.renameAsync(source, fixedDest)
           .catch(err => (err.code === 'EXDEV')
             ? fs.copyAsync(source, fixedDest, { noSelfCopy: true })
-            : Promise.reject(err))
+            : Bluebird.reject(err))
         : fs.copyAsync(source, fixedDest, { noSelfCopy: true }));
   }
 
@@ -3119,7 +3167,8 @@ class InstallManager {
     tempPath: string,
     destinationPath: string,
     copies: IInstruction[],
-    gameId: string): Promise<void> {
+    gameId: string): Bluebird<void> {
+    let normalize: Normalize;
 
     const dlPath = downloadPathForGame(api.getState(), gameId);
 
@@ -3138,11 +3187,11 @@ class InstallManager {
                 return prev;
               }, {});
           // for each source, copy or rename to destination(s)
-          return Promise.mapSeries(Object.keys(sourceMap), srcRel => {
+          return Bluebird.mapSeries(Object.keys(sourceMap), srcRel => {
             const sourcePath = path.join(tempPath, srcRel);
             // need to do this sequentially, otherwise we can't use the idx to
             // decide between rename and copy
-            return Promise.mapSeries(sourceMap[srcRel], (dest, idx, len) => {
+            return Bluebird.mapSeries(sourceMap[srcRel], (dest, idx, len) => {
               // 'download' is currently the only supported section
               const destPath = (dest.section === 'download')
                 ? path.join(dlPath, dest.dest)
@@ -3154,7 +3203,7 @@ class InstallManager {
                   .catch(err => (err.code === 'ENOENT')
                     ? this.transferFile(sourcePath, destPath, idx === len - 1)
                       .then(() => true)
-                    : Promise.reject(err))
+                    : Bluebird.reject(err))
                 : this.transferFile(sourcePath, destPath, idx === len - 1)
                   .then(() => true)
               )
@@ -3173,7 +3222,7 @@ class InstallManager {
                         api.store.dispatch(setDownloadHashByFile(dest.dest, md5, fileSize));
                       });
                   } else {
-                    return Promise.resolve();
+                    return Bluebird.resolve();
                   }
                 })
                 .catch(err => {
@@ -3182,7 +3231,7 @@ class InstallManager {
                   } else if (err.code === 'EPERM') {
                     return this.transferFile(sourcePath, destPath, false);
                   } else {
-                    return Promise.reject(err);
+                    return Bluebird.reject(err);
                   }
                 });
             });
