@@ -30,8 +30,8 @@ export interface IInitResult {
 
 type BackendType = 'bundled' | 'custom' | 'extension';
 
-class MultiBackend { // @ts-expect-error
-  private static type = 'backend';
+class MultiBackend { // @ts-ignore the typings are rough
+  private static type = 'backend'; // i18next-node-fs-backend replace with i18next-fs-backend
   private mOptions: any;
   private mServices: any;
   private mCurrentBackend: FSBackend;

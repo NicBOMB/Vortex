@@ -59,7 +59,7 @@ function checkForUpdates(api: IExtensionApi) {
 
       return prev;
     }, []);
-  
+
   let forceRestart: boolean = false;
 
   {
@@ -172,9 +172,8 @@ function installDependency(api: IExtensionApi,
 
 function checkMissingDependencies(api: IExtensionApi,
                                   loadFailures: { [extId: string]: IExtensionLoadFailure[] }) {
-    const missingDependencies = Object.keys(loadFailures)
-      .reduce((prev, extId) => {
-        const deps = loadFailures[extId].filter(fail => fail.id === 'dependency');
+    const missingDependencies = Object.entries(loadFailures).reduce((prev, [extId, extFail]) => {
+        const deps = extFail.filter(fail => fail.id === 'dependency');
         deps.forEach(dep => {
           const depId = dep.args.dependencyId;
           if (prev[depId] === undefined) {

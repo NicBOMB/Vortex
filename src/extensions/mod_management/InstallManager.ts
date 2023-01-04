@@ -1105,7 +1105,7 @@ class InstallManager {
           });
       } catch (err) {
         log('error', 'invalid mod type', { typeId: type.typeId, error: err.message });
-        return Promise.resolve(null);
+        return Bluebird.resolve(null);
       }
     }).then(matches => matches.find(match => match !== null) || '');
   }

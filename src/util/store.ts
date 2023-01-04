@@ -72,7 +72,7 @@ export function createVortexStore(sanityCallback: (err: StateError) => void): Re
 
   ipcMain.on('redux-action', (event, payload) => {
     try {
-      const action = JSON.parse(payload);
+      const action = JSON.parse(JSON.stringify(payload));
       /*
       if (process.env.NODE_ENV === 'development') {
         log('info', 'forwarded action', payload);
