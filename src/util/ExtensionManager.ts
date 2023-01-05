@@ -2219,7 +2219,7 @@ class ExtensionManager {
     const res = fs.readdirSync(extension.path)
       .filter(name => fs.statSync(path.join(extension.path, name)).isDirectory())
       .reduce((prev: { [id: string]: IRegisteredExtension }, name: string) => {
-        if (!(this.mExtensionState[name].enabled ?? true)){
+        if (!(this.mExtensionState[name]?.enabled ?? true)){
           log('debug', 'extension disabled', { name });
           return prev;
         }
@@ -2328,7 +2328,7 @@ class ExtensionManager {
     const loadedExtensions = new Set<string>();
     let dynamicallyLoaded = [];
     return staticExtensions
-      .filter(ext => this.mExtensionState[ext].enabled ?? true)
+      .filter(ext => this.mExtensionState[ext]?.enabled ?? true)
       .map((name: string) => ({
           name,
           namespace: name,

@@ -43,7 +43,7 @@ function validateState(input: any): IPresetsState {
 class PresetManager {
   private mPresets: { [presetId: string]: IPreset } = {};
   private mState: IPresetsState = { presets: {}, processing: '' };
-  private mStepHandlers: Map<PresetStepType, StepCB> = new Map();
+  private mStepHandlers: Map<PresetStepType|string, StepCB> = new Map();
 
   private mStatePath: string;
 
@@ -148,7 +148,7 @@ class PresetManager {
   public now(stepType: PresetStepType, cb: StepCB): boolean {
     const { presetId, stepId } = this.nextStep();
     if (stepId !== undefined) {
-      const step: IPresetStep = this.stepById(presetId, stepId);
+      const step = this.stepById(presetId, stepId);
       if (step.type === stepType) {
         this.invoke(presetId, stepId, cb);
         return true;
@@ -172,19 +172,19 @@ class PresetManager {
     cb?: StepCB,
     forwarded: boolean = false
   ): Promise<boolean> {
-    const step: IPresetStep = this.stepById(presetId, stepId);
+    const step = this.stepById(presetId, stepId);
 
     if (typeof cb !== "function") {
-      if (!this.mStepHandlers.has(step.type)) {
+      cb = this.mStepHandlers.get(step.type);
+      if (!cb) {
         log('info', 'no handler found', { type: step.type, handlers: this.mStepHandlers.keys() });
         return false;
       }
-      cb = this.mStepHandlers.get(step.type);
     }
     log('info', 'processing preset step', { presetId, stepId });
     try {
       // the callback may change the data object as a side effect
-      await cb(step, this.mState.presets[presetId].data);
+      await cb(step as IPresetStep, this.mState.presets[presetId].data);
       log('info', 'done processing preset step', { step, forwarded });
     } catch (err) {
       log('error', 'preset step failed', { step: JSON.stringify(step), error: err.message, process: process.type });
@@ -236,8 +236,7 @@ class PresetManager {
     }
     const incompleteStep = this.mPresets[presetId].steps.find(
       (step) => !(
-        (this.mState.presets[presetId]?.completed ?? [])
-        .includes(step.id)
+        (this.mState.presets[presetId]?.completed ?? []).includes(step.id)
       )
     );
     return incompleteStep?.id ?? '';
@@ -250,10 +249,11 @@ class PresetManager {
   private nextIncompletePreset(): string {
     log('info', 'next incomplete preset', this.mState.processing ?? 'not yet set');
     // find a preset with incomplete steps
-    return this.presetIds()
-      .find(presetId =>
-        this.mPresets[presetId].steps.find(step =>
-          !this.mState.presets[presetId].completed.includes(step.id)) !== undefined);
+    return this.presetIds().find(
+      (presetId) => this.mPresets[presetId].steps.find(
+        (step) => !this.mState.presets[presetId].completed.includes(step.id)
+      ) !== undefined
+    ) ?? '';
   }
 
   private async writeState() {
@@ -262,12 +262,13 @@ class PresetManager {
 
   private nextStep(): { presetId: string, stepId: string } {
     let { processing } = this.mState;
-    let nextStepId = this.nextStepInPreset(processing ?? '');
+    processing ??= '';
+    let nextStepId = this.nextStepInPreset(processing);
     log('info', 'next step', { processing, nextStepId });
 
-    if (nextStepId === undefined) {
-      processing = this.mState.processing = this.nextIncompletePreset();
-      if (processing !== undefined) {
+    if (nextStepId.length === 0) {
+      this.mState.processing = processing = this.nextIncompletePreset();
+      if (processing.length !== 0) {
         nextStepId = this.nextStepInPreset(processing);
       }
     }
@@ -275,8 +276,8 @@ class PresetManager {
     return { presetId: processing, stepId: nextStepId };
   }
 
-  private stepById(presetId: string, stepId: string): IPresetStep {
-    return this.mPresets[presetId].steps.find(step => step.id === stepId);
+  private stepById(presetId: string, stepId: string): IPresetStep|{type: ''} {
+    return this.mPresets[presetId]?.steps?.find?.((step) => step.id === stepId) ?? {type: ''};
   }
 
   private async processNext() {

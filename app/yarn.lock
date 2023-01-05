@@ -1499,9 +1499,9 @@ flux-standard-action@^2.0.0:
     lodash.isplainobject "^4.0.6"
     lodash.isstring "^4.0.1"
 
-fomod-installer@Nexus-Mods/fomod-installer#net6:
-  version "0.7.18"
-  resolved "https://codeload.github.com/Nexus-Mods/fomod-installer/tar.gz/740406a0b042f28461712c8b6cd39e2e5ed0d923"
+fomod-installer@NicBOMB/fomod-installer#net6-only:
+  version "0.7.16"
+  resolved "https://codeload.github.com/NicBOMB/fomod-installer/tar.gz/1f6296e87efe2f4898ec602d2403231ef613ceb0"
   dependencies:
     async "^3.2.2"
     copyfiles "*"
@@ -4317,7 +4317,7 @@ wide-align@^1.1.0, wide-align@^1.1.5:
 
 winapi-bindings@Nexus-Mods/node-winapi-bindings:
   version "2.6.1"
-  resolved "https://codeload.github.com/Nexus-Mods/node-winapi-bindings/tar.gz/f2c6154742d26c142c77d0278396e5d1b6a49e50"
+  resolved "https://codeload.github.com/Nexus-Mods/node-winapi-bindings/tar.gz/59ed97ac1dbb3fa32c0ed796f49f8562f9cb239f"
   dependencies:
     autogypi "^0.2.2"
     node-addon-api "^3.1.0"

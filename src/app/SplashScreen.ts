@@ -5,7 +5,7 @@ import getVortexPath from '../util/getVortexPath';
 import { log } from '../util/log';
 
 class SplashScreen {
-  private mWindow: Electron.BrowserWindow = null;
+  private mWindow: Electron.BrowserWindow;
 
   public fadeOut() {
     // apparently we can't prevent the user from closing the splash with alt-f4...
@@ -34,7 +34,6 @@ class SplashScreen {
           if (!this.mWindow.isDestroyed()) {
             this.mWindow.close();
           }
-          this.mWindow = null;
         });
   }
 
@@ -45,14 +44,12 @@ class SplashScreen {
       const timeout = setTimeout(() => {
         log('warn', 'splash screen taking awfully long');
         resolve?.();
-        resolve = undefined;
       }, 1000);
 
       const onReady = () => {
         clearTimeout(timeout);
         this.mWindow.show();
         resolve?.();
-        resolve = undefined;
       };
 
       this.mWindow = new BrowserWindow({

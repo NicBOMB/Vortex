@@ -181,7 +181,7 @@ class Application {
     const MainWindow = require('./MainWindow').default;
     this.mMainWindow = new MainWindow(this.mStore, this.mArgs.inspector);
     log('debug', 'creating main window');
-    return this.mMainWindow.create(this.mStore).then(webContents => {
+    return this.mMainWindow.create(this.mStore).then((webContents) => {
       log('debug', 'window created');
       this.mExtensions.setupApiMain(this.mStore, webContents);
       setOutdated(this.mExtensions.getApi());

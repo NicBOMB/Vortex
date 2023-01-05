@@ -106,6 +106,7 @@
     "@types/rimraf": "^2.0.3",
     "@types/semver": "^6.2.0",
     "@types/shortid": "^0.0.29",
+    "@types/source-map-support": "^0.5.6",
     "@types/string-template": "^1.0.2",
     "@types/tmp": "^0.1.0",
     "@types/universal-analytics": "^0.4.5",

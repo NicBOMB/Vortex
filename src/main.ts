@@ -57,7 +57,6 @@ function setEnv(key: string, value: string, force?: boolean) {
 if (process.env.NODE_ENV !== 'development') {
   setEnv('NODE_ENV', 'production', true);
 } else {
-
   const rebuildRequire = require('./util/requireRebuild').default;
   rebuildRequire();
 }
@@ -87,8 +86,8 @@ if ((process.platform === 'win32') && (process.env.NODE_ENV !== 'development')) 
         && !envPath.startsWith(programFilesX86);
   };
 
-  process.env['PATH_ORIG'] = process.env['PATH'].slice(0);
-  process.env['PATH'] = process.env['PATH'].split(';')
+  process.env['PATH_ORIG'] = process.env?.['PATH']?.slice?.(0);
+  process.env['PATH'] = process.env?.['PATH']?.split?.(';')
     .filter(pathFilter).join(';');
 }
 
@@ -108,7 +107,7 @@ import {} from './util/requireRebuild';
 
 import Application from './app/Application';
 
-import type { IPresetStep, IPresetStepCommandLine } from './types/IPreset';
+import type { IPresetStepCommandLine } from './types/IPreset';
 
 import commandLine, { relaunch } from './util/commandLine';
 import { sendReportFile, terminate, toError } from './util/errorHandling';
@@ -133,13 +132,6 @@ const handleError = (error: any) => {
 
   terminate(toError(error));
 };
-
-async function firstTimeInit() {
-  // use this to do first time setup, that is: code to be run
-  // only the very first time vortex starts up.
-  // This functionality was introduced but then we ended up solving
-  // the problem in a different way that's why this is unused currently
-}
 
 async function main(): Promise<void> {
   // important: The following has to be synchronous!
@@ -195,12 +187,12 @@ async function main(): Promise<void> {
 
   // async code only allowed from here on out
 
-  if (!presetManager.now('commandline', (step: IPresetStep): Promise<void> => {
-    (step as IPresetStepCommandLine).arguments.forEach(arg => {
+  if (!presetManager.now('commandline', (step: IPresetStepCommandLine): Promise<void> => {
+    step.arguments.forEach((arg) => {
       mainArgs[arg.key] = arg.value ?? true;
     });
     return Promise.resolve();
-  })) {
+  })){
     // if the first step was not a command-line instruction but we encounter one
     // further down the preset queue, Vortex has to restart to process it.
     // this is only relevant for the main process, if the renderer process encounters
@@ -216,9 +208,7 @@ async function main(): Promise<void> {
 
   try {
     await fs.statAsync(getVortexPath('userData'));
-  } catch (err) {
-    await firstTimeInit();
-  }
+  } catch (err){}
 
   process.on('uncaughtException', handleError);
   process.on('unhandledRejection', handleError);
@@ -226,7 +216,6 @@ async function main(): Promise<void> {
   if (process.env.NODE_ENV === 'development') {
     app.commandLine.appendSwitch('remote-debugging-port', DEBUG_PORT);
   }
-
 
   require('@electron/remote/main').initialize();
 
