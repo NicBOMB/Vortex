@@ -127,11 +127,11 @@ export function createErrorReport(type: string, error: IError, context: IErrorCo
 
 function nexusReport(hash: string, type: string, error: IError, labels: string[],
                      context: IErrorContext, apiKey: string, reporterProcess: string,
-                     sourceProcess: string, attachment: string): Promise<IFeedbackResponse> {
+                     sourceProcess: string, attachment: string): Promise<IFeedbackResponse|undefined> {
   const Nexus: typeof NexusT = require('@nexusmods/nexus-api').default;
 
   const referenceId = require('uuid').v4();
-  return Promise.resolve(Nexus.create(apiKey, 'Vortex', getApplication().version, undefined))
+  return Promise.resolve(Nexus.create(apiKey, 'Vortex', getApplication().version, ''))
     .then(nexus => nexus.sendFeedback(
       createTitle(type, error, hash),
       createReport(type, error, context, getApplication().version, reporterProcess, sourceProcess),
@@ -194,7 +194,7 @@ if (ipcRenderer !== undefined) {
   });
 }
 
-export function sendReportFile(fileName: string): Promise<IFeedbackResponse> {
+export function sendReportFile(fileName: string): Promise<IFeedbackResponse|undefined> {
   let reportInfo: any;
   return Promise.resolve(fs.readFile(fileName, { encoding: 'utf8' }))
     .then(reportData => {
@@ -216,7 +216,7 @@ export function sendReportFile(fileName: string): Promise<IFeedbackResponse> {
         }],
       });
     })
-    .then(attachment => {
+    .then((attachment) => {
       const { type, error, labels, reporterId, reportProcess, sourceProcess, context } = reportInfo;
       return sendReport(type, error, context, labels, reporterId,
         reportProcess, sourceProcess, attachment);
@@ -226,7 +226,7 @@ export function sendReportFile(fileName: string): Promise<IFeedbackResponse> {
 export function sendReport(type: string, error: IError, context: IErrorContext,
                            labels: string[],
                            reporterId: string, reporterProcess: string,
-                           sourceProcess: string, attachment: string): Promise<IFeedbackResponse> {
+                           sourceProcess: string, attachment: string): Promise<IFeedbackResponse|undefined> {
   const dialog = process.type === 'renderer' ? remote.dialog : dialogIn;
   const hash = genHash(error);
   if (process.env.NODE_ENV === 'development') {
@@ -285,7 +285,7 @@ function showTerminateError(
 
   const contextNow = { ...globalContext };
 
-  let detail: string = error.details;
+  let detail = error.details;
   if (withDetails) {
     detail = (error.stack || '');
     if (error.path) {
@@ -434,20 +434,20 @@ export function toError(input: IPrettifiedError|any, title?: string,
     case 'object': {
       // object, but not an Error
       let message: string;
-      let stack: string;
-      if (!input || (getAllPropertyNames(input).length === 0)) {
+      let stack = '';
+      if (!input || (getAllPropertyNames(input).length === 0)){
         // this is bad...
         message = `An empty error message was thrown: "${inspect(input)}"`;
-      } else if ((input.error !== undefined) && (input.error instanceof Error)) {
+      } else if ((input.error !== undefined) && (input.error instanceof Error)){
         message = input.error.message;
         stack = input.error.stack;
       } else {
         message = input.message;
-        if (input.message === undefined) {
-          if (input.error !== undefined) {
+        if (input.message === undefined){
+          if (input.error !== undefined){
             // not sure what this is but need to ensure not to drop any information
             message = inspect(input.error);
-          } else if (Object.keys(input).length > 0) {
+          } else if (Object.keys(input).length > 0){
             // wtf is this???
             message = inspect(input);
           } else {
@@ -458,10 +458,10 @@ export function toError(input: IPrettifiedError|any, title?: string,
       }
 
       if (sourceStack !== undefined) {
-        if (stack === undefined) {
-          stack = sourceStack;
-        } else {
+        if (stack) {
           stack += '\n\nReported from:\n' + sourceStack;
+        } else {
+          stack = sourceStack;
         }
       }
 

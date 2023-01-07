@@ -76,17 +76,10 @@ function selfCL(userDataPath?: string): [string, string[]] {
       execPath = path.join(getVortexPath('package'), 'vortex.bat');
     }
 
-    const args = [];
-    /*
-    TODO: This is necessary for downloads to multiple instances to work correctly but
-      it doesn't work until https://github.com/electron/electron/issues/18397 is fixed
-
-    if (userDataPath !== undefined) {
-      args.push('--user-data', userDataPath);
-    }
-    */
-
-    args.push('-d');
+    const args = [
+      ...((userDataPath && [ '--user-data', userDataPath ]) ?? []),
+      '-d'
+    ];
 
     return [execPath, args];
 }
@@ -674,7 +667,7 @@ class EventProxy extends EventEmitter {
       if (typeof(args[args.length - 1]) === 'function') {
         const id = shortid();
         this.mRemoteCallbacks[id] = args[args.length - 1];
-        const newArgs = [].concat(args.slice(0, args.length - 1), id);
+        const newArgs = args.slice(0, args.length - 1).concat(id);
         this.mTarget.send('relay-event-with-cb', eventName, ...newArgs);
       } else {
         this.mTarget.send('relay-event', eventName, ...args);
@@ -757,7 +750,7 @@ class ExtensionManager {
   // or coffescript directly but that would require us shipping the corresponding compilers
   private mExtensionFormats: string[] = ['index.js'];
 
-  constructor(initStore: ThunkStore<IState>, eventEmitter?: NodeJS.EventEmitter) {
+  constructor(initStore: ThunkStore<IState>, eventEmitter: NodeJS.EventEmitter) {
     this.mEventEmitter = eventEmitter;
     if (eventEmitter !== undefined) {
       this.mEventEmitter.setMaxListeners(100);

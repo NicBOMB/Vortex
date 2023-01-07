@@ -180,7 +180,7 @@ function dataToFile(id: string, input: any) {
 
 function zipFiles(files: string[]): Promise<string> {
   if (files.length === 0) {
-    return Promise.resolve(undefined);
+    return Promise.resolve('');
   }
   const Zip: typeof ZipT = require('node-7z');
   const task: ZipT = new Zip();
@@ -209,7 +209,7 @@ export function bundleAttachment(options?: IErrorOptions): Promise<string> {
   if ((options === undefined)
       || (options.attachments === undefined)
       || (options.attachments.length === 0)) {
-    return Promise.resolve(undefined);
+    return Promise.resolve('');
   }
 
   return Promise.reduce(options.attachments, (accum: string[], iter: IAttachment) => {
@@ -229,7 +229,7 @@ export function bundleAttachment(options?: IErrorOptions): Promise<string> {
         });
     }
   }, [])
-    .then(fileNames => zipFiles(fileNames));
+    .then((fileNames) => zipFiles(fileNames));
 }
 
 export const IErrorOptionsDefault: IErrorOptions = {
@@ -269,7 +269,7 @@ export function showError(
   }
   const sourceErr = new Error();
 
-  if (options.extensionName.length === 0) {
+  if ((options?.extensionName?.length ?? 0) === 0) {
     options.extensionName = details?.extensionName ?? options.extensionName;
   }
 
@@ -333,10 +333,11 @@ export function showError(
       })));
   }
 
-  if ((options.attachments?.length ?? 0) > 0 && allowReport) {
+  if (options.attachments !== undefined && allowReport){
     content.text = `${content.text !== undefined ? (content.text + '\n\n') : ''
       }Note: If you report this error, the following data will be added to the report:\n${
-      options.attachments.map(attach => ` - ${attach.description}`).join('\n')}`;
+        (options.attachments).map((attach) => ` - ${attach.description}`).join('\n')
+      }`;
   }
 
   if ((options.extensionName !== undefined)

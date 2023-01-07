@@ -1,5 +1,5 @@
-import {addNotification} from '../actions/notifications';
-import {setMaximized, setWindowPosition,  setWindowSize} from '../actions/window';
+import { addNotification } from '../actions/notifications';
+import { setMaximized, setWindowPosition,  setWindowSize } from '../actions/window';
 import { ThunkStore } from '../types/IExtensionContext';
 import {IState, IWindow} from '../types/IState';
 import Debouncer from '../util/Debouncer';
@@ -73,15 +73,15 @@ class MainWindow {
         const size: number[] = this.mWindow.getSize();
         store.dispatch(setWindowSize({width: size[0], height: size[1]}));
       }
-      return null;
+      return new Promise(()=>null);
     }, 500);
 
     this.mMoveDebouncer = new Debouncer((x: number, y: number) => {
       if ((this.mWindow !== null)) {
         store.dispatch(setWindowPosition({x, y}));
-        return null;
+        return new Promise(()=>null);
       }
-      return null;
+      return new Promise(()=>null);
     }, 500);
   }
 
@@ -120,7 +120,7 @@ class MainWindow {
                   message: 'Vortex failed to start',
                   details: message
                 },
-                {} as IState,
+                undefined,
                 true,
                 'renderer'
               );

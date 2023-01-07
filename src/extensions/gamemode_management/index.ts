@@ -111,7 +111,7 @@ function refreshGameInfo(store: Redux.Store<IState>, gameId: string): Promise<vo
     gameInfoProviders.find(prov => prov.id === expectedKeys[key].provider))));
 
   // do the queries
-  const game: IGameStored =
+  const game =
     store.getState().session.gameMode.known.find(iter => iter.id === gameId);
   const gameDiscovery: IDiscoveryResult =
     store.getState().settings.gameMode.discovered[gameId];
@@ -128,7 +128,7 @@ function refreshGameInfo(store: Redux.Store<IState>, gameId: string): Promise<vo
     }
   };
 
-  return Promise.map(providersToQuery, prov => {
+  return Promise.map(providersToQuery, (prov) => {
     const expires = now + prov.expireMS;
     return prov.query({ ...game, ...gameDiscovery }).then(details => {
       const receivedKeys = Object.keys(details);
@@ -205,7 +205,7 @@ function browseGameLocation(api: IExtensionApi, gameId: string): Promise<void> {
     }, [
       { label: 'Close' },
     ])
-      .then(() => null);
+      .then(() => undefined);
   }
 
   const game = getGame(gameId);
@@ -555,7 +555,7 @@ function init(context: IExtensionContext): boolean {
         message: game.name,
       });
     }
-  }) as any;
+  }) as (game: IGame) => void;
 
   context.registerGameStub = (game: IGame, ext: IExtensionDownloadInfo) => {
     $.extensionStubs.push({ ext, game });
@@ -601,7 +601,7 @@ function init(context: IExtensionContext): boolean {
     const discovered = discoveredGames?.[instanceIds[0]];
     if (discovered !== undefined) {
       try {
-        let targetPath = getGame(instanceIds[0]).getModPaths(discovered.path)[''];
+        let targetPath = getGame(instanceIds[0])?.getModPaths?.(discovered?.path ?? '')[''];
         if (!targetPath.endsWith(path.sep)) {
           targetPath += path.sep;
         }
@@ -737,13 +737,13 @@ function init(context: IExtensionContext): boolean {
       $.gameModeManager.stopSearchDiscovery();
     });
 
-    events.on('refresh-game-info', (gameId: string, callback: (err: Error) => void) => {
+    events.on('refresh-game-info', (gameId: string, callback: (err) => void) => {
       refreshGameInfo(store, gameId)
       .then(() => callback(null))
       .catch(err => callback(err));
     });
 
-    events.on('manually-set-game-location', (gameId: string, callback: (err: Error) => void) => {
+    events.on('manually-set-game-location', (gameId: string, callback: (err) => void) => {
       browseGameLocation(context.api, gameId)
         .then(() => callback(null))
         .catch(err => callback(err));
@@ -777,7 +777,7 @@ function init(context: IExtensionContext): boolean {
           if ((discovery === undefined) || (discovery.path === undefined)) {
             return Promise.reject(new ProcessCanceled('The game is no longer discovered'));
           }
-          getGame(newGameId).getModPaths(discovery.path);
+          getGame(newGameId).getModPaths?.(discovery.path);
         })
         .then(() =>
           $.gameModeManager.setGameMode(oldGameId, newGameId, currentProfileId))
@@ -823,7 +823,7 @@ function init(context: IExtensionContext): boolean {
             }
           }
           // unset profile
-          store.dispatch(setNextProfile(undefined));
+          store.dispatch(setNextProfile(''));
         })
         .finally(() => {
           context.api.dismissNotification(id);
@@ -887,7 +887,7 @@ function init(context: IExtensionContext): boolean {
             .then(() => null);
         } else {
           // if the game is no longer discovered we can't keep this profile as active
-          store.dispatch(setNextProfile(undefined));
+          store.dispatch(setNextProfile(''));
         }
       }
     }

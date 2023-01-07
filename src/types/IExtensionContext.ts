@@ -719,9 +719,8 @@ export interface IExtensionApi {
 
   /**
    * wrapper for api.store.getState() with the benefit that it automatically assigns a type
-   * @deprecated
    */
-  getState: <T extends IState>() => T;
+  getState: () => IState;
 
   /**
    * get a list of extensions currently loaded into Vortex

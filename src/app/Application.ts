@@ -1,9 +1,9 @@
-import {setApplicationVersion, setInstallType, setInstanceId, setWarnedAdmin} from '../actions/app';
+import { setApplicationVersion, setInstallType, setInstanceId, setWarnedAdmin } from '../actions/app';
 import { NEXUS_DOMAIN } from '../extensions/nexus_integration/constants';
 import { STATE_BACKUP_PATH } from '../reducers/index';
 import { ThunkStore } from '../types/IExtensionContext';
 import type { IPresetStep, IPresetStepHydrateState } from '../types/IPreset';
-import {IState} from '../types/IState';
+import { IState } from '../types/IState';
 import { getApplication } from '../util/application';
 import commandLine, {IParameters, ISetItem, relaunch} from '../util/commandLine';
 import { DataInvalid, DocumentsPathMissing, ProcessCanceled,
@@ -39,7 +39,7 @@ import TrayIconT from './TrayIcon';
 import * as msgpackT from '@msgpack/msgpack';
 import Promise from 'bluebird';
 import crashDumpT from 'crash-dump';
-import {app, crashReporter as crashReporterT, dialog, ipcMain, protocol, shell} from 'electron';
+import { app, crashReporter as crashReporterT, dialog, ipcMain, protocol, shell } from 'electron';
 import contextMenu from 'electron-context-menu';
 import isAdmin = require('is-admin');
 import * as _ from 'lodash';
@@ -1058,7 +1058,7 @@ class Application {
         if ((validation.changed.length > 0)
             || (validation.missing.length > 0)) {
           log('info', 'Files were manipulated', validation);
-          return dialog.showMessageBox(null, {
+          return dialog.showMessageBox(getVisibleWindow(), {
             type: 'error',
             title: 'Installation corrupted',
             message: 'Your Vortex installation has been corrupted. '
