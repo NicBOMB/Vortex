@@ -1,4 +1,6 @@
 import safeCreateAction from '../../../actions/safeCreateAction';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 
 export const setMaxDownloads = safeCreateAction(
     'SET_MAX_DOWNLOADS',

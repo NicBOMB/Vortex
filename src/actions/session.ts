@@ -1,6 +1,7 @@
 import { IParameters } from '../util/commandLine';
-
 import safeCreateAction from './safeCreateAction';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 
 const uiOnlyMeta = (process.type === 'renderer')
   ? () => ({ forward: false, scope: 'local' })

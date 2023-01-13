@@ -1,7 +1,8 @@
 import safeCreateAction from '../../../actions/safeCreateAction';
 import { IChunk } from '../types/IChunk';
-
 import { log } from '../../../util/log';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 
 export interface IDictionary {
   [key: string]: any;

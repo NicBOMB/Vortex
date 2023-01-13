@@ -1,79 +1,92 @@
-# Vortex
-
-#### Building from source code
-
-To build from source you have two choices.
-### 1) Automatic (mostly):
-- Download _bootstrap.ps1_ and run as a powershell script
+# Vortex Development Package
+## Automatic Dependency Installation
+### Windows
+- Download `bootstrap.ps1` and run as a powershell script
   - In the dialog that shows up, select a build directory (should be a clean/new one)
   - This script will try to download and install all dependencies, then check out and build vortex
   - The dependencies are not installed headless so you have to click through the dialogs but it's only guaranteed to work if you keep the defaults
-
-### 2) Manual:
-- Before you can build vortex you need to download and install a couple of dependencies. If any of the download links is no longer valid, try google or a search engine of your choice.
-
-##### Node.js
-- Download installer from [nodejs.org](https://nodejs.org) and run the installer
-- Version should not matter, the latest LTS version should be fine
-- Verify that Node has installed successfully by running `node --version` in your _cmd_ or _terminal_
-
-##### Yarn
-- Run `npm install --global yarn`
-- Verify that Yarn has installed successfully by running `yarn --version` in your _cmd_ or _terminal_
-
-##### Git
-- Download installer (64-bit) from [git-scm.com](https://git-scm.com/downloads) and run installer
-- Verify that Git has installed successfully byb running `git --version` in your _cmd_ or _terminal_
-
-##### Python
-- Required for one of the build tools (_node-gyp_). At the time of writing versions _3.7-3.10_ are known to work
-- Download installer (64-bit) from [python.org](https://www.python.org/downloads/) and run installer
-- Make sure to have it added to `PATH`, otherwise defaults are fine.
-  - If you have trouble refer to [How to add Python to PATH variable in Windows](https://www.educative.io/answers/how-to-add-python-to-path-variable-in-windows)
-  - You can disable samples and documentation if you want
-
-##### Visual c++ build tools 2022 or Visual Studio 2022 (Community Edition)
-- Download installer from [visualstudio.microsoft.com](https://visualstudio.microsoft.com/en/downloads/) 
-  - You may have to google around for this as Microsoft tends to change their sitemap all the bloody time
-- In the installer, make sure you enable the build tools themselves, the latest windows SDK (version doesn't actually matter) and ATL headers. Everything else is optional.
-
-##### Set up yarn to use C++ build tools
-- Run `yarn config set msvs_version 2022 --global`
-  - This sets up yarn to use the c++ build tools we just installed, you probably only need to do this if you've also installed other versions of Visual Studio. Can't hurt though
-
-#### Cloning and building the Vortex source code
-- Create and `cd` to an appropriate directory (i.e. _c:\projects_)
-- `git clone https://github.com/Nexus-Mods/Vortex.git` from the created directory
-  - this should create a new directory _vortex_ in the current working directory (i.e. _c:\projects\vortex_)
-- Go into the vortex directory `cd vortex`
-- Switch to an appropriate branch, if necessary
-  - `git checkout some_branch`
-- For development
-  - `yarn install` to install dependencies
-  - `yarn build` to build
-  - `yarn start` to run
-- For production
-  - The scripts (_electron-builder-oneclick.json_ and _electron-builder-advanced.json_) are set up to require code signing with
-    a certificate you don't have so change that
-  - `yarn dist` to build (this will take a while)
-  - Find the installer and an already unpacked version in dist
-
-### If something goes wrong:
-
-The build tools are unfortunately not particularly robust, so the build may break for various reasons (i.e. network problems, dependencies that changed remotely, ...) and leave the checkout in an inconsistent state.
-In that case you will have to see if the error is something that needs to be fixed, then restart from the last step that failed.
-
-The automatic variant will skip dependency download and install if the download was installed previously. If a dependency install failed for some reason or you cancelled it, you will have to manually install that package (see the downloads directory).
-
+### Linux
+#### Arch
+```sh
+sudo pacman -Syu base-devel git npm nodejs node-gyp cmake zlib lz4 zip flatpak-builder
+```
+#### Debian
+(incomplete, PRs welcome)
+```sh
+sudo apt install zlib1g-dev liblz4-dev
+```
+#### Fedora
+(incomplete, PRs welcome)
+```sh
+sudo dnf install zlib-devel lz4-devel
+```
+#### Other
+(PRs welcome)
+```sh
+this is a template
+```
+## Manual Dependency Installation
+- If automatic installation of any dependency fails use the instructions provided for each dependency below.
+- If any of the provided link is no longer valid
+  - Try searching the web or use your package manager.
+  - Make a PR with updated links.
+### Node.js
+- Download and run the installer from [nodejs.org](https://nodejs.org)
+- Version should not matter; the latest and/or LTS version are both fine
+- Verify that Node was installed successfully by running `node --version` in your _cmd_ or _terminal_
+### pnpm
+- Node has started shipping [corepack](https://nodejs.org/api/corepack.html#corepack), a new method for directly installing package managers.
+- Update to the latest version of NodeJS or a version which supports corepack.
+- Run the following commands:
+  - `corepack enable && corepack prepare pnpm@latest --activate`
+- Verify that pnpm was installed successfully with:
+  - `pnpm --version`.
+  - Note:
+     - Running `pnpm -v` from the cloned Vortex repo will list the version of the packageManager specified in [package.json](package.json).
+       - Complex semver ranges don't appear to be supported (yet?)
+### Python
+- Many node modules require node-gyp, which requires python.
+- Download and run the installer (64-bit) from [python.org](https://www.python.org/downloads/).
+- When installing, make sure to tick the box which adds python to the `PATH`.
+- Verify that Python was installed successfully by running `python --version` in your _cmd_ or _terminal_
+### Git
+- Download and run the installer from [git-scm.com](https://git-scm.com/downloads)
+- Verify that Git was installed successfully by running `git --version` in your _cmd_ or _terminal_
+### CMake
+- Download and run the installer from [cmake.org](https://cmake.org/download/)
+- Verify that CMake was installed successfully by running `cmake --version` in your _cmd_ or _terminal_
+### C++ Tools
+### Visual C++ Build Tools 2022 or Visual Studio 2022 (Community Edition)
+- Download and run the installer from [visualstudio.microsoft.com](https://visualstudio.microsoft.com/en/downloads/)
+  - You may have to search Microsoft's website as their sitemap changes frequently.
+  - When installing, make sure you enable the build tools, latest windows SDK and ATL headers. Other components are optional.
+#### Cloning and Installing Sources
+Create and `cd` to an appropriate directory (i.e. `C:\GitHub\Nexus-Mods\`, `/GitHub/Nexus-Mods`) then run the following commands
+```sh
+git clone --recursive https://github.com/NicBOMB/Vortex.git
+cd Vortex
+pnpm i
+```
+Running the following commands will build Vortex, its extensions, and start the app using the built extensions and transpiled sources.
+```sh
+pnpm build
+pnpm start
+```
 ------
 # Further Information
-
-- see [structure.md](structure.md) for an overview of how the project is organized
-- see [https://nexus-mods.github.io/vortex-api](https://nexus-mods.github.io/vortex-api/) for a description of the extension api
-- see [https://wiki.nexusmods.com/index.php/Vortex](https://wiki.nexusmods.com/index.php/Vortex) for usage information
-
+## User Guides
+- See [https://wiki.nexusmods.com/index.php/Vortex](https://wiki.nexusmods.com/index.php/Vortex) for usage information
+## Developer Guides
+- For development
+  - `pnpm install` to install dependencies
+  - `pnpm build` to build
+  - `pnpm start` to run
+- See [structure.md](structure.md) for an extended overview of the project.
+- For production
+  - The scripts ([electron-builder-oneclick.json](electron-builder-oneclick.json) and [electron-builder-advanced.json](electron-builder-advanced.json) require code signing with a certificate you don't have so change those.
+  - `pnpm dist` to make distributable packages (this will take a while)
+    - installers and an unpacked distributable will build into `dist/`
 # Reporting bugs
-
 Please report issues to the issue tracker on github. Please always include at the very least the following information:
 - The exact version of Vortex you're using
 - Your operating system
@@ -83,16 +96,32 @@ Please report issues to the issue tracker on github. Please always include at th
 - The log file (see below)
 - Ideally also the application state (see below)
 
-All data the client generates (including settings and logs) are stored at
+All data the client generates (including settings and logs) are stored at the following filepaths:
 
-_C:\Users\\<username\>\AppData\Roaming\Vortex_ (releases)
+<details><summary>Windows</summary>
+
+`C:\Users\<username>\AppData\Roaming\Vortex` (releases)
 
 or
 
-_C:\Users\\<username\>\AppData\Roaming\vortex\_devel_ (development build)
+`C:\Users\<username>\AppData\Roaming\vortex_devel` (development build)
 
-If you need to report a bug, the following files inside that directory may be useful in addition to the error message displayed on screen:
+</details>
+<details><summary>Linux</summary>
 
-- vortex.log (logs are rotated at a certain size, this is the latest one)
-- state\\* except global_account (that one contains keys and passwords so sensitive information)
-- \<game\>\state\* (if the bug pertains to a specific game)
+`/home/<username>/.config/Vortex` (releases)
+
+or
+
+`/home/<username>/.config/vortex_devel` (development build)
+
+or
+
+TBA (flatpak build)
+
+</details>
+
+If you need to report a bug, the following files inside Vortex's directory may be useful in addition to the error message displayed on screen:
+- `vortex.log` (logs are rotated at a certain size, this is the latest one)
+- `state\*` except `global_account` which contains sensitive information like keys and passwords
+- `<game>\state\*` (if the bug pertains to a specific game)

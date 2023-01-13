@@ -1,5 +1,7 @@
 import safeCreateAction from '../../../actions/safeCreateAction';
 import {ICategory, ICategoryDictionary} from '../types/ICategoryDictionary';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 
 export const loadCategories = safeCreateAction(
   'LOAD_CATEGORIES',

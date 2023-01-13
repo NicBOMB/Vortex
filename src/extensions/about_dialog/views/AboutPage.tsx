@@ -4,18 +4,21 @@ import github from '../../../util/github';
 import {log} from '../../../util/log';
 import MainPage from '../../../views/MainPage';
 
-import { ILicense } from '../types/ILicense';
-
 import * as fs from 'fs';
 import I18next from 'i18next';
 import * as path from 'path';
 import * as React from 'react';
 import { Image, Media, Panel } from 'react-bootstrap';
 import ReactMarkdown from 'react-markdown';
+import { ModuleInfo, ModuleInfos } from 'license-checker';
 import { getApplication } from '../../../util/application';
 import getVortexPath from '../../../util/getVortexPath';
 
-let modules = {};
+interface ILicense extends ModuleInfo {
+  key?: string;
+}
+
+let modules: ModuleInfos = {};
 let ownLicenseText: string = '';
 if (process.type === 'renderer') {
   try {
@@ -101,7 +104,7 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
     const { t } = this.props;
     const { changelog, ownLicense, tag, releaseDate } = this.state;
 
-    const moduleList = Object.keys(modules).map(key => ({ key, ...modules[key] }));
+    const moduleList: ILicense[] = Object.keys(modules).map((key) => ({ key, ...modules[key] }));
 
     const imgPath = path.resolve(getVortexPath('assets'), 'images', 'vortex.png');
 
@@ -183,10 +186,11 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
 
     this.nextState.selectedLicense = modKey;
 
-    const mod: ILicense = modules[modKey];
-    const license = typeof (mod.licenses) === 'string' ? mod.licenses : mod.licenses[0];
+    const mod = modules[modKey];
+    const license = typeof (mod.licenses) === 'string' ? mod.licenses :
+      Array.isArray(mod.licenses) ? mod.licenses[0] : '';
     const licenseFile = mod.licenseFile !== undefined
-      ? path.resolve(getVortexPath('modules'), '..', ...mod.licenseFile)
+      ? path.resolve(getVortexPath('modules'), '..', 'node_modules', ...mod.licenseFile)
       : path.join(getVortexPath('assets'), 'licenses', license + '.md');
     fs.readFile(licenseFile, { }, (err, licenseText) => {
       if (!this.mMounted) {

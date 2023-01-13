@@ -6,7 +6,9 @@ import { IGameStored } from './types/IGameStored';
 
 import { SITE_ID } from './constants';
 
-import createCachedSelector from 're-reselect';
+import createCachedSelector, /* @ts-ignore fewer imports in typings */
+{ ICacheObject, OutputParametricSelector, ParametricSelector, ParametricKeySelector, OutputSelectorFields }
+from 're-reselect'; // @ts-ignore fewer imports in typings
 import { createSelector } from 'reselect';
 
 export function knownGames(state: IState): IGameStored[] {

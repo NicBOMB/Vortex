@@ -1,5 +1,7 @@
 import createAction from '../../../actions/safeCreateAction';
 import { IInstallerInfo, IInstallerState } from '../types/interface';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 
 export const startDialog = createAction('START_FOMOD_DIALOG', (info: IInstallerInfo): any => info);
 

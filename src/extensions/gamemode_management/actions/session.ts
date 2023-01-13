@@ -1,4 +1,6 @@
 import safeCreateAction from '../../../actions/safeCreateAction';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 
 /**
  * sets the list of known/supported games

@@ -1,6 +1,8 @@
 import safeCreateAction from '../../../actions/safeCreateAction';
 import { IDiscoveredTool } from '../../../types/IDiscoveredTool';
 import { IDiscoveryResult } from '../types/IDiscoveryResult';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 
 /**
  * add info about a discovered game

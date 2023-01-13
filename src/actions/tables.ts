@@ -1,6 +1,7 @@
 import {SortDirection} from '../types/SortDirection';
-
 import safeCreateAction from './safeCreateAction';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 
 export const setAttributeVisible = safeCreateAction(
   'SET_ATTRIBUTE_VISIBLE',

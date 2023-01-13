@@ -1,5 +1,6 @@
 import safeCreateAction from './safeCreateAction';
-
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 import VortexInstallType from '../types/VortexInstallType';
 
 const id = (input) => input;

@@ -336,6 +336,11 @@ function showTerminateError(
   return false;
 }
 
+/**
+ * display an error message and quit the application on confirmation.
+ * Use this whenever the application state is unknown and thus
+ * continuing could lead to data loss.
+ */
 export function terminate(error: IError, state?: IState, allowReport?: boolean, source?: string) {
   const dialog = process.type === 'renderer' ? remote.dialog : dialogIn;
 

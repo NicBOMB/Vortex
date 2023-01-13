@@ -1,4 +1,6 @@
 import Bluebird from 'bluebird';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 import safeCreateAction from '../../../actions/safeCreateAction';
 import { IExtensionApi } from '../../../types/IExtensionContext';
 import { batchDispatch } from '../../../util/util';

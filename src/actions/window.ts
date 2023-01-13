@@ -1,4 +1,6 @@
 import safeCreateAction from './safeCreateAction';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 
 const identity = (input) => input;
 

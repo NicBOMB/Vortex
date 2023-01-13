@@ -1,37 +1,54 @@
-let fs = require('fs');
-let checker = require('license-checker');
-let path = require('path');
-
-let basePath = path.join(__dirname, 'app');
+// @ts-check
+const fs = require('fs');
+const checker = require('license-checker');
+const path = require('path');
 
 checker.init(
   {
-    start: basePath,
+    start: './app',
     customPath: './licenseFormat.json',
-    production: true,
+    relativeLicensePath: true,
+    production: true
   },
   function (err, json) {
-    if (err) {
-      return console.error('error', err);
-    }
+    if (err){ return console.error('error', err); }
 
-    const deleteKeys = ['vortex-api', 'vortex'];
-    Object.keys(json).forEach(key => {
-      if (key.startsWith('@types')
-          || ((json[key].publisher !== undefined) && json[key].publisher.startsWith('Black Tree Gaming'))) {
-        deleteKeys.push(key);
-        return;
+    const filtered = Object.entries(json).reduce((prev, [key, value]) => {
+      if (key === ""
+        || value.publisher?.startsWith?.('Black Tree Gaming')
+        || key.startsWith('@types')
+      ){
+        console.log(`skipping module "${key}"`);
+        return prev;
       }
+      if (value.name === ""){ delete value.name; }
+      if (value.version === ""){ delete value.version; }
+      if (value.description === ""){ delete value.description; }
+      if (value.repository === ""){ delete value.repository; }
+      if (value.publisher === ""){ delete value.publisher; }
+      if (value.email === ""){ delete value.email; }
+      if (value.url === ""){ delete value.url; }
+      if (value.licenses === ""){ delete value.licenses; }
+      if (value.licenseFile === ""){ delete value.licenseFile; }
+      delete value.licenseText;
+      delete value.licenseModified;
+      delete value.private;
+      delete value.path;
+      if (value.copyright === ""){ delete value.copyright; }
+      if (value.noticeFile === ""){ delete value.noticeFile; }
+      prev[key] = {
+        ...value,
+        licenseFile: value.licenseFile ?
+          value.licenseFile.split(path.sep).slice(1) :
+          undefined
+      };
+      return prev;
+    }, {});
 
-      // make the license path relative. license-checker has an option
-      // to do that for us but that causes errors
-      if (json[key].licenseFile) {
-        json[key].licenseFile = path.relative(basePath, json[key].licenseFile).split(path.sep);
-      }
-      delete json[key].path;
-    });
-
-    deleteKeys.forEach(key => delete json[key]);
-
-    fs.writeFile(path.join('assets', 'modules.json'), JSON.stringify(json, undefined, 2), { encoding: 'utf-8' }, () => null);
+    fs.writeFile(
+      path.join('assets', 'modules.json'),
+      JSON.stringify(filtered, undefined, 2),
+      { encoding: 'utf-8' },
+      () => null
+    );
   });

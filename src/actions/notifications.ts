@@ -2,10 +2,11 @@ import { DialogActions, DialogType, IDialogContent, IDialogResult } from '../typ
 import { INotification, NotificationDismiss } from '../types/INotification';
 import local from '../util/local';
 import {log} from '../util/log';
-
 import safeCreateAction from './safeCreateAction';
 
 import Promise from 'bluebird';
+// @ts-ignore fewer imports in typings
+import * as reduxAct from 'redux-act';
 import { ipcMain, ipcRenderer } from 'electron';
 import { generate as shortid } from 'shortid';
 
