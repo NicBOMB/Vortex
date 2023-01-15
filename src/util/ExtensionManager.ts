@@ -476,10 +476,13 @@ class ContextProxyHandler implements ProxyHandler<any> {
     });
 
     this.getCalls('requireVersion').forEach(call => {
-      if ((process.env.NODE_ENV !== 'development')
-          && !semver.satisfies(getApplication().version,
-                               call.arguments[0],
-                               { includePrerelease: true })) {
+      if (process.env.NODE_ENV !== 'development' &&
+        !semver.satisfies(
+          getApplication().version,
+          call.arguments[0],
+          { includePrerelease: true }
+        )
+      ){
         incompatibleExtensions[call.extension] ??= [];
         incompatibleExtensions[call.extension].push({
           id: 'unsupported-version'
@@ -1387,7 +1390,7 @@ class ExtensionManager {
 
     const migrations: { [ext: string]: MigrationFunc[] } = {};
 
-    this.mContextProxyHandler.getCalls('registerMigration').forEach(call => {
+    this.mContextProxyHandler.getCalls('registerMigration').forEach((call) => {
       migrations[call.extension] ??= [];
       migrations[call.extension].push(call.arguments[0]);
     });
@@ -1407,7 +1410,7 @@ class ExtensionManager {
             if (migrations[ext.name] === undefined) {
               this.mApi.store.dispatch(setExtensionVersion(ext.name, ext.info.version));
             } else {
-              Bluebird.mapSeries(migrations[ext.name], mig => mig(oldVersion))
+              Bluebird.mapSeries(migrations[ext.name], (mig) => mig(oldVersion))
                 .then(() => {
                   log('info', 'set extension version',
                       { name: ext.name, info: JSON.stringify(ext.info) });
@@ -2114,7 +2117,6 @@ class ExtensionManager {
       conn.on('message', data => {
           const { message, payload } = data;
           if (message === 'log') {
-
             const { level, message, meta } = payload;
             log(level, message, meta);
           } else if (message === 'finished') {

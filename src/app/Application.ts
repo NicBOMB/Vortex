@@ -5,7 +5,7 @@ import { ThunkStore } from '../types/IExtensionContext';
 import type { IPresetStep, IPresetStepHydrateState } from '../types/IPreset';
 import { IState } from '../types/IState';
 import { getApplication } from '../util/application';
-import commandLine, {IParameters, ISetItem, relaunch} from '../util/commandLine';
+import commandLine, { IParameters, ISetItem, relaunch } from '../util/commandLine';
 import { DataInvalid, DocumentsPathMissing, ProcessCanceled,
          UserCanceled } from '../util/CustomErrors';
 import * as develT from '../util/devel';
@@ -17,7 +17,7 @@ import * as fs from '../util/fs';
 import getVortexPath, { setVortexPath } from '../util/getVortexPath';
 import lazyRequire from '../util/lazyRequire';
 import LevelPersist, { DatabaseLocked } from '../util/LevelPersist';
-import {log, setLogPath, setupLogging} from '../util/log';
+import { log, setLogPath, setupLogging } from '../util/log';
 import { prettifyNodeErrorMessage, showError } from '../util/message';
 import migrate from '../util/migrate';
 import presetManager from '../util/PresetManager';
@@ -277,7 +277,6 @@ class Application {
     });
 
     app.on('web-contents-created', (event: Electron.Event, contents: Electron.WebContents) => {
-
       require('@electron/remote/main').enable(contents);
       contents.on('will-attach-webview', this.attachWebView);
     });
@@ -598,7 +597,7 @@ class Application {
   private handleGet(getPaths: string[] | boolean, dbpath: string): Promise<void> {
     if (typeof(getPaths) === 'boolean') {
       fs.writeSync(1, 'Usage: vortex --get <path>\n');
-      return new Promise(()=>(undefined));
+      return new Promise(() => undefined);
     }
 
     let persist: LevelPersist;

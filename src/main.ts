@@ -126,10 +126,7 @@ import presetManager from './util/PresetManager';
 process.env.Path = process.env.Path + path.delimiter + __dirname;
 
 const handleError = (error: any) => {
-  if (Application.shouldIgnoreError(error)) {
-    return;
-  }
-
+  if (Application.shouldIgnoreError(error)){ return; }
   terminate(toError(error));
 };
 
@@ -167,7 +164,7 @@ async function main(): Promise<void> {
       stdio: 'inherit',
       detached: true,
     })
-    .on('error', err => {
+    .on('error', (err) => {
       // TODO: In practice we have practically no information about what we're running
       //       at this point
       dialog.showErrorBox('Failed to run script', err.message);
@@ -222,8 +219,8 @@ async function main(): Promise<void> {
   let fixedT = require('i18next').getFixedT('en');
   try {
     fixedT('dummy');
-  } catch (err) {
-    fixedT = input => input;
+  } catch (err){
+    fixedT = (input) => input;
   }
 
   /* allow application controlled scaling

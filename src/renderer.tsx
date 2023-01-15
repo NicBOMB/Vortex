@@ -382,7 +382,6 @@ function errorHandler(evt: any) {
     // By logging this error here we ensure that even a suppressed error will be reported to
     // user _if_ it managed to prevent the application start. Of course it would be nicer
     // if there was a proper api for that but it's quite the fringe case I think
-
     console.error(error.stack);
     return true;
   } else {
@@ -402,31 +401,22 @@ window.addEventListener('close', () => {
 
 const eventEmitter: NodeJS.EventEmitter = new EventEmitter();
 
-let enhancer: any = null;
-
-if (process.env.NODE_ENV === 'development') {
-
-  const freeze = require('redux-freeze');
-  const devtool = window['__REDUX_DEVTOOLS_EXTENSION__']?.({
+const enhancer = compose(
+  applyMiddleware(
+    forwardToMain,
+    ...middleware,
+    process.env.NODE_ENV === 'development' ?
+    require('redux-freeze') :
+    undefined
+  ),
+  process.env.NODE_ENV === 'development' ?
+    window['__REDUX_DEVTOOLS_EXTENSION__']?.({
       shouldRecordChanges: false,
       autoPause: true,
       shouldHotReload: false,
-    });
-  enhancer = compose(
-    applyMiddleware(
-      forwardToMain,
-      ...middleware,
-      freeze),
-    devtool || ((id: string) => id),
-  );
-} else {
-  enhancer = compose(
-    applyMiddleware(
-      forwardToMain,
-      ...middleware,
-    ),
-  );
-}
+    }) || (id => id) :
+  undefined,
+);
 
 let tFunc: TFunction = fallbackTFunc;
 let startupFinished: () => void;

@@ -46,6 +46,9 @@
     "no-irregular-whitespace": "error",
     "no-constant-condition": "error",
     "prefer-spread": "error",
+    "space-before-blocks": { "functions": "never", "keywords": "always", "classes": "never" },
+    "space-infix-ops": ["error", { "int32Hint": false }],
+    "keyword-spacing": { "before": true, "after": true },
 
     "@typescript-eslint/no-inferrable-types": "on",
     "@typescript-eslint/no-explicit-any": "on",

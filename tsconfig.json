@@ -5,11 +5,6 @@
         "module": "commonjs",
         "moduleResolution": "node",
         "allowJs": true,
-        "noFallthroughCasesInSwitch": true,
-        "noImplicitAny": false,
-        "noImplicitThis": true,
-        "noImplicitOverride": true,
-        "noUnusedLocals": true,
         "removeComments": true,
         "preserveConstEnums": true,
         "rootDir": "./src",
@@ -18,8 +13,18 @@
         "inlineSourceMap": true,
         "inlineSources": true,
         "skipLibCheck": true,
-        "strictNullChecks": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+
+        "allowUnreachableCode": false,
+        "exactOptionalPropertyTypes": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": false,
+        "noImplicitThis": true,
+        "noImplicitOverride": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "noUncheckedIndexedAccess": true,
+        "noUnusedLocals": true,
+        "strict": true
     },
     "files": [
       "typings.custom/index.d.ts"

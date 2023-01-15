@@ -27,8 +27,8 @@ class EpicGamesLauncher implements IGameStore {
   public name: string = STORE_NAME;
   public priority: number = STORE_PRIORITY;
   private mDataPath: Promise<string>;
-  private mLauncherExecPath: string;
-  private mCache: Promise<IGameStoreEntry[]>;
+  private mLauncherExecPath: string = '';
+  private mCache: Promise<IGameStoreEntry[]> = new Promise(()=>[]);
 
   constructor() {
     if (process.platform === 'win32') {
@@ -37,14 +37,18 @@ class EpicGamesLauncher implements IGameStore {
         const epicDataPath = winapi.RegGetValue('HKEY_LOCAL_MACHINE',
           'SOFTWARE\\WOW6432Node\\Epic Games\\EpicGamesLauncher',
           'AppDataPath');
-        this.mDataPath = Promise.resolve(epicDataPath.value as string);
-      } catch (err) {
+        if (typeof epicDataPath.value === "string"){
+          this.mDataPath = Promise.resolve(epicDataPath.value);
+        } else {
+          throw new Error("The Epic Games 'AppDataPath' does not contain a path string!");
+        }
+      } catch (err){
         log('info', 'Epic games launcher not found', { error: err.message });
-        this.mDataPath = Promise.resolve(undefined);
+        this.mDataPath = Promise.resolve('');
       }
     } else {
       // TODO: Is epic launcher even available on non-windows platforms?
-      this.mDataPath = Promise.resolve(undefined);
+      this.mDataPath = Promise.resolve('');
     }
   }
 
@@ -123,24 +127,24 @@ class EpicGamesLauncher implements IGameStore {
     });
   }
 
-  public getGameStorePath(): Promise<string> {
-    const getExecPath = () => {
-      try {
-        const epicLauncher = winapi.RegGetValue('HKEY_LOCAL_MACHINE',
-          'SOFTWARE\\Classes\\com.epicgames.launcher\\DefaultIcon',
-          '(Default)');
-        const val = epicLauncher.value;
-        this.mLauncherExecPath = val.toString().split(',')[0];
-        return Promise.resolve(this.mLauncherExecPath);
-      } catch (err) {
-        log('info', 'Epic games launcher not found', { error: err.message });
-        return Promise.resolve(undefined);
-      }
-    };
+  private getExecPath (){
+    try {
+      const epicLauncher = winapi.RegGetValue('HKEY_LOCAL_MACHINE',
+        'SOFTWARE\\Classes\\com.epicgames.launcher\\DefaultIcon',
+        '(Default)');
+      const val = epicLauncher.value;
+      this.mLauncherExecPath = val.toString().split(',')[0];
+      return Promise.resolve(this.mLauncherExecPath);
+    } catch (err){
+      log('info', 'Epic games launcher not found', { error: err.message });
+      return Promise.resolve('');
+    }
+  };
 
-    return (!!this.mLauncherExecPath)
+  public getGameStorePath (): Promise<string> {
+    return (this.mLauncherExecPath)
       ? Promise.resolve(this.mLauncherExecPath)
-      : getExecPath();
+      : this.getExecPath();
   }
 
   private executable() {
@@ -151,7 +155,7 @@ class EpicGamesLauncher implements IGameStore {
       : 'EpicGamesLauncher';
   }
 
-  private parseManifests(): Promise<IGameStoreEntry[]> {
+  private parseManifests(): Promise<IGameStoreEntry[]|any[]> {
     let manifestsLocation;
     return this.mDataPath
       .then(dataPath => {
@@ -201,7 +205,4 @@ class EpicGamesLauncher implements IGameStore {
   }
 }
 
-const instance: IGameStore =
-  process.platform === 'win32' ?  new EpicGamesLauncher() : undefined;
-
-export default instance;
+export default new EpicGamesLauncher();

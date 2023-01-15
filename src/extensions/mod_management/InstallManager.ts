@@ -132,7 +132,7 @@ function nop() {
 }
 
 function validateVariantName(t: TFunction, content: IDialogContent): IConditionResult[] {
-  const variantName = content.input.find(inp => inp.id === 'variant')?.value ?? '';
+  const variantName = content.input?.find?.(inp => inp.id === 'variant')?.value ?? '';
 
   if ((variantName.length < MIN_VARIANT_NAME) || (variantName.length > MAX_VARIANT_NAME)) {
     return [{
@@ -158,7 +158,7 @@ function validateVariantName(t: TFunction, content: IDialogContent): IConditionR
 class InstallManager {
   private mInstallers: IModInstaller[] = [];
   private mGetInstallPath: (gameId: string) => string;
-  private mTask: Zip;
+  private mTask: Zip = new Zip();
   private mQueue: Bluebird<void>;
   private mDependencyInstalls: { [modId: string]: () => void } = {};
   private mDependencyDownloadsLimit: ConcurrencyLimiter =
@@ -178,7 +178,7 @@ class InstallManager {
         if (profile === undefined) {
           return Bluebird.reject(new ProcessCanceled('No game active'));
         }
-        const { mods } = api.store.getState().persistent;
+        const { mods } = api.getState().persistent;
         const collection = mods[profile.gameId]?.[dependentId];
 
         if (collection === undefined) {
@@ -187,8 +187,9 @@ class InstallManager {
 
         const instPath = this.mGetInstallPath(profile.gameId);
 
-        const filtered = rules.filter(iter =>
-          collection.rules.find(rule => _.isEqual(iter, rule)) !== undefined);
+        const filtered = rules.filter((iter) =>
+          collection.rules?.find?.((rule) => _.isEqual(iter, rule)) !== undefined
+        );
 
         if (recommended) {
           return this.withDependenciesContext('install-recommendations', () =>
@@ -224,7 +225,8 @@ class InstallManager {
     id: string,
     priority: number,
     testSupported: TestSupported,
-    install: InstallFunc) {
+    install: InstallFunc
+  ){
     this.mInstallers.push({ id, priority, testSupported, install });
     this.mInstallers.sort((lhs: IModInstaller, rhs: IModInstaller): number => {
       return lhs.priority - rhs.priority;
@@ -237,10 +239,6 @@ class InstallManager {
                   installChoices?: any,
                   progress?: (entries: string[], percent: number) => void)
                   : Bluebird<IInstallResult> {
-    if (this.mTask === undefined) {
-      this.mTask = new Zip();
-    }
-
     let extractProm: Bluebird<any>;
     if (FILETYPES_AVOID.includes(path.extname(archivePath).toLowerCase())) {
       extractProm = Bluebird.reject(new ArchiveBrokenError('file type on avoidlist'));
@@ -299,7 +297,7 @@ class InstallManager {
               fileList, tempPath, gameId,
               (perc: number) => {
                 log('info', 'progress', perc);
-                progress([], perc);
+                progress?.([], perc);
               },
               installChoices,
               unattended,
@@ -346,11 +344,6 @@ class InstallManager {
     unattended?: boolean,
     forceInstaller?: string,
     allowAutoDeploy?: boolean): void {
-
-    if (this.mTask === undefined) {
-      this.mTask = new Zip();
-    }
-
     const fullInfo = { ...info };
     let rules: IRule[] = [];
     let overrides: string[] = [];
@@ -410,7 +403,7 @@ class InstallManager {
           },
         });
       }).catch(() => null))
-      .then(gameId => {
+      .then((gameId) => {
         if (installGameId === 'site') {
           // install an already-downloaded extension
           return api.emitAndAwait('install-extension-from-download', archiveId)
@@ -964,12 +957,17 @@ class InstallManager {
     if (FILETYPES_AVOID.includes(path.extname(archivePath).toLowerCase())) {
       extractProm = Bluebird.reject(new ArchiveBrokenError('file type on avoidlist'));
     } else {
-      extractProm = this.mTask.extractFull(archivePath, tempPath, {ssc: false},
-                                    progress,
-                                    () => this.queryPassword(api.store) as any)
-          .catch((err: Error) => this.isCritical(err.message)
+      extractProm = this.mTask.extractFull(
+        archivePath,
+        tempPath,
+        {ssc: false},
+        progress, // @ts-ignore FIXME: Bluebird is not Bluebird because this Bluebird is not that Bluebird, smh
+        this.queryPassword(api.store)
+      ).catch(
+          (err: Error) => this.isCritical(err.message)
             ? Bluebird.reject(new ArchiveBrokenError(err.message))
-            : Bluebird.reject(err));
+            : Bluebird.reject(err)
+      );
     }
 
     return extractProm
@@ -1094,7 +1092,7 @@ class InstallManager {
 
     return Bluebird.mapSeries(sorted, (type: IModType): Bluebird<string> => {
       if (found) {
-        return Bluebird.resolve<string>(null);
+        return Bluebird.resolve('');
       }
 
       try {
@@ -1104,12 +1102,12 @@ class InstallManager {
               found = true;
               return Bluebird.resolve(type.typeId);
             } else {
-              return Bluebird.resolve(null);
+              return Bluebird.resolve('');
             }
           });
       } catch (err) {
         log('error', 'invalid mod type', { typeId: type.typeId, error: err.message });
-        return Bluebird.resolve(null);
+        return Bluebird.resolve('');
       }
     }).then(matches => matches.find(match => match !== null) || '');
   }
@@ -1154,26 +1152,31 @@ class InstallManager {
     });
   }
 
-  private queryPassword(store: ThunkStore<any>): Bluebird<string> {
+  private queryPassword(store: ThunkStore<IState>) {
     return new Bluebird<string>((resolve, reject) => {
-      store
-          .dispatch(showDialog(
-              'info', 'Password Protected',
-              {
-                input: [{
-                  id: 'password',
-                  type: 'password',
-                  value: '',
-                  label: 'A password is required to extract this archive',
-                }],
-              }, [ { label: 'Cancel' }, { label: 'Continue' } ]))
-          .then((result: IDialogResult) => {
-            if (result.action === 'Continue') {
-              resolve(result.input['password']);
-            } else {
-              reject(new UserCanceled());
-            }
-          });
+      store.dispatch(
+        showDialog(
+          'info',
+          'Password Protected',
+          {
+            input: [{
+              id: 'password',
+              type: 'password',
+              value: '',
+              label: 'A password is required to extract this archive',
+            }],
+          },
+          [ { label: 'Cancel' }, { label: 'Continue' } ]
+        )
+      ).then(
+        (result) => {
+          if (result.action === 'Continue'){
+            resolve(result.input['password']);
+          } else {
+            reject(new UserCanceled());
+          }
+        }
+      );
     });
   }
 
@@ -2553,7 +2556,11 @@ class InstallManager {
 
     const phases: { [phase: number]: IDependency[] } = {};
 
-    dependencies.forEach(dep => (phases[dep.phase ?? 0] ??= []).push(dep));
+    dependencies.forEach((dep) => {
+      const pos = dep.phase ?? 0;
+      phases[pos] ??= [];
+      phases[pos].push(dep);
+    });
 
     const abort = new AbortController();
 

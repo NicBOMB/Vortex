@@ -4,8 +4,8 @@
   - *package.json*: the vortex_devel project file
     - scripts: The most common/convenient are scripts are described below.
       - build: Builds the rest of Vortex before transpiling Vortex's sources.
-      - buildwatch: Transpiles Vortex's sources as changes are made.
       - build_api: Creates the typings of Vortex's sources in the api/lib directory.
+      - devel: Transpiles Vortex's sources using strict settings.
       - start: Launches electron in development mode.
       - dist: Builds and packages all extensions, updates all assets, transpiles Vortex's sources
       - lint: Formats Vortex's sources. Temporarily disabled. The linting configuration will return.

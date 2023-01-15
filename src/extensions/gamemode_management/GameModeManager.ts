@@ -86,7 +86,7 @@ class GameModeManager {
   public attachToStore(store: Redux.Store<IState>) {
     this.mStore = store;
 
-    const gamesStored: IGameStored[] = this.mKnownGames.map(this.storeGame);
+    const gamesStored = this.mKnownGames.map(this.storeGame);
     store.dispatch(setKnownGames(gamesStored));
     // we used to activate the game mode right here but there is another
     // call to do this in the "once" CB of gamemode_management so it's

@@ -76,12 +76,12 @@ function transformError(err: any): Error {
                           + 'some will be inaccessible, just ignore those.');
   }
 
-  if (result === undefined) {
-    result = new Error(
+  result ??= new Error(
       (err.Message !== undefined)
         ? err.Message
-        : 'unknown error: ' + util.inspect(err));
-  }
+        : 'unknown error: ' + util.inspect(err)
+  );
+
   [
     { in: 'StackTrace', out: 'stack' },
     { in: 'FileName', out: 'path' },
@@ -227,7 +227,7 @@ function createConnection(ipcPath: string, tries: number = 5): Promise<net.Socke
 
 class ConnectionIPC {
   public static async bind(): Promise<ConnectionIPC> {
-    let proc: ChildProcess = null;
+    let proc: ChildProcess;
     let onResolve: () => void;
     let onReject: (err: Error) => void;
     const connectedPromise = new Promise<void>((resolve, reject) => {

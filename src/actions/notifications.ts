@@ -1,7 +1,7 @@
 import { DialogActions, DialogType, IDialogContent, IDialogResult } from '../types/IDialog';
 import { INotification, NotificationDismiss } from '../types/INotification';
 import local from '../util/local';
-import {log} from '../util/log';
+import { log } from '../util/log';
 import safeCreateAction from './safeCreateAction';
 
 import Promise from 'bluebird';
@@ -126,10 +126,6 @@ export function setupNotificationSuppression(cb: (id: string) => boolean) {
 
 /**
  * show a notification
- *
- * @export
- * @param {INotification} notification
- * @returns
  */
 export function addNotification(notification: INotification) {
   return (dispatch) => {
@@ -199,13 +195,6 @@ class DialogCallbacks {
 
 /**
  * show a dialog
- *
- * @export
- * @param {DialogType} type
- * @param {string} title
- * @param {IDialogContent} content
- * @param {IDialogActions} actions
- * @returns
  */
 export function showDialog(type: DialogType, title: string,
                            content: IDialogContent, actions: DialogActions,

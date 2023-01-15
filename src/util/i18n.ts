@@ -1,20 +1,19 @@
 import { IExtension } from '../extensions/extension_manager/types';
 
 import * as fs from './fs';
+import { log } from './log';
 import getVortexPath from './getVortexPath';
 
-import Bluebird from 'bluebird';
-import I18next, { i18n, TOptions } from 'i18next';
-import FSBackend from 'i18next-node-fs-backend';
+import I18next, { i18n, PostProcessorModule, BackendModule, Services, TOptions, TFunction } from 'i18next';
+import FSBackend from 'i18next-fs-backend';
 import * as path from 'path';
 import { initReactI18next } from 'react-i18next';
 
-type TFunction = typeof I18next.t;
-
 let debugging = false;
 let currentLanguage = 'en';
-const fallbackTFunc: TFunction =
-  str => (Array.isArray(str) ? str[0].toString() : str.toString()) as any;
+const fallbackTFunc: TFunction = (str) => (
+  Array.isArray(str) ? str[0].toString() : str.toString()
+);
 
 let actualT: TFunction = fallbackTFunc;
 
@@ -30,51 +29,49 @@ export interface IInitResult {
 
 type BackendType = 'bundled' | 'custom' | 'extension';
 
-class MultiBackend { // @ts-ignore the typings are rough
-  private static type = 'backend'; // i18next-node-fs-backend replace with i18next-fs-backend
-  private mOptions: any;
-  private mServices: any;
-  private mCurrentBackend: FSBackend;
-  private mLastReadLanguage: string;
-  private mBackendType: BackendType;
+class MultiBackend implements BackendModule {
+  public type: BackendModule["type"] = "backend";
+  private mServices: Services;
+  private mOptions: object;
+  private mCurrentBackend?: FSBackend;
+  private mLastReadLanguage?: string;
+  private mBackendType?: BackendType;
 
-  constructor(services, options) {
-    this.init(services, options);
-  }
-
-  public init(services, options) {
-    this.mOptions = options;
+  constructor (services: Services, options: object){
     this.mServices = services;
+    this.mOptions = options;
+    log('info', 'i18n Backend Options', options);
   }
 
-  public read(language: string, namespace: string, callback) {
+  public init: BackendModule['init'] = (services, options) => {
+    this.mServices = services;
+    this.mOptions = options;
+    log('info', 'i18n Backend Options', options);
+  }
+
+  public read: BackendModule['read'] = (language, namespace, callback) => {
     const {backendType, extPath} = this.backendType(language);
-    if ((backendType !== this.mBackendType)
-        || ((backendType === 'extension')
-            && (language !== this.mLastReadLanguage))) {
+    if (backendType !== this.mBackendType ||
+      (backendType === 'extension' && language !== this.mLastReadLanguage)
+    ){
       this.mCurrentBackend = this.initBackend(backendType, extPath);
     }
 
     this.mLastReadLanguage = language;
-    this.mCurrentBackend.read(language, namespace, callback);
+    this.mCurrentBackend?.read?.(language, namespace, callback);
   }
 
-  private initBackend(type: BackendType, extPath: string) {
+  private initBackend (type: BackendType, extPath: string){
     const res = new FSBackend();
 
-    let basePath: string;
-    if (type === 'bundled') {
-      basePath = this.mOptions.bundled;
-    } else if (type === 'custom') {
-      basePath = this.mOptions.user;
-    } else {
-      basePath = extPath;
-    }
+    const basePath =
+    (type === 'bundled') ? this.mOptions.bundled :
+    (type === 'custom') ? this.mOptions.user :
+    extPath;
 
     res.init(this.mServices, {
       loadPath: path.join(basePath, '{{lng}}', '{{ns}}.json'),
-      addPath: path.join(basePath, '{{lng}}','{{ns}}.missing.json'),
-      jsonIndent: 2,
+      addPath: path.join(basePath, '{{lng}}','{{ns}}.missing.json')
     });
 
     this.mBackendType = type;
@@ -112,16 +109,13 @@ class MultiBackend { // @ts-ignore the typings are rough
   }
 }
 
-class HighlightPP {
-  public name: string;
-  public type: 'postProcessor';
+class HighlightPP implements PostProcessorModule {
+  public name: PostProcessorModule['name'] = 'HighlightPP';
+  public type: PostProcessorModule['type'] = 'postProcessor';
 
-  constructor() {
-    this.type = 'postProcessor';
-    this.name = 'HighlightPP';
-  }
+  constructor() {}
 
-  public process(value: string, key, options, translator) {
+  public process: PostProcessorModule['process'] = (value: string, key, options, translator) => {
     if (value.startsWith('TT:')) {
       console.trace('duplicate translation', key, value);
     }
@@ -131,83 +125,66 @@ class HighlightPP {
 
 /**
  * initialize the internationalization library
- *
- * @export
- * @param {string} language
- * @returns {I18next.I18n}
  */
-function init(language: string, translationExts: () => IExtension[]): Bluebird<IInitResult> {
+function init(language: string, translationExts: () => IExtension[]): Promise<IInitResult> {
   // reset to english if the language isn't valid
   try {
-    (new Date()).toLocaleString(language);
-  } catch (err) {
+    new Date().toLocaleString(language);
+  } catch {
     language = 'en';
   }
 
   currentLanguage = language;
 
-  const i18nObj = I18next;
-  if (process.env.HIGHLIGHT_I18N === 'true') {
-    i18nObj.use(new HighlightPP());
+  if (process.env['HIGHLIGHT_I18N'] === 'true') {
+    I18next.use(new HighlightPP());
   }
-  i18nObj.use(MultiBackend as any)
-    .use(initReactI18next)
-    ;
+  I18next.use(MultiBackend).use(initReactI18next);
 
-  return Bluebird.resolve(i18nObj.init(
-    {
-      lng: language,
+  return new Promise((resolve, reject) => I18next.init({
       fallbackLng: 'en',
       fallbackNS: 'common',
-
       ns: ['common'],
       defaultNS: 'common',
-
       nsSeparator: ':::',
       keySeparator: '::',
-
       debug: false,
-      postProcess: (process.env.HIGHLIGHT_I18N === 'true') ? 'HighlightPP' : false,
-
-      react: {
-        // afaict this is simply broken at this time. With this enabled the React.Suspense will
-        // render the fallback on certain operations after the UI has been started,
-        // why I don't know, and that unmounts all components in the dom but it doesn't seem to
-        // fire the componentDidUnmount lifecycle functions meaning we can't stop delayed
-        // operations that will then break since the component is unmounted
-        useSuspense: false,
-      } as any,
-
+      postProcess: ((process.env['HIGHLIGHT_I18Nlng'] === 'true') ? 'HighlightPP' : false),
+      react: { useSuspense: false },
       saveMissing: debugging,
       saveMissingTo: 'current',
-
-      missingKeyHandler: (lng, ns, key, fallbackValue) => {
+      missingKeyHandler: (
+        lngs,
+        ns,
+        key,
+        fallbackValue
+      ) => {
         if (missingKeys[ns] === undefined) {
           missingKeys[ns] = {};
         }
         missingKeys[ns][key] = key;
       },
-
-      interpolation: {
-        escapeValue: false,
-      },
-
+      interpolation: { escapeValue: false },
       backend: {
         bundled: getVortexPath('locales'),
         user: path.normalize(path.join(getVortexPath('userData'), 'locales')),
-        translationExts,
-      },
-    }))
-    .tap(tFunc => { actualT = tFunc; })
-    .then(tFunc => Bluebird.resolve({
-      i18n: i18nObj,
-      tFunc,
-    }))
-    .catch((error) => ({
-      i18n: i18nObj,
-      tFunc: fallbackTFunc,
-      error,
-    }));
+        translationExts
+      }
+    }, (err, t) => {
+      if (err){
+        reject({
+          i18n: I18next,
+          tFunc: actualT = fallbackTFunc,
+          err
+        });
+      } else {
+        resolve({
+          i18n: I18next,
+          tFunc: actualT = t
+        });
+      }
+    }
+  ));
 }
 
 export function getCurrentLanguage() {
@@ -245,7 +222,7 @@ export class TString implements ITString {
   private mKey: string;
   private mOptions: TOptions;
 
-  constructor(key: string, options: TOptions, namespace: string) {
+  constructor(key: string, options: TOptions|undefined, namespace: string) {
     this.mKey = key;
     this.mOptions = options ?? {};
     if (this.mOptions.ns === undefined) {
@@ -253,15 +230,15 @@ export class TString implements ITString {
     }
   }
 
-  public get key(): string {
+  public get key (): string {
     return this.mKey;
   }
 
-  public get options(): TOptions {
+  public get options (): TOptions {
     return this.mOptions;
   }
 
-  public toString(): string {
+  public toString (): string {
     return this.mKey;
   }
 }
@@ -291,9 +268,6 @@ export function preT(t: TFunction,
                      key: string | string[] | ITString,
                      options?: TOptions,
                      onlyTString?: boolean) {
-  if ([undefined, null].includes(key)) {
-    return '';
-  }
   if (typeof(key) === 'string') {
     if (onlyTString === true) {
       return key;
