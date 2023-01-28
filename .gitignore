@@ -1,45 +1,23 @@
-**/node_modules/*
-typings
-dist
-dist_custom
-dist_portable
-dist_web
-out
-doc
-coverage
+# User-specific files
+.env
 .vscode
 *.VC.db
-app/bundledPlugins
-attachments
-sourcemaps
-.env
 **/*.kate-swp
 **/*.kateproject*
 
-# User-specific files
-*.suo
-
 # auto generated
-auto.gypi
-auto-top.gypi
-npm-debug.log*
-.DS_Store
-yarn-error.log
+**/npm-debug.log
+**/yarn-error.log
 
 # temporary fonts directory used during font-svg generation
 /fonts/
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-api/lib/
-build/
-bld/
-[Oo]bj/
-lib/cpp/loot/loot/
-lib/cpp/loot/loot_api/docs/
+**/node_modules/*
+dist
+dist_custom
+dist_portable
+dist_web
 icons/fontawesome/
 icons/Font-Awesome-SVG-PNG-master/
 icons/fontawesome/
@@ -47,7 +25,4 @@ icons/Nucleo_Colored/
 icons/Nucleo_Glyph/
 icons/Nucleo_Outline/
 icons/nucleo-standard-license.txt
-BuildState*.json
-tools/stackmap/*.vsix
-changelog_*.txt
 eslint.log

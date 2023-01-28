@@ -6,7 +6,7 @@ const path = require('path');
 checker.init(
   {
     start: './app',
-    customPath: './licenseFormat.json',
+    customPath: './updateLicensesFormat.json',
     relativeLicensePath: true,
     production: true
   },
@@ -20,6 +20,8 @@ checker.init(
       ){
         console.log(`skipping module "${key}"`);
         return prev;
+      } else {
+        console.log(`including module "${key}"`);
       }
       if (value.name === ""){ delete value.name; }
       if (value.version === ""){ delete value.version; }

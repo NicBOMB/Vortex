@@ -207,8 +207,8 @@ class ProfileView extends ComponentEx<IProps, IViewState> {
   private setShortcut = (profileId: string) => {
     const { t, profiles } = this.props;
     const profile = profiles[profileId];
-    const appDir = (process.env.NODE_ENV === 'development')
-      ? path.join(process.env.ProgramFiles, 'Black Tree Gaming Ltd', 'Vortex')
+    const appDir = (process.env['NODE_ENV'] === 'development')
+      ? path.join(process.env['ProgramFiles'], 'Black Tree Gaming Ltd', 'Vortex')
       : path.dirname(getVortexPath('exe'));
 
     const desktopLocation = getVortexPath('desktop');

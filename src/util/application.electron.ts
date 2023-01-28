@@ -10,7 +10,7 @@ class ElectronApplication implements IApplication {
   private mApp: Electron.App;
 
   constructor() {
-    const remote = process.type === 'browser' ? undefined : require('@electron/remote');
+    const remote: typeof import('@electron/remote') = process.type === 'browser' ? undefined : require('@electron/remote');
     this.mApp = remote?.app ?? appIn;
 
     this.mName = this.mApp.name;

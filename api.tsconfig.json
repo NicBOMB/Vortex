@@ -1,0 +1,23 @@
+{
+    "compileOnSave": true,
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "noImplicitAny": false,
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "rootDir": "src",
+        "outDir": "api/lib",
+        "sourceMap": false,
+        "jsx":"react",
+        "emitDeclarationOnly": true,
+        "declaration": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true
+    },
+    "files": [
+        "src/index.ts",
+        "typings.custom/index.d.ts"
+    ]
+}

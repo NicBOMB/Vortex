@@ -19,20 +19,27 @@ We have a soft limit of **25 lines per function.**
 #### **Async and Promises**
 Use `async` and `await`, and avoid having long promise chains.
 
-Avoid using Bluebird. Use ES6 promises instead; when vortex was written, ES Promises were incomplete, so we used Bluebird; this is not the case anymore.
+When vortex was written, ES6 Promises were incomplete, so we used Bluebird; this is not the case anymore.
 
 To get rid of `Bluebird` we have to avoid certain constructs that are widely in use in Vortex but are Bluebird extensions:
 ```
 somethingAsync().catch(ExceptionType, err => { … }) // NO
 
 somethingAsync().catch(err => { if (err instanceof ExceptionType) { … } else { return Promise.reject(err); } }) // YES
+```
 
+```
 Promise.map(stuff, item => somethingAsync(item)) // NO
 
 Promise.all(stuff.map(item => somethingAsync(item))) // YES
-
-for (const item of stuff) { await somethingAsync(item) } // ALSO YES
 ```
+
+```
+Promise.delay(2000) // NO
+
+new Promise((resolve) => setTimeout(resolve, 2000)); // YES
+```
+
 ### **Naming conventions**
 #### **React**
 We enforce **PascalCase** for user-defined JSX components. 
@@ -42,7 +49,7 @@ We enforce **PascalCase** for user-defined JSX components.
 <TestComponent>
 ```
 #### **Types**
-Use PascalCase for type names. 
+Use PascalCase. 
 
 ```
 type NotificationFunc = (dismiss: NotificationDismiss) => void;
@@ -53,18 +60,18 @@ We have the ESLint rule `no-explicit-any` disabled, but this does not mean you c
 
 Use `Any` only when stricly necessary
 #### **Interfaces**
-We use I as a prefix for our interfaces. This is because most of the team has a C# background.
+Use PascalCase and `I` as a prefix. This is done since most of the team has a C# background.
 ```
 interface IBaseProps {}
 ```
 #### **Enums**
-Use PascalCase for enum values.
+Use PascalCase.
 
 ```
 export enum Decision {}
 ```
 #### **Functions**
-Use camelCase for function names.
+Use camelCase.
 ```
 function fetchReduxState(tries: number = 5) {}
 ```
@@ -76,18 +83,18 @@ let visibleLineCount = 0;
 const copy = ordered.slice();
 ```
 #### **Private properties**
-Use m as a prefix for private properties. It is a bit uncommon compared to using \_ or nothing at all, but this is how we always do it, and at the moment, we have no good reason to change it.
+Use `i` as a prefix or omit the prefix entirely.
 ```
 class SplashScreen {
 
-`  `private mWindow: Electron.BrowserWindow = null;
+    private window: Electron.BrowserWindow;
 
 }
 ```
 #### **Const and Globals**
 We use UPPER\_SNAKE\_CASE for global and/or exported variables.
 ```
-export const NEXUS\_MEMBERSHIP\_URL = 'https://users.nexusmods.com/register/memberships';
+export const NEXUS_MEMBERSHIP_URL = 'https://users.nexusmods.com/register/memberships';
 ```
 ### **Function Alignment and Formatting**
 #### **Parameter alignment**

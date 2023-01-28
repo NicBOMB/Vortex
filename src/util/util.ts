@@ -42,8 +42,8 @@ export function midClip(input: string, maxLength: number): string {
  * @param lhs left object, "before"
  * @param rhs right object, "after"
  */
-export function objDiff(lhs: any, rhs: any, skip?: string[]): object|null {
-  const res: {[key: string]: any} = {};
+export function objDiff<T>(lhs: any, rhs: any, skip?: string[]): T|null {
+  const res: T = {} as T;
 
   if ((typeof(lhs) === 'object') && (typeof(rhs) === 'object')) {
     Object.keys(lhs || {}).forEach((key) => {
@@ -53,11 +53,11 @@ export function objDiff(lhs: any, rhs: any, skip?: string[]): object|null {
       if (!rhs?.hasOwnProperty?.(key) && lhs?.hasOwnProperty?.(key)) {
         res['-' + key] = lhs[key];
       } else {
-        const sub = objDiff(lhs?.[key] ?? {}, rhs?.[key] ?? {});
+        const sub = objDiff<T>(lhs?.[key] ?? {}, rhs?.[key] ?? {});
         if (sub === null) {
           res['-' + key] = lhs?.[key] ?? null;
           res['+' + key] = rhs?.[key] ?? null;
-        } else if (Object.keys(sub).length !== 0) {
+        } else if (Object.keys(sub || {}).length !== 0) {
           res[key] = sub;
         }
       }
@@ -102,18 +102,19 @@ interface IQueueItem {
  * and with the promise that nothing else in the queue is run in parallel.
  */
 export function makeQueue<T>() {
-  const pending: IQueueItem[] =  [];
-  let processing: IQueueItem;
+  const pending: IQueueItem[] = [];
+  let processing: IQueueItem|undefined;
 
   const tick = () => {
-    processing = pending.shift();
-    if (processing !== undefined) {
-      processing.func()
-        .then(processing.resolve)
-        .catch(err => processing.reject(restackErr(err, processing.stackErr)))
-        .finally(() => {
-          tick();
-        });
+    if ((processing = pending.shift()) !== undefined) {
+      const proc = processing;
+      proc.func().then(
+        proc.resolve
+      ).catch(
+        err => proc.reject(restackErr(err, proc.stackErr))
+      ).finally(
+        () => { tick(); }
+      );
     }
   };
 
@@ -176,7 +177,7 @@ export function largeNumToString(num: number): string {
   }
 }
 
-export function pad(value: number, padding: string, width: number) {
+export function pad(value: number|string, padding: string, width: number) {
   const temp = `${value}`;
   return (temp.length >= width)
     ? temp

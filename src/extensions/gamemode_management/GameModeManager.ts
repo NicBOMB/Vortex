@@ -60,10 +60,12 @@ class GameModeManager {
   private mActiveSearch: Promise<void>;
   private mOnGameModeActivated: (mode: string) => void;
 
-  constructor(extensionGames: IGame[],
-              gameStubs: IGameStub[],
-              gameStoreExtensions: IGameStore[],
-              onGameModeActivated: (mode: string) => void) {
+  constructor(
+    extensionGames: IGame[],
+    gameStubs: IGameStub[],
+    gameStoreExtensions: IGameStore[],
+    onGameModeActivated: (mode: string) => void
+  ){
     this.mStore = null;
     this.mKnownGames = extensionGames;
     this.mGameStubs = gameStubs;

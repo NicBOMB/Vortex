@@ -87,7 +87,7 @@ const NUM_RETRIES = 5;
 const RETRY_DELAY_MS = 100;
 const RETRY_ERRORS = new Set(['EPERM', 'EBUSY', 'EIO', 'EBADF', 'ENOTEMPTY', 'EMFILE', 'UNKNOWN']);
 
-const simfail = (process.env.SIMULATE_FS_ERRORS === 'true')
+const simfail = (process.env['SIMULATE_FS_ERRORS'] === 'true')
   ? (func: () => PromiseBB<any>): PromiseBB<any> => {
     if (Math.random() < 0.25) {
       const code = Math.random() < 0.33 ? 'EBUSY' : Math.random() < 0.5 ? 'EIO' : 'UNKNOWN';

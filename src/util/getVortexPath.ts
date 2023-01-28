@@ -14,7 +14,7 @@ const getElectronPath = (electron !== undefined) ?  makeRemoteCallSync('get-elec
 
 const setElectronPath = makeRemoteCallSync('set-electron-path',
   (electronIn, webContents, id: string, value: string) => {
-    electronIn.app.setPath(id as any, value);
+    electronIn.app.setPath(id, value);
 });
 
 export type AppPath = 'base' | 'assets' | 'assets_unpacked' | 'modules' | 'modules_unpacked'
@@ -89,25 +89,21 @@ function getPackagePath(unpacked: boolean): string {
   return res;
 }
 
-const cache: { [id: string]: string | (() => string) } = {};
+const cache: Map <AppPath, string | (() => string)> = new Map();
 
-const cachedAppPath = (id: string) => {
-  if (cache[id] === undefined) {
-    cache[id] = getElectronPath(id as any);
-  }
-  const value = cache[id];
-  if (typeof value === 'string') {
-    return value;
-  } else {
-    return value();
-  }
+const cachedAppPath = (id: AppPath): string => {
+  const value = cache.get(id) ?? cache.set(id, getElectronPath(id)).get(id);
+  return (typeof value ===  'function' ?
+    value() :
+    value ?? ''
+  );
 };
 
 const localAppData = (() => {
   let cached;
   return () => {
     if (cached === undefined) {
-      cached = process.env.LOCALAPPDATA
+      cached = process.env['LOCALAPPDATA']
         || path.resolve(cachedAppPath('appData'), '..', 'Local');
     }
     return cached;
@@ -115,7 +111,7 @@ const localAppData = (() => {
 })();
 
 export function setVortexPath(id: AppPath, value: string | (() => string)) {
-  cache[id] = value;
+  cache.set(id, value);
   if (typeof value === 'string') {
     setElectronPath(id, value);
   } else {

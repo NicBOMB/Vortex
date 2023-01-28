@@ -72,7 +72,7 @@ function getHTTPData<T>(link: string): Bluebird<T[]> {
 async function updateAnnouncements(store: ThunkStore<IState>) {
   try {
     let res: IAnnouncement[];
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       try {
         res = JSON.parse(await fs.readFileAsync(
           path.join(getVortexPath('temp'), 'announcements.json'),

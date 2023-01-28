@@ -11,7 +11,7 @@ import Promise from 'bluebird';
  */
 export function installDevelExtensions(): Promise<void> {
   return new Promise<void>((resolved, reject) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       const installExtension = require('electron-devtools-installer').default;
       const {
         REACT_DEVELOPER_TOOLS,

@@ -97,7 +97,7 @@ class MainWindow {
 
     // opening the devtools automatically can be very useful if the renderer has
     // trouble loading the page
-    if (this.mInspector || parseBool(process.env.START_DEVTOOLS ?? '')) {
+    if (this.mInspector || parseBool(process.env['START_DEVTOOLS'] ?? '')) {
       // You can set START_DEVTOOLS to true, by creating a .env file in the root of the project
       this.mWindow.webContents.openDevTools();
     }
@@ -139,7 +139,7 @@ class MainWindow {
         }));
         // workaround for electron issue #19887
         setImmediate(() => {
-          process.env.CRASH_REPORTING = (Math.random() > 0.5) ? 'vortex' : 'electron';
+          process.env['CRASH_REPORTING'] = (Math.random() > 0.5) ? 'vortex' : 'electron';
           if (this.mWindow !== null) {
             this.mWindow.loadURL(`file://${getVortexPath('base')}/index.html`);
           } else {

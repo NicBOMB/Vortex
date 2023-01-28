@@ -74,7 +74,7 @@ export function createVortexStore(sanityCallback: (err: StateError) => void): Re
     try {
       const action = JSON.parse(JSON.stringify(payload));
       /*
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         log('info', 'forwarded action', payload);
       }
       */

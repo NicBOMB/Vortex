@@ -139,9 +139,8 @@ function init(language: string, translationExts: () => IExtension[]): Promise<II
   if (process.env['HIGHLIGHT_I18N'] === 'true') {
     I18next.use(new HighlightPP());
   }
-  I18next.use(MultiBackend).use(initReactI18next);
 
-  return new Promise((resolve, reject) => I18next.init({
+  return new Promise((resolve, reject) => I18next.use(MultiBackend).use(initReactI18next).init({
       fallbackLng: 'en',
       fallbackNS: 'common',
       ns: ['common'],

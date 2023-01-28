@@ -140,12 +140,12 @@ class Application {
     this.mStartupLogPath = path.join(tempPath, 'startup.log');
     try {
       fs.statSync(this.mStartupLogPath);
-      process.env.CRASH_REPORTING = Math.random() > 0.5 ? 'vortex' : 'electron';
+      process.env['CRASH_REPORTING'] = Math.random() > 0.5 ? 'vortex' : 'electron';
     } catch (err) {
       // nop, this is the expected case
     }
 
-    if (process.env.CRASH_REPORTING === 'electron') {
+    if (process.env['CRASH_REPORTING'] === 'electron') {
       const crashReporter: typeof crashReporterT = require('electron').crashReporter;
       crashReporter.start({
         productName: 'Vortex',
@@ -153,13 +153,13 @@ class Application {
         submitURL: '',
       });
       app.setPath('crashDumps', path.join(tempPath, 'dumps'));
-    } else if (process.env.CRASH_REPORTING === 'vortex') {
+    } else if (process.env['CRASH_REPORTING'] === 'vortex') {
       const crashDump: typeof crashDumpT = require('crash-dump').default;
       this.mDeinitCrashDump =
         crashDump(path.join(tempPath, 'dumps', `crash-main-${Date.now()}.dmp`));
     }
 
-    setupLogging(app.getPath('userData'), process.env.NODE_ENV === 'development');
+    setupLogging(app.getPath('userData'), process.env['NODE_ENV'] === 'development');
     this.setupAppEvents(args);
   }
 
@@ -239,7 +239,7 @@ class Application {
     });
 
     app.whenReady().then(() => {
-      const vortexPath = process.env.NODE_ENV === 'development'
+      const vortexPath = process.env['NODE_ENV'] === 'development'
           ? 'vortex_devel'
           : 'vortex';
 
@@ -247,7 +247,7 @@ class Application {
       let userData = args.userData
           // (only on windows) use ProgramData from environment
           ?? ((args.shared && process.platform === 'win32')
-            ? path.join(process.env.ProgramData ?? '', 'vortex')
+            ? path.join(process.env['ProgramData'] ?? '', 'vortex')
             // this allows the development build to access data from the
             // production version and vice versa
             : path.resolve(app.getPath('userData'), '..', vortexPath));
@@ -548,7 +548,7 @@ class Application {
   private migrateIfNecessary(currentVersion: string): Promise<void> {
     const state: IState = this.mStore.getState();
     const lastVersion = state.app.appVersion || '0.0.0';
-    if (this.mFirstStart || (currentVersion === '0.0.1')) {
+    if (this.mFirstStart || (state.app.name !== 'vortex')) {
       // don't check version change in development builds or on first start
       return Promise.resolve();
     }
@@ -703,7 +703,7 @@ class Application {
 
   private multiUserPath() {
     if (process.platform === 'win32') {
-      const muPath = path.join(process.env.ProgramData ?? '', 'vortex');
+      const muPath = path.join(process.env['ProgramData'] ?? '', 'vortex');
       try {
         fs.ensureDirSync(muPath);
       } catch (err) {
@@ -997,7 +997,7 @@ class Application {
   }
 
   private initDevel(): Promise<void> {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       const {installDevelExtensions} = require('../util/devel') as typeof develT;
       return installDevelExtensions();
     } else {

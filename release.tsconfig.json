@@ -9,7 +9,7 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "rootDir": "./src",
-        "outDir": "./out",
+        "outDir": "./app",
         "inlineSourceMap": true,
         "inlineSources": true,
         "skipLibCheck": true,

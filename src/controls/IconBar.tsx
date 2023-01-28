@@ -18,7 +18,7 @@ import ReactDOM from 'react-dom';
 
 export type ButtonType = 'text' | 'icon' | 'both' | 'menu';
 
-interface IBaseProps {
+export interface IBaseProps {
   className?: string;
   group?: string;
   instanceId?: string | string[];

@@ -250,10 +250,6 @@ function addToTree(tree: any, statePath: string[], spec: IReducerSpec) {
 
 /**
  * initialize reducer tree
- *
- * @export
- * @param {IExtensionReducer[]} extensionReducers
- * @returns
  */
 function reducers(extensionReducers: IExtensionReducer[],
                   querySanitize: (errors: string[]) => Decision) {

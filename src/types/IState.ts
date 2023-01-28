@@ -15,7 +15,7 @@ import { IMod } from '../extensions/mod_management/types/IMod';
 import { IProfile } from '../extensions/profile_management/types/IProfile';
 import { IParameters } from '../util/commandLine';
 import VortexInstallType from './VortexInstallType';
-import { EndorsedStatus } from '@nexusmods/nexus-api';
+import { EndorsedStatus, ICollection, IRevision } from '@nexusmods/nexus-api';
 import { IServer } from 'modmeta-db';
 
 // re-export these to keep the imports from extensions local
@@ -81,7 +81,10 @@ export interface ISession {
   visibleDialog: string;
   mainPage: string;
   secondaryPage: string;
-  activity: { mods: string[] };
+  activity: {
+    mods: string[]
+    // FIXME: missing {dependencies?: []} type
+  };
   progress: { [group: string]: { [id: string]: IProgress } };
   settingsPage: string;
   extLoadFailures: { [extId: string]: IExtensionLoadFailure[] };
@@ -114,6 +117,7 @@ export interface IExtensionState {
 /** settings relating to the vortex application itself */
 export interface IApp {
   instanceId: string;
+  name: 'vortex'|'vortex_devel';
   version: string;
   appVersion: string;
   extensions: { [id: string]: IExtensionState };
@@ -334,8 +338,66 @@ export interface IExtensionsState {
   updateTime: number,
 }
 
+/**
+ * generic information about a plugin
+ */
+export interface IPlugin {
+  /**
+   * name of the mod that installed this plugin
+   * may be undefined if this plugin was not installed with Vortex
+   *
+   * @type {string}
+   * @memberOf IPlugin
+   */
+  modId?: string;
+  /**
+   * path to the plugin on disk
+   */
+  filePath: string;
+  /**
+   * specifies whether this is a "native" plugin, that is: One
+   * where the load order is hard-coded into the game engine so
+   * we have no influence on if/when it is loaded.
+   *
+   * @type {boolean}
+   * @memberOf IPlugin
+   */
+  isNative: boolean;
+
+  /**
+   * Specifies whether this plugin has any warning which it
+   * wishes to bring to the user's attention. Will add a warning
+   * icon under plugin flags.
+   */
+  warnings?: {[key: string]: boolean};
+
+  /**
+   * true if the plugin is currently deployed
+   */
+  deployed?: boolean;
+}
+
+export interface IPlugins { [key: string]: IPlugin; }
+
+export interface IPluginDependencies {
+  connection: {
+    target: {
+      id: string,
+    },
+  };
+  dialog: IDialog;
+  quickEdit: {
+    plugin: string,
+    mode: string,
+  };
+  groupEditorOpen: boolean;
+}
+
 export interface ISessionState {
   base: ISession;
+  collections: {
+    modId: string;
+  };
   gameMode: ISessionGameMode;
   discovery: IDiscoveryState;
   notifications: INotificationState;
@@ -353,8 +415,9 @@ export interface ISessionState {
     }
   },
   plugins: {
-    pluginList: { [key: string]: string }
-  }
+    pluginList: IPlugins;
+  };
+  pluginDependencies: IPluginDependencies;
 }
 
 export interface INexusUser {
@@ -375,6 +438,19 @@ export interface INexusInfo {
 
 export interface IPersistent {
     profiles: { [profileId: string]: IProfile };
+    collections: {
+      [collectionId: string]: {
+        timestamp: number;
+        info: ICollection;
+      };
+    };
+    revisions: {
+      [revisionId: string]: {
+        timestamp: number;
+        info: IRevision;
+      };
+    };
+    changelogs: { changelogs: any[] };
     loadOrder: { [profileId: string]: LoadOrder };
     mods: IModTable;
     downloads: IStateDownloads;
@@ -389,10 +465,83 @@ export interface IPersistent {
     nexus: INexusInfo;
   }
 
+export interface ILocalizedMessage {
+  lang: string;
+  str: string;
+}
+
+export interface IMessage {
+  type: 'say' | 'warn' | 'error';
+  content: string | ILocalizedMessage[];
+  condition?: string;
+  subs?: string[];
+}
+
+export interface IBashTag {
+  name: string;
+  condition?: string;
+}
+
+type BashTag = string | IBashTag;
+
+export interface ILocation {
+  link: string;
+  // ver is deprecated anyway so not even implemented
+}
+
+export interface IDirtyInfo {
+  crc: string;
+  util: string;
+  itm?: number;
+  udr?: number;
+  nav?: number;
+}
+
+export interface ILootReference {
+  name: string;
+  display: string;
+  condition?: string;
+}
+
+export interface ILOOTPlugin {
+  name: string;
+  enabled?: boolean;
+  group?: string;
+  after?: Array<string | ILootReference>;
+  req?: Array<string | ILootReference>;
+  inc?: Array<string | ILootReference>;
+  msg?: IMessage[];
+  tag?: BashTag[];
+  url?: ILocation[];
+  dirty?: IDirtyInfo[];
+}
+
+export interface ILOOTGroup {
+  name: string;
+  after?: string[];
+}
+
+export interface ILOOTList {
+  globals: IMessage[];
+  plugins: ILOOTPlugin[];
+  groups: ILOOTGroup[];
+  // only used in the persistors to determine if the list has been loaded from disk
+  __isLoaded?: boolean;
+}
+
+export interface ILoadOrder {
+  name: string;
+  enabled?: boolean | 'ghost';
+  loadOrder?: number;
+}
+
 /** interface for the top-level state object */
 export interface IState {
   app: IApp;
   user: IUser;
+  masterlist: ILOOTList;
+  userlist: ILOOTList;
+  loadOrder: { [pluginId: string]: ILoadOrder };
   confidential: {
     account: {
       nexus: {

@@ -2,7 +2,7 @@
  * entry point for the renderer process(es)
  */
 
-if (process.env.DEBUG_REACT_RENDERS === 'true') {
+if (process.env['DEBUG_REACT_RENDERS'] === 'true') {
   // eslint-disable-next-line @typescript-eslint/no-var-requires
   const whyDidYouRender = require('@welldone-software/why-did-you-render');
   whyDidYouRender?.(require('react'), {
@@ -37,7 +37,7 @@ window.addEventListener('unhandledrejection', earlyErrHandler);
 import requireRemap from './util/requireRemap';
 requireRemap();
 
-if (process.env.NODE_ENV === 'development') {
+if (process.env['NODE_ENV'] === 'development') {
 
   const rebuildRequire = require('./util/requireRebuild').default;
   rebuildRequire();
@@ -46,10 +46,10 @@ if (process.env.NODE_ENV === 'development') {
   const sourceMapSupport = require('source-map-support');
   sourceMapSupport.install();
 } else {
-  // webpack will replace every occurrence of process.env.NODE_ENV in its endeavour to eliminate
+  // webpack will replace every occurrence of process.env['NODE_ENV'] in its endeavour to eliminate
   // dead code. It doesn't however set the environment variable itself for externals and the
   // replacement means I can't set the actual environment variable directly anymore because
-  // "process.env.NODE_ENV = 'production'" would be converted to 'production' = 'production' at
+  // "process.env['NODE_ENV'] = 'production'" would be converted to 'production' = 'production' at
   // build time. So FU very much webpack
   const key = 'NODE_ENV';
   process.env[key] = 'production';
@@ -83,7 +83,6 @@ import MainWindow from './views/MainWindow';
 
 import * as remote from '@electron/remote';
 import * as msgpackT from '@msgpack/msgpack';
-import Promise from 'bluebird';
 import { ipcRenderer, webFrame } from 'electron';
 import { forwardToMain, replayActionRenderer } from 'electron-redux';
 import { EventEmitter } from 'events';
@@ -183,7 +182,7 @@ setVortexPath('temp', () => path.join(getVortexPath('userData'), 'temp'));
 
 let deinitCrashDump: () => void;
 
-if (process.env.CRASH_REPORTING === 'vortex') {
+if (process.env['CRASH_REPORTING'] === 'vortex') {
 
   const crashDump: typeof crashDumpT = require('crash-dump').default;
   deinitCrashDump =
@@ -211,13 +210,6 @@ if (process.platform === 'win32') {
   };
 }
 
-// allow promises to be cancelled.
-Promise.config({
-  cancellation: true,
-  // long stack traces would be sooo nice but the performance cost in some places is ridiculous
-  longStackTraces: false,
-});
-
 // set up store. Through the electronEnhancer this is automatically
 // synchronized with the main process store
 
@@ -236,7 +228,7 @@ let store: ThunkStore<any>;
 
 const terminateFromError = (error: any, allowReport?: boolean) => {
   log('warn', 'about to report an error', { stack: new Error().stack });
-  terminate(toError(error), store !== undefined ? store.getState() : {}, allowReport);
+  terminate(toError(error), store?.getState?.(), allowReport);
 };
 
 function errorHandler(evt: any) {
@@ -313,7 +305,7 @@ function errorHandler(evt: any) {
     return;
   }
 
-  if (error.stack.includes('react-sortable-tree')) {
+  if (error?.stack?.includes?.('react-sortable-tree')) {
     // bug in external library. I know where the bug is but fixing that causes a new problem and
     // i just don't want to pull that thread.
     // To elaborate: there is no logic in react-sortable-tree to stop users
@@ -326,23 +318,21 @@ function errorHandler(evt: any) {
 
   const dynPaths = ExtensionManager.getExtensionPaths().filter(extPath => !extPath.bundled);
 
-  if (dynPaths.length > 0) {
-    if (error.stack.includes(`at ${dynPaths[0].path}`)) {
-      const extPath = (dynPaths[0].path + path.sep).replace(/[\\]/g, '\\\\');
-      const re = new RegExp(
-        `at ${extPath}(Vortex Extension Update - )?([^/\\\\]*)`);
-      const reMatch = error.stack.match(re);
-      const extName = reMatch?.[2] ?? 'unknown';
-      log('error', 'extension caused an unhandled exception', {
-        name: extName,
-        error: error.stack,
-      });
-      extensions?.getApi()?.showErrorNotification?.('Unhandled exception in extension', error, {
-        message: extName,
-        allowReport: false,
-      });
-      return;
-    }
+  if (dynPaths.length > 0 && error?.stack?.includes?.(`at ${dynPaths[0]?.path}`)) {
+    const extPath = (dynPaths[0]?.path + path.sep).replace(/[\\]/g, '\\\\');
+    const re = new RegExp(
+      `at ${extPath}(Vortex Extension Update - )?([^/\\\\]*)`);
+    const reMatch = error.stack.match(re);
+    const extName = reMatch?.[2] ?? 'unknown';
+    log('error', 'extension caused an unhandled exception', {
+      name: extName,
+      error: error.stack,
+    });
+    extensions?.getApi()?.showErrorNotification?.('Unhandled exception in extension', error, {
+      message: extName,
+      allowReport: false,
+    });
+    return;
   }
 
   if (error.message === 'Cannot read property \'parentNode\' of undefined'
@@ -405,11 +395,11 @@ const enhancer = compose(
   applyMiddleware(
     forwardToMain,
     ...middleware,
-    process.env.NODE_ENV === 'development' ?
+    process.env['NODE_ENV'] === 'development' ?
     require('redux-freeze') :
     undefined
   ),
-  process.env.NODE_ENV === 'development' ?
+  process.env['NODE_ENV'] === 'development' ?
     window['__REDUX_DEVTOOLS_EXTENSION__']?.({
       shouldRecordChanges: false,
       autoPause: true,
@@ -419,15 +409,25 @@ const enhancer = compose(
 );
 
 let tFunc: TFunction = fallbackTFunc;
-let startupFinished: () => void;
+let startupFinished: (value?: any) => void;
 let extensions: ExtensionManager;
 
 function init() {
-  // extension manager initialized without store, the information about what
-  // extensions are to be loaded has to be retrieved from the main process
+  // I only want to add reducers, but redux-electron-store seems to break
+  // when calling replaceReducer in the renderer
+  // (https://github.com/samiskin/redux-electron-store/issues/48)
+  // now that we're not using it any more, may want to try again
+  // store.replaceReducer(reducer(extReducers));
+  store = createStore(
+    reducer([], () => Decision.QUIT),
+    initialState(),
+    enhancer
+  );
+
+  // extension manager initialized without store was out of order
   extensions = new ExtensionManager(
-    undefined,
-    eventEmitter,
+    store,
+    eventEmitter
   );
   if (extensions.hasOutdatedExtensions) {
     // we should *not* get here, the main process should never have started the renderer
@@ -436,18 +436,6 @@ function init() {
     relaunch();
     return Promise.resolve(null);
   }
-  const extReducers = extensions.getReducers();
-
-  // I only want to add reducers, but redux-electron-store seems to break
-  // when calling replaceReducer in the renderer
-  // (https://github.com/samiskin/redux-electron-store/issues/48)
-  // now that we're not using it any more, may want to try again
-  // store.replaceReducer(reducer(extReducers));
-  store = createStore(
-    reducer(extReducers, () => Decision.QUIT),
-    initialState(),
-    enhancer,
-  );
   replayActionRenderer(store);
   extensions.setStore(store);
   setOutdated(extensions.getApi());
@@ -488,15 +476,16 @@ function init() {
 
   const startupPromise = new Promise(resolve => (startupFinished = resolve));
 
-  /** @ts-expect-error */
-  const globalNotifications = new GlobalNotifications(extensions.getApi());
+  /** @ts-expect-error unused local */
+  const globalNotifications =
+    new GlobalNotifications(extensions.getApi());
 
   function startDownloadFromURL(url: string, fileName?: string, install?: boolean) {
     store.dispatch(
       addNotification({
         type: 'info',
         title: 'Download started',
-        message: fileName,
+        message: fileName ?? '',
         displayMS: 4000,
       }));
 
@@ -505,18 +494,26 @@ function init() {
         return;
       }
       const protocol = url.split(':')[0];
-
-      const handler = extensions.getProtocolHandler(protocol);
-      if (handler !== null) {
-        log('info', 'handling url', { url });
-        handler(url, install);
-      } else {
-        store.dispatch(addNotification({
+      if (protocol){
+        const handler = extensions.getProtocolHandler(protocol);
+        if (handler !== null) {
+          log('info', 'handling url', { url });
+          handler(url, install ?? false);
+        } else {
+          store.dispatch(addNotification({
             type: 'info',
-            message: tFunc('Vortex isn\'t set up to handle this protocol: {{url}}', {
-                replace: { url },
+            message: tFunc('Vortex isn\'t set up to handle this protocol: {{protocol}}', {
+                replace: { protocol },
               }),
           }));
+        }
+      } else {
+        store.dispatch(addNotification({
+          type: 'info',
+          message: tFunc('Vortex isn\'t set up to handle this url: {{url}}', {
+              replace: { url },
+            }),
+        }));
       }
     });
   }
@@ -554,7 +551,7 @@ function init() {
       });
       ipcRenderer.send('relay-cb', id, ...newCBArgs);
     };
-    const newArgs = [].concat(args.slice(0, args.length - 1), cb);
+    const newArgs = new Array().concat(args.slice(0, args.length - 1), cb);
     eventEmitter.emit(event, ...newArgs);
   });
 
@@ -651,11 +648,8 @@ function renderer(extensions: ExtensionManager) {
         .then(() => {
           extensions.setTranslation(i18n);
         });
-    }).then(() => {
-      if (error !== undefined) {
-        showError(store.dispatch, 'failed to initialize localization', error,
-                  { allowReport: false });
-      }
+    }, () => {
+      showError(store.dispatch, 'failed to initialize localization', error, { allowReport: false });
       return extensions.doOnce();
     })
     .then(() => {
@@ -702,4 +696,4 @@ function renderer(extensions: ExtensionManager) {
   };
 }
 
-init().then((extensions: ExtensionManager) => renderer(extensions));
+init().then((extensions) => renderer(extensions));

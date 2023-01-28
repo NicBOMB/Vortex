@@ -8,7 +8,7 @@
         "removeComments": true,
         "preserveConstEnums": true,
         "rootDir": "./src",
-        "outDir": "./out",
+        "outDir": "./app",
         "jsx":"react",
         "inlineSourceMap": true,
         "inlineSources": true,

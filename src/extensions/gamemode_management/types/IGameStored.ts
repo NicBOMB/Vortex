@@ -1,4 +1,4 @@
-import { IDiscoveredTool } from '../../../types/IDiscoveredTool'
+import { IToolStored } from './IToolStored';
 
 /**
  * cached information about games.
@@ -18,28 +18,10 @@ export interface IGameStored {
   // if the  return value of executable() is independent of discovery information!
   executable: string;
   parameters?: string[];
-  supportedTools?: IDiscoveredTool[];
+  supportedTools?: IToolStored[];
   environment?: { [key: string]: string };
   details?: { [key: string]: any };
   shell?: boolean;
   contributed?: string|string[];
   final?: boolean;
-}
-
-export interface GameStored {
-  id: string;
-  name: string;
-  shortName: string;
-  logo: string;
-  extensionPath: string;
-  imageURL: string;
-  requiredFiles: string[];
-  executable: string;
-  parameters: string[];
-  supportedTools: IDiscoveredTool[];
-  environment: { [key: string]: string };
-  details: { [key: string]: any };
-  shell: boolean;
-  contributed: string|string[];
-  final: boolean;
 }

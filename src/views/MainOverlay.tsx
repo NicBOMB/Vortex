@@ -18,7 +18,7 @@ class MainOverlay extends ComponentEx<IProps, {}> {
     super(props);
 
     this.buttons = [];
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       this.buttons.push(
         {
           icon: 'mods',

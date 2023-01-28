@@ -81,8 +81,7 @@ if (ipcMain !== undefined) {
 
     sassIndex = `$theme-path: "${pathToFileURL(themePath)}";\n` + sassIndex;
 
-    // development builds are always versioned as 0.0.1
-    const isDevel: boolean = getApplication().version === '0.0.1';
+    const isDevel = getApplication().name === 'vortex_devel';
 
     const assetsPath = path.join(getVortexPath('assets_unpacked'), 'css');
     const modulesPath = getVortexPath('modules_unpacked');
@@ -92,7 +91,7 @@ if (ipcMain !== undefined) {
       : '__renderSASS_update';
 
     /*
-    process.env.SASS_BINARY_PATH = path.resolve(getVortexPath('modules'), 'node-sass', 'bin',
+    process.env['SASS_BINARY_PATH'] = path.resolve(getVortexPath('modules'), 'node-sass', 'bin',
       `${process.platform}-${process.arch}-${process.versions.modules}`, 'node-sass.node');
     */
     const sass: typeof sassT = require('sass');

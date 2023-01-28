@@ -96,7 +96,7 @@ export function initApplicationMenu(extensions: ExtensionManager) {
     });
 
     // development stuff
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       viewMenu.push({ type: 'separator' });
       viewMenu.push({
         label: 'Toggle Developer Tools',

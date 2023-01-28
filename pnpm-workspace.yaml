@@ -1,0 +1,6 @@
+packages:
+  - 'api'
+  - 'app'
+  - 'extensions/*'
+  - 'src/util/vortex-run'
+  - 'tools/remote/*'

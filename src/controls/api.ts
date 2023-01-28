@@ -27,7 +27,7 @@ import RadialProgress from './RadialProgress';
 import SelectUpDown from './SelectUpDown';
 import Spinner from './Spinner';
 import Steps from './Steps';
-import Table, {ChangeDataHandler, ITableRowAction, makeGetSelection} from './Table';
+import Table, { ChangeDataHandler, ITableRowAction, makeGetSelection } from './Table';
 import TableDateTimeFilter from './table/DateTimeFilter';
 import TableNumericFilter from './table/NumericFilter';
 import OptionsFilter from './table/OptionsFilter';

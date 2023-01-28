@@ -1,7 +1,7 @@
 import Promise from 'bluebird';
 import * as React from 'react';
 
-const debugMissingIcons = process.env.NODE_ENV === 'development';
+const debugMissingIcons = process.env['NODE_ENV'] === 'development';
 const debugReported = new Set<string>();
 
 /**

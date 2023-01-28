@@ -1,14 +1,38 @@
-[submodule "extensions/games"]
-	path = extensions/games
-	url = https://github.com/Nexus-Mods/vortex-games.git
+[submodule "api"]
+	path = api
+	url = https://github.com/Nexus-Mods/vortex-api.git
 	branch = master
-[submodule "extensions/gamebryo-plugin-management"]
-	path = extensions/gamebryo-plugin-management
-	url = https://github.com/Nexus-Mods/extension-plugin-management.git
+[submodule "extensions/changelog-dashlet"]
+	path = extensions/changelog-dashlet
+	url = https://github.com/Nexus-Mods/extension-changelog-dashlet.git
+	branch = master
+[submodule "extensions/collections"]
+	path = extensions/collections
+	url = https://github.com/Nexus-Mods/extension-collections.git
+	branch = master
+[submodule "extensions/common-interpreters"]
+	path = extensions/common-interpreters
+	url = https://github.com/Nexus-Mods/extension-common-interpreters.git
+	branch = master
+[submodule "extensions/documentation"]
+	path = extensions/documentation
+	url = https://github.com/Nexus-Mods/extension-documentation.git
+	branch = master
+[submodule "extensions/extension-dashlet"]
+	path = extensions/extension-dashlet
+	url = https://github.com/Nexus-Mods/extension-extension-dashlet.git
 	branch = master
 [submodule "extensions/feedback"]
 	path = extensions/feedback
 	url = https://github.com/Nexus-Mods/extension-feedback.git
+	branch = master
+[submodule "extensions/fnis-integration"]
+	path = extensions/fnis-integration
+	url = https://github.com/Nexus-Mods/fnis-integration.git
+	branch = master
+[submodule "extensions/gamebryo-archive-check"]
+	path = extensions/gamebryo-archive-check
+	url = https://github.com/Nexus-Mods/bethesda-archive-check.git
 	branch = master
 [submodule "extensions/gamebryo-archive-invalidation"]
 	path = extensions/gamebryo-archive-invalidation
@@ -26,6 +50,10 @@
 	path = extensions/gamebryo-plugin-indexlock
 	url = https://github.com/Nexus-Mods/extension-plugin-indexlock.git
 	branch = master
+[submodule "extensions/gamebryo-plugin-management"]
+	path = extensions/gamebryo-plugin-management
+	url = https://github.com/Nexus-Mods/extension-plugin-management.git
+	branch = master
 [submodule "extensions/gamebryo-savegame-management"]
 	path = extensions/gamebryo-savegame-management
 	url = https://github.com/Nexus-Mods/extension-gamebryo-savegames.git
@@ -38,109 +66,9 @@
 	path = extensions/gameinfo-steam
 	url = https://github.com/Nexus-Mods/extension-gameinfo-steam.git
 	branch = master
-[submodule "extensions/local-gamesettings"]
-	path = extensions/local-gamesettings
-	url = https://github.com/Nexus-Mods/extension-local-gamesettings.git
-	branch = master
-[submodule "extensions/meta-editor"]
-	path = extensions/meta-editor
-	url = https://github.com/Nexus-Mods/extension-metaeditor.git
-	branch = master
-[submodule "extensions/mo-import"]
-	path = extensions/mo-import
-	url = https://github.com/Nexus-Mods/extension-mo-import.git
-	branch = master
-[submodule "extensions/mod-dependencies"]
-	path = extensions/mod-dependency-manager
-	url = https://github.com/Nexus-Mods/extension-mod-dependencies.git
-	branch = master
-[submodule "extensions/mod-highlights"]
-	path = extensions/mod-highlight
-	url = https://github.com/Nexus-Mods/extension-mod-highlights.git
-	branch = master
-[submodule "extensions/modtype-dinput"]
-	path = extensions/modtype-dinput
-	url = https://github.com/Nexus-Mods/extension-modtype-dinput.git
-	branch = master
-[submodule "extensions/modtype-dazip"]
-	path = extensions/modtype-dazip
-	url = https://github.com/Nexus-Mods/extension-modtype-dazip.git
-	branch = master
-[submodule "extensions/modtype-enb"]
-	path = extensions/modtype-enb
-	url = https://github.com/Nexus-Mods/extension-modtype-enb.git
-	branch = master
-[submodule "extensions/modtype-gedosato"]
-	path = extensions/modtype-gedosato
-	url = https://github.com/Nexus-Mods/extension-modtype-gedosato.git
-	branch = master
-[submodule "extensions/mtframework-arc-support"]
-	path = extensions/mtframework-arc-support
-	url = https://github.com/Nexus-Mods/extension-arc-support.git
-	branch = master
-[submodule "extensions/nmm-import"]
-	path = extensions/nmm-import-tool
-	url = https://github.com/Nexus-Mods/extension-nmm-import.git
-	branch = master
-[submodule "extensions/open-directory"]
-	path = extensions/open-directory
-	url = https://github.com/Nexus-Mods/extension-open-directory.git
-	branch = master
-[submodule "extensions/theme-switcher"]
-	path = extensions/theme-switcher
-	url = https://github.com/Nexus-Mods/extension-theme-switcher.git
-	branch = master
-[submodule "api"]
-	path = api
-	url = https://github.com/Nexus-Mods/vortex-api.git
-	branch = master
-[submodule "extensions/common-interpreters"]
-	path = extensions/common-interpreters
-	url = https://github.com/Nexus-Mods/extension-common-interpreters.git
-	branch = master
-[submodule "extensions/issue-tracker"]
-	path = extensions/issue-tracker
-	url = https://github.com/Nexus-Mods/extension-issue-tracker.git
-	branch = master
-[submodule "extensions/changelog-dashlet"]
-	path = extensions/changelog-dashlet
-	url = https://github.com/Nexus-Mods/extension-changelog-dashlet.git
-	branch = master
-[submodule "extensions/fnis-integration"]
-	path = extensions/fnis-integration
-	url = https://github.com/Nexus-Mods/fnis-integration.git
-	branch = master
-[submodule "extensions/game-pillarsofeternity2"]
-	path = extensions/game-pillarsofeternity2
-	url = https://github.com/Nexus-Mods/game-pillarsofeternity2.git
-	branch = master
-[submodule "extensions/test-gameversion"]
-	path = extensions/test-gameversion
-	url = https://github.com/Nexus-Mods/test-gameversion.git
-	branch = master
-[submodule "extensions/documentation"]
-	path = extensions/documentation
-	url = https://github.com/Nexus-Mods/extension-documentation.git
-	branch = master
-[submodule "extensions/modtype-umm"]
-	path = extensions/modtype-umm
-	url = https://github.com/nexus-mods/extension-modtype-umm.git
-	branch = master
-[submodule "extensions/mod-content"]
-	path = extensions/mod-content
-	url = https://github.com/Nexus-Mods/extension-mod-content.git
-	branch = master
-[submodule "extensions/quickbms-support"]
-	path = extensions/quickbms-support
-	url = https://github.com/nexus-mods/extension-quickbms-support.git
-	branch = master
-[submodule "extensions/morrowind-plugin-management"]
-	path = extensions/morrowind-plugin-management
-	url = https://github.com/Nexus-Mods/extension-morrowind-plugin-management.git
-	branch = master
-[submodule "extensions/script-extender-error-check"]
-	path = extensions/script-extender-error-check
-	url = https://github.com/Nexus-Mods/extension-script-extender-error-check.git
+[submodule "extensions/games"]
+	path = extensions/games
+	url = https://github.com/Nexus-Mods/vortex-games.git
 	branch = master
 [submodule "extensions/gamestore-gog"]
 	path = extensions/gamestore-gog
@@ -158,47 +86,203 @@
 	path = extensions/gamestore-xbox
 	url = https://github.com/nexus-mods/extension-gamestore-xbox.git
 	branch = master
-[submodule "extensions/new-file-monitor"]
-	path = extensions/new-file-monitor
-	url = https://github.com/Nexus-Mods/extension-new-file-monitor.git
+[submodule "extensions/gameversion-hash"]
+	path = extensions/gameversion-hash
+	url = https://github.com/nexus-mods/extension-gameversion-hash.git
+	branch = main
+[submodule "extensions/issue-tracker"]
+	path = extensions/issue-tracker
+	url = https://github.com/Nexus-Mods/extension-issue-tracker.git
 	branch = master
-[submodule "extensions/modtype-harmony-patcher"]
-	path = extensions/modtype-harmony-patcher
-	url = https://github.com/nexus-mods/extension-modtype-harmony-patcher.git
+[submodule "extensions/local-gamesettings"]
+	path = extensions/local-gamesettings
+	url = https://github.com/Nexus-Mods/extension-local-gamesettings.git
 	branch = master
-[submodule "extensions/extension-dashlet"]
-	path = extensions/extension-dashlet
-	url = https://github.com/Nexus-Mods/extension-extension-dashlet.git
+[submodule "extensions/meta-editor"]
+	path = extensions/meta-editor
+	url = https://github.com/Nexus-Mods/extension-metaeditor.git
 	branch = master
-[submodule "extensions/test-setup"]
-	path = extensions/test-setup
-	url = https://github.com/Nexus-Mods/extension-test-setup.git
+[submodule "extensions/mo-import"]
+	path = extensions/mo-import
+	url = https://github.com/Nexus-Mods/extension-mo-import.git
+	branch = master
+[submodule "extensions/mod-content"]
+	path = extensions/mod-content
+	url = https://github.com/Nexus-Mods/extension-mod-content.git
+	branch = master
+[submodule "extensions/mod-dependencies"]
+	path = extensions/mod-dependency-manager
+	url = https://github.com/Nexus-Mods/extension-mod-dependencies.git
+	branch = master
+[submodule "extensions/mod-highlights"]
+	path = extensions/mod-highlight
+	url = https://github.com/Nexus-Mods/extension-mod-highlights.git
 	branch = master
 [submodule "extensions/mod-report"]
 	path = extensions/mod-report
 	url = https://github.com/Nexus-Mods/extension-mod-report.git
 	branch = master
-[submodule "extensions/script-extender-installer"]
-	path = extensions/script-extender-installer
-	url = https://github.com/Pickysaurus/script-extender-installer.git
-	branch = master
-[submodule "extensions/gamebryo-archive-check"]
-	path = extensions/gamebryo-archive-check
-	url = https://github.com/Nexus-Mods/bethesda-archive-check.git
-	branch = master
 [submodule "extensions/modtype-bepinex"]
 	path = extensions/modtype-bepinex
 	url = https://github.com/Nexus-Mods/extension-modtype-bepinex.git
 	branch = main
-[submodule "extensions/collections"]
-	path = extensions/collections
-	url = https://github.com/Nexus-Mods/extension-collections.git
+[submodule "extensions/modtype-dazip"]
+	path = extensions/modtype-dazip
+	url = https://github.com/Nexus-Mods/extension-modtype-dazip.git
 	branch = master
-[submodule "extensions/gameversion-hash"]
-	path = extensions/gameversion-hash
-	url = https://github.com/nexus-mods/extension-gameversion-hash.git
-	branch = main
+[submodule "extensions/modtype-dinput"]
+	path = extensions/modtype-dinput
+	url = https://github.com/Nexus-Mods/extension-modtype-dinput.git
+	branch = master
+[submodule "extensions/modtype-enb"]
+	path = extensions/modtype-enb
+	url = https://github.com/Nexus-Mods/extension-modtype-enb.git
+	branch = master
+[submodule "extensions/modtype-gedosato"]
+	path = extensions/modtype-gedosato
+	url = https://github.com/Nexus-Mods/extension-modtype-gedosato.git
+	branch = master
+[submodule "extensions/modtype-harmony-patcher"]
+	path = extensions/modtype-harmony-patcher
+	url = https://github.com/nexus-mods/extension-modtype-harmony-patcher.git
+	branch = master
+[submodule "extensions/modtype-umm"]
+	path = extensions/modtype-umm
+	url = https://github.com/nexus-mods/extension-modtype-umm.git
+	branch = master
+[submodule "extensions/morrowind-plugin-management"]
+	path = extensions/morrowind-plugin-management
+	url = https://github.com/Nexus-Mods/extension-morrowind-plugin-management.git
+	branch = master
+[submodule "extensions/mtframework-arc-support"]
+	path = extensions/mtframework-arc-support
+	url = https://github.com/Nexus-Mods/extension-arc-support.git
+	branch = master
+[submodule "extensions/new-file-monitor"]
+	path = extensions/new-file-monitor
+	url = https://github.com/Nexus-Mods/extension-new-file-monitor.git
+	branch = master
+[submodule "extensions/nmm-import"]
+	path = extensions/nmm-import-tool
+	url = https://github.com/Nexus-Mods/extension-nmm-import.git
+	branch = master
+[submodule "extensions/open-directory"]
+	path = extensions/open-directory
+	url = https://github.com/Nexus-Mods/extension-open-directory.git
+	branch = master
+[submodule "extensions/quickbms-support"]
+	path = extensions/quickbms-support
+	url = https://github.com/nexus-mods/extension-quickbms-support.git
+	branch = master
+[submodule "extensions/script-extender-error-check"]
+	path = extensions/script-extender-error-check
+	url = https://github.com/Nexus-Mods/extension-script-extender-error-check.git
+	branch = master
+[submodule "extensions/script-extender-installer"]
+	path = extensions/script-extender-installer
+	url = https://github.com/Pickysaurus/script-extender-installer.git
+	branch = master
+[submodule "extensions/test-gameversion"]
+	path = extensions/test-gameversion
+	url = https://github.com/Nexus-Mods/test-gameversion.git
+	branch = master
+[submodule "extensions/test-setup"]
+	path = extensions/test-setup
+	url = https://github.com/Nexus-Mods/extension-test-setup.git
+	branch = master
+[submodule "extensions/theme-switcher"]
+	path = extensions/theme-switcher
+	url = https://github.com/Nexus-Mods/extension-theme-switcher.git
+	branch = master
 [submodule "extensions/titlebar-launcher"]
 	path = extensions/titlebar-launcher
 	url = https://github.com/Nexus-Mods/extension-titlebar-launcher.git
+	branch = master
+[submodule "7z-bin"]
+	path = tools/remote/7z-bin
+	url = https://github.com/Nexus-Mods/7z-bin.git
+	branch = master
+[submodule "fomod-installer"]
+	path = tools/remote/fomod-installer
+	url = https://github.com/Nexus-Mods/fomod-installer.git
+	branch = net6
+[submodule "harmony-patcher"]
+	path = tools/remote/harmony-patcher
+	url = https://github.com/Nexus-Mods/harmony-patcher.git
+	branch = master
+[submodule "modmeta-db"]
+	path = tools/remote/modmeta-db
+	url = https://github.com/Nexus-Mods/modmeta-db.git
+	branch = master
+[submodule "node-7z"]
+	path = tools/remote/node-7z
+	url = https://github.com/Nexus-Mods/node-7z.git
+	branch = master
+[submodule "node-ba2tk"]
+	path = tools/remote/node-ba2tk
+	url = https://github.com/Nexus-Mods/node-ba2tk.git
+	branch = master
+[submodule "node-bsatk"]
+	path = tools/remote/node-bsatk
+	url = https://github.com/Nexus-Mods/node-bsatk.git
+	branch = master
+[submodule "node-crash-dump"]
+	path = tools/remote/node-crash-dump
+	url = https://github.com/Nexus-Mods/node-crash-dump.git
+	branch = master
+[submodule "node-esptk"]
+	path = tools/remote/node-esptk
+	url = https://github.com/Nexus-Mods/node-esptk.git
+	branch = master
+[submodule "node-exe-version"]
+	path = tools/remote/node-exe-version
+	url = https://github.com/Nexus-Mods/node-exe-version.git
+	branch = master
+[submodule "node-gamebryo-savegames"]
+	path = tools/remote/node-gamebryo-savegames
+	url = https://github.com/Nexus-Mods/node-gamebryo-savegames.git
+	branch = master
+[submodule "node-loot"]
+	path = tools/remote/node-loot
+	url = https://github.com/Nexus-Mods/node-loot.git
+	branch = master
+[submodule "node-native-errors"]
+	path = tools/remote/node-native-errors
+	url = https://github.com/Nexus-Mods/node-native-errors.git
+	branch = master
+[submodule "nexus-api"]
+	path = tools/remote/node-nexus-api
+	url = https://github.com/Nexus-Mods/node-nexus-api.git
+	branch = master
+[submodule "node-permissions"]
+	path = tools/remote/node-permissions
+	url = https://github.com/Nexus-Mods/node-permissions.git
+	branch = master
+[submodule "node-turbowalk"]
+	path = tools/remote/node-turbowalk
+	url = https://github.com/NicBOMB/node-turbowalk.git
+	branch = master
+[submodule "node-vortexmt"]
+	path = tools/remote/node-vortexmt
+	url = https://github.com/Nexus-Mods/node-vortexmt.git
+	branch = master
+[submodule "node-wholocks"]
+	path = tools/remote/node-wholocks
+	url = https://github.com/Nexus-Mods/node-wholocks.git
+	branch = master
+[submodule "node-winapi-bindings"]
+	path = tools/remote/node-winapi-bindings
+	url = https://github.com/Nexus-Mods/node-winapi-bindings.git
+	branch = master
+[submodule "ts-v-gen"]
+	path = tools/remote/ts-v-gen
+	url = https://github.com/IDCs/ts-v-gen
+	branch = main
+[submodule "simple-vdf"]
+	path = tools/remote/vdf-parser
+	url = https://github.com/Nexus-Mods/vdf-parser.git
+	branch = master
+[submodule "vortex-parse-ini"]
+	path = tools/remote/vortex-parse-ini
+	url = https://github.com/Nexus-Mods/vortex-parse-ini.git
 	branch = master

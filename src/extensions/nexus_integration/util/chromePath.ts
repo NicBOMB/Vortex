@@ -13,8 +13,8 @@ import * as path from 'path';
 function chromePath(): Promise<string> {
   const appPath = getVortexPath('appData');
   if (process.platform === 'win32') {
-    const userData = process.env.LOCALAPPDATA !== undefined
-      ? path.join(process.env.LOCALAPPDATA, 'Google', 'Chrome', 'User Data')
+    const userData = process.env['LOCALAPPDATA'] !== undefined
+      ? path.join(process.env['LOCALAPPDATA'], 'Google', 'Chrome', 'User Data')
       : path.resolve(appPath, '..', 'Local', 'Google', 'Chrome', 'User Data');
     return fs.readFileAsync(path.join(userData, 'Local State'), { encoding: 'utf-8' })
       .then(state => {

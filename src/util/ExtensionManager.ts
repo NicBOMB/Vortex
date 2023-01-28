@@ -6,7 +6,7 @@ import { setExtensionLoadFailures } from '../actions/session';
 
 import { IExtension } from '../extensions/extension_manager/types';
 import { IModReference, IModRepoId } from '../extensions/mod_management/types/IMod';
-import { ExtensionInit } from '../types/Extension';
+import { ExtensionInit, IExtensionReducer } from '../types/Extension';
 import {
   ArchiveHandlerCreator,
   IArchiveHandler,
@@ -32,6 +32,7 @@ import { COMPANY_ID } from './constants';
 import { MissingDependency, NotSupportedError,
         ProcessCanceled, ThirdPartyError, TimeoutError, UserCanceled } from './CustomErrors';
 import { isOutdated } from './errorHandling';
+import { SystemError } from './CustomErrors';
 import getVortexPath from './getVortexPath';
 import { i18n, TString } from './i18n';
 import lazyRequire from './lazyRequire';
@@ -204,12 +205,15 @@ class ExtEventHandler extends EventEmitter {
   }
 
   public override removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
-    if (this.mFuncMap.has(event)) {
-      const listeners = this.mFuncMap.get(event);
-      const idx = listeners.findIndex(iter => iter.orig === listener);
-      if (idx !== -1) {
-        this.mWrappee.removeListener(event, listeners[idx].wrapped);
-        listeners.splice(idx, 1);
+    const listeners = this.mFuncMap.get(event);
+    if (listeners) {
+      const idx = listeners.findIndex((iter) => (iter.orig === listener));
+      if (idx > -1) {
+        const callback = listeners[idx]?.wrapped;
+        if (typeof callback === "function"){
+          this.mWrappee.removeListener(event, callback);
+          listeners.splice(idx, 1);
+        }
       }
     }
     return this;
@@ -256,10 +260,7 @@ class ExtEventHandler extends EventEmitter {
   }
 
   private funcMap(event: string | symbol) {
-    if (!this.mFuncMap.has(event)) {
-      this.mFuncMap.set(event, []);
-    }
-    return this.mFuncMap.get(event);
+    return this.mFuncMap.get(event) ?? this.mFuncMap.set(event, []).get(event) as [];
   }
 
   private makeWrapped(event: string | symbol, listener: CBFunc) {
@@ -444,8 +445,7 @@ class ContextProxyHandler implements ProxyHandler<any> {
       (call: IInitCall) => !call.optional && !fullAPI.has(call.key))
     .forEach((call: IInitCall) => {
       log('debug', 'unsupported api call', { extension: call.extension, api: call.key });
-      incompatibleExtensions[call.extension] ??= [];
-      incompatibleExtensions[call.extension].push({ id: 'unsupported-api' });
+      (incompatibleExtensions[call.extension] ??= []).push({ id: 'unsupported-api' });
     });
 
     const findExt = (id: string) => {
@@ -457,14 +457,12 @@ class ContextProxyHandler implements ProxyHandler<any> {
     const testValid = (extId: string, requiredId?: string, version?: string) => {
       const req = findExt(requiredId);
       if (req === undefined) {
-        incompatibleExtensions[extId] ??= [];
-        incompatibleExtensions[extId].push({
+        (incompatibleExtensions[extId] ??= []).push({
           id: 'dependency',
           args: { dependencyId: requiredId }
         });
       } else if ((version !== undefined) && !semver.satisfies(req.info?.version, version)) {
-        incompatibleExtensions[extId] ??= [];
-        incompatibleExtensions[extId].push({
+        (incompatibleExtensions[extId] ??= []).push({
           id: 'dependency',
           args: { dependencyId: requiredId, version }
         });
@@ -476,15 +474,14 @@ class ContextProxyHandler implements ProxyHandler<any> {
     });
 
     this.getCalls('requireVersion').forEach(call => {
-      if (process.env.NODE_ENV !== 'development' &&
+      if (process.env['NODE_ENV'] !== 'development' &&
         !semver.satisfies(
           getApplication().version,
           call.arguments[0],
           { includePrerelease: true }
         )
       ){
-        incompatibleExtensions[call.extension] ??= [];
-        incompatibleExtensions[call.extension].push({
+        (incompatibleExtensions[call.extension] ??= []).push({
           id: 'unsupported-version'
         });
       }
@@ -825,7 +822,7 @@ class ExtensionManager {
       } catch (err) {
         // an ENOENT will happen on the first start where the dir doesn't
         // exist yet. No problem
-        if (err.code !== 'ENOENT') {
+        if (err instanceof Error && (err as SystemError).code !== 'ENOENT') {
           log('error', 'failed to read disabled extensions', err.message);
         }
       }
@@ -833,9 +830,9 @@ class ExtensionManager {
       this.mExtensionState = initStore.getState().app.extensions;
       const extensionsPath = path.join(getVortexPath('userData'), 'plugins');
 
-      Object.keys(this.mExtensionState)
-        .filter(extId => this.mExtensionState[extId].remove)
-        .forEach(extId => {
+      Object.entries(this.mExtensionState)
+        .filter(([extId, extVal]) => extVal.remove)
+        .forEach(([extId, extVal]) => {
           log('info', 'removing', path.join(extensionsPath, extId));
           fs.removeSync(path.join(extensionsPath, extId));
           initStore.dispatch(forgetExtension(extId));
@@ -1020,7 +1017,7 @@ class ExtensionManager {
    * retrieve list of all reducers registered by extensions
    */
   public getReducers() {
-    const reducers = [];
+    const reducers: IExtensionReducer[] = [];
     this.apply('registerReducer', (statePath: string[], reducer: IReducerSpec) => {
       reducers.push({ path: statePath, reducer });
     });

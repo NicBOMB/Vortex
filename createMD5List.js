@@ -1,3 +1,4 @@
+// @ts-check
 const crypto = require('crypto');
 const fs = require('fs').promises;
 const path = require('path');
@@ -8,7 +9,7 @@ async function walk(base, rel) {
 
   try {
     await Promise.all((await fs.readdir(path.join(base, rel)))
-      .map(async name => {
+      .map(async (name) => {
         const stats = await fs.stat(path.join(base, rel, name));
         const rPath = path.join(rel, name);
         if (stats.isDirectory()) {
@@ -18,9 +19,9 @@ async function walk(base, rel) {
         }
       }));
 
-    await Promise.all(await dirs.map(async dir => {
+    await Promise.all(dirs.map(async (dir) => {
       const rec = await walk(base, dir);
-      files = [].concat(files, rec);
+      files = new Array().concat(files, rec);
     }));
   } catch (err) {
     console.error('Failed to walk', base, err.message);
@@ -33,7 +34,7 @@ exports.default = async function(context) {
   const assetsPath = path.join(context.appOutDir, 'resources', 'app.asar.unpacked', 'assets');
 
   const hashes = await Promise.all((await walk(context.appOutDir, ''))
-    .map(async relPath => {
+    .map(async (relPath) => {
       const hash = crypto.createHash('md5');
       const fileData = await fs.readFile(path.join(context.appOutDir, relPath));
       const buf = hash

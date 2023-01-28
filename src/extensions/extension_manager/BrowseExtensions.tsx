@@ -228,7 +228,7 @@ class BrowseExtensions extends ComponentEx<IProps, IBrowseExtensionsState> {
   private isCompatible(ext: IAvailableExtension): boolean {
     if ((ext.dependencies === undefined)
         || (ext.dependencies['vortex'] === undefined)
-        || (process.env.NODE_ENV === 'development')) {
+        || (process.env['NODE_ENV'] === 'development')) {
       return true;
     }
 

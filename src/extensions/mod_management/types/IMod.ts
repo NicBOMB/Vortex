@@ -7,8 +7,6 @@ export type ModState =
 
 /**
  * represents a mod in all states (being downloaded, downloaded, installed)
- *
- * @interface IMod
  */
 export interface IMod {
   id: string;

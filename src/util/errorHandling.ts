@@ -156,7 +156,7 @@ export function setApiKey(key: string) {
 }
 
 export function setOutdated(api: IExtensionApi) {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env['NODE_ENV'] === 'development') {
     return;
   }
   const state = api.store.getState();
@@ -229,7 +229,7 @@ export function sendReport(type: string, error: IError, context: IErrorContext,
                            sourceProcess: string, attachment: string): Promise<IFeedbackResponse|undefined> {
   const dialog = process.type === 'renderer' ? remote.dialog : dialogIn;
   const hash = genHash(error);
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env['NODE_ENV'] === 'development') {
     const fullMessage = error.title !== undefined
       ? error.message + `\n(${error.title})`
       : error.message;

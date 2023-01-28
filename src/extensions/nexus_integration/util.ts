@@ -1154,9 +1154,9 @@ export function updateKey(api: IExtensionApi, nexus: Nexus, key: string): Promis
       }
       return github.fetchConfig('api')
         .then(configObj => {
-          const currentVer = getApplication().version;
-          if ((currentVer !== '0.0.1')
-            && (semver.lt(currentVer, configObj.minversion))) {
+          const app = getApplication();
+          if ((app.name === 'vortex')
+            && (semver.lt(app.version, configObj.minversion))) {
             (nexus as any).disable();
             api.sendNotification({
               type: 'warning',

@@ -54,7 +54,7 @@ function setEnv(key: string, value: string, force?: boolean) {
   }
 }
 
-if (process.env.NODE_ENV !== 'development') {
+if (process.env['NODE_ENV'] !== 'development') {
   setEnv('NODE_ENV', 'production', true);
 } else {
   const rebuildRequire = require('./util/requireRebuild').default;
@@ -67,17 +67,17 @@ if (process.env.NODE_ENV !== 'development') {
   setEnv('IS_PREVIEW_BUILD', 'no');
 }
 
-if ((process.platform === 'win32') && (process.env.NODE_ENV !== 'development')) {
+if ((process.platform === 'win32') && (process.env['NODE_ENV'] !== 'development')) {
   // On windows dlls may be loaded from directories in the path variable
   // (which I don't know why you'd ever want that) so I filter path quite aggressively here
   // to prevent dynamically loaded dlls to be loaded from unexpected locations.
   // The most common problem this should prevent is the edge dll being loaded from
   // "Browser Assistant" instead of our own.
 
-  const userPath = (process.env.HOMEDRIVE || 'c:') + (process.env.HOMEPATH || '\\Users');
-  const programFiles = process.env.ProgramFiles ||  'C:\\Program Files';
+  const userPath = (process.env['HOMEDRIVE'] || 'c:') + (process.env['HOMEPATH'] || '\\Users');
+  const programFiles = process.env['ProgramFiles'] ||  'C:\\Program Files';
   const programFilesX86 = process.env['ProgramFiles(x86)'] || 'C:\\Program Files (x86)';
-  const programData = process.env.ProgramData || 'C:\\ProgramData';
+  const programData = process.env['ProgramData'] || 'C:\\ProgramData';
 
   const pathFilter = (envPath: string): boolean => {
     return !envPath.startsWith(userPath)
@@ -123,7 +123,7 @@ import * as child_processT from 'child_process';
 import * as fs from './util/fs';
 import presetManager from './util/PresetManager';
 
-process.env.Path = process.env.Path + path.delimiter + __dirname;
+process.env['Path'] = process.env['Path'] + path.delimiter + __dirname;
 
 const handleError = (error: any) => {
   if (Application.shouldIgnoreError(error)){ return; }
@@ -140,8 +140,8 @@ async function main(): Promise<void> {
       });
   }
 
-  const NODE_OPTIONS = process.env.NODE_OPTIONS || '';
-  process.env.NODE_OPTIONS = NODE_OPTIONS
+  const NODE_OPTIONS = process.env['NODE_OPTIONS'] || '';
+  process.env['NODE_OPTIONS'] = NODE_OPTIONS
     + ` --max-http-header-size=${HTTP_HEADER_SIZE}`
     + ' --no-force-async-hooks-checks';
 
@@ -210,7 +210,7 @@ async function main(): Promise<void> {
   process.on('uncaughtException', handleError);
   process.on('unhandledRejection', handleError);
 
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env['NODE_ENV'] === 'development') {
     app.commandLine.appendSwitch('remote-debugging-port', DEBUG_PORT);
   }
 

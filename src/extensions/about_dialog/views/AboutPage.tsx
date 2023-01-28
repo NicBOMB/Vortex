@@ -1,7 +1,8 @@
 import More from '../../../controls/More';
 import { ComponentEx, translate } from '../../../util/ComponentEx';
 import github from '../../../util/github';
-import {log} from '../../../util/log';
+import { IApplication } from '../../../util/application';
+import { log } from '../../../util/log';
 import MainPage from '../../../views/MainPage';
 
 import * as fs from 'fs';
@@ -41,7 +42,7 @@ interface IComponentState {
   selectedLicense: string;
   licenseText: string;
   ownLicense: boolean;
-  releaseDate: Date;
+  releaseDate: undefined|Date;
   changelog: string;
   tag: string;
 }
@@ -50,38 +51,38 @@ type IProps = IBaseProps;
 
 class AboutPage extends ComponentEx<IProps, IComponentState> {
   private mMounted: boolean;
-  private mVersion: string;
+  private readonly mApp: IApplication;
   constructor(props) {
     super(props);
     this.mMounted = false;
     this.initState({
-      selectedLicense: undefined,
-      licenseText: undefined,
+      selectedLicense: '',
+      licenseText: '',
       ownLicense: false,
       releaseDate: undefined,
-      changelog: undefined,
-      tag: undefined,
+      changelog: '',
+      tag: '',
     });
 
-    this.mVersion = getApplication().version;
+    this.mApp = getApplication();
   }
 
   public override componentDidMount() {
     this.mMounted = true;
 
-    if (this.mVersion === '0.0.1') {
+    if (this.mApp.name === 'vortex_devel') {
       this.nextState.tag = 'Development';
     } else {
       github.releases()
         .then(releases => {
           if (this.mMounted) {
             try {
-              const thisVersion = 'v' + this.mVersion;
+              const thisVersion = 'v' + this.mApp.version;
               const thisRelease = releases.find(rel => rel.tag_name === thisVersion);
               if (thisRelease !== undefined) {
                 this.nextState.releaseDate = new Date(thisRelease.published_at);
                 this.nextState.changelog = thisRelease.body;
-                this.nextState.tag = thisRelease.prerelease ? 'Beta' : undefined;
+                this.nextState.tag = thisRelease.prerelease ? 'Beta' : '';
               } else {
                 this.nextState.tag = 'Unknown';
               }
@@ -108,8 +109,6 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
 
     const imgPath = path.resolve(getVortexPath('assets'), 'images', 'vortex.png');
 
-    let body = null;
-
     const licenseBox = ownLicense
       ? (
         <ReactMarkdown
@@ -127,7 +126,7 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
       );
 
     const PanelX: any = Panel;
-    body = (
+    const body = (
       <MainPage.Body id='about-dialog'>
         <Panel>
           <PanelX.Body>
@@ -135,8 +134,8 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
               <Media.Left><Image className='vortex-logo' src={imgPath} /></Media.Left>
               <Media.Body>
                 <h2 className='media-heading'>
-                  Vortex {this.mVersion}
-                  {(tag !== undefined) ? ' ' + tag : ''}
+                  Vortex {this.mApp.version}
+                  {tag ? ` ${tag}` : ''}
                 </h2>
                 <p>&#169;2022 Black Tree Gaming Ltd.</p>
                 <p>
@@ -175,16 +174,16 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
     this.nextState.ownLicense = !this.state.ownLicense;
   }
 
-  private selectLicense = (evt) => {
+  private selectLicense: React.MouseEventHandler<HTMLAnchorElement> = (evt) => {
     const {t} = this.props;
 
     const modKey = evt.currentTarget.href.split('#')[1];
     if (this.state.selectedLicense === modKey) {
-      this.nextState.selectedLicense = undefined;
+      this.nextState.selectedLicense = '';
       return;
+    } else if (modKey){
+      this.nextState.selectedLicense = modKey;
     }
-
-    this.nextState.selectedLicense = modKey;
 
     const mod = modules[modKey];
     const license = typeof (mod.licenses) === 'string' ? mod.licenses :
@@ -233,6 +232,4 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
   }
 }
 
-export default
-  translate(['common'])(
-    AboutPage) as React.ComponentClass<IBaseProps>;
+export default translate(['common'])(AboutPage);

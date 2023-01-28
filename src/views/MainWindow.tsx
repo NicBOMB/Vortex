@@ -379,7 +379,7 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
   }
 
   private setFocus = () => {
-    if (process.env.DEBUG_REACT_RENDERS !== 'true') {
+    if (process.env['DEBUG_REACT_RENDERS'] !== 'true') {
       this.updateState({
         focused: { $set: true },
       });
@@ -387,7 +387,7 @@ export class MainWindow extends React.Component<IProps, IMainWindowState> {
   }
 
   private unsetFocus = () => {
-    if (process.env.DEBUG_REACT_RENDERS !== 'true') {
+    if (process.env['DEBUG_REACT_RENDERS'] !== 'true') {
       this.updateState({
         focused: { $set: false },
       });

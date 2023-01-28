@@ -303,8 +303,8 @@ function setupAutoUpdate(api: IExtensionApi) {
       log('info', 'set channel', { channel, manual });
       if ((channel !== 'none')
           && ((channelOverride === undefined) || manual)
-          && (process.env.NODE_ENV !== 'development')
-          && (process.env.IGNORE_UPDATES !== 'yes')) {
+          && (process.env['NODE_ENV'] !== 'development')
+          && (process.env['IGNORE_UPDATES'] !== 'yes')) {
         if (manual) {
           channelOverride = channel;
         }
