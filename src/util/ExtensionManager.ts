@@ -4,7 +4,7 @@ import { addNotification, closeDialog, DialogActions, DialogType, dismissNotific
 import { suppressNotification } from '../actions/notificationSettings';
 import { setExtensionLoadFailures } from '../actions/session';
 
-import { IExtension } from '../extensions/extension_manager/types';
+import { IAvailableExtension, IExtension } from '../extensions/extension_manager/types';
 import { IModReference, IModRepoId } from '../extensions/mod_management/types/IMod';
 import { ExtensionInit, IExtensionReducer } from '../types/Extension';
 import {
@@ -65,6 +65,14 @@ import stringFormat from 'string-template';
 import * as winapiT from 'vortex-run';
 import { getApplication } from './application';
 import makeRemoteCall, { makeRemoteCallSync } from './electronRemote';
+
+export function isExtSame(installed: IExtension, remote: IAvailableExtension): boolean {
+  if (installed.modId !== undefined) {
+    return installed.modId === remote.modId;
+  }
+  
+  return installed.name === remote.name;
+}
 
 const winapi = lazyRequire<typeof winapiT>(() => require('vortex-run'));
 
@@ -910,16 +918,26 @@ class ExtensionManager {
     this.mApi.showErrorNotification = function(message: string,
                                                details: string | Error | any,
                                                options?: IErrorOptions) {
-      if ((this.extension !== undefined)
-          && (this.extension.info !== undefined)
-          && (this.extension.info.author !== COMPANY_ID)) {
+      let extension: IRegisteredExtension = this.extension;
+
+      if ((extension === undefined) && (details?.['extension'] !== undefined)) {
+        extension = (this.getLoadedExtensions() as IRegisteredExtension[])
+          .find(iter => (iter.name === details['extension']));
+      }
+      
+      if ((extension !== undefined)
+          && (extension.info !== undefined)
+          && (extension.info.author !== COMPANY_ID + 'x')) {
         if (options === undefined) {
           options = {};
         }
         if (options.allowReport !== false) {
-          options['allowReport'] = false;
-          options.extensionName = this.extension.info.name;
+          options.extensionName = extension.info.name;
+
+          const remoteExtensions = this.getState().session.extensions.available;
+          options.extensionRemote = remoteExtensions.find(ext => isExtSame(extension.info, ext));
         }
+        options.extension = extension;
       }
       showError(store.dispatch, message, details, options);
     };
@@ -1775,13 +1793,18 @@ class ExtensionManager {
         ...options.env,
       };
 
+      // TODO: we might want to be much more restrictive in what keys we allow in environment variables,
+      //   based on a quick google I could only find rules for Linux which appears to not allow the equal
+      //   sign in keys either (which makes sense).
+      //   On windows the empty string is the only thing I found that causes a problem though
+      delete env[''];
+
       return this.applyStartHooks({ executable, args, options })
-      .then(updatedParameters => {
-        ({ executable, args, options } = updatedParameters);
-        return Bluebird.resolve();
-      })
-      .then(() => new Bluebird<void>((resolve, reject) => {
-        try {
+        .then(updatedParameters => {
+          ({ executable, args, options } = updatedParameters);
+          return Bluebird.resolve();
+        })
+        .then(() => new Bluebird<void>((resolve, reject) => {
           const runExe = options.shell
             ? `"${executable}"`
             : executable;
@@ -1789,113 +1812,122 @@ class ExtensionManager {
             cwd,
             env,
             detached: options.detach !== undefined ? options.detach : true,
-            shell: options.shell,
+            shell: options.shell ?? false,
           };
 
-          const runParams = { executable, args, options: { ...options, env } };
-          const vars = this.mToolParameterCBs.reduce((prev, cb) => {
-            return { ...prev, ...cb(runParams) };
-          }, {});
+          try {
+            const runParams = { executable, args, options: { ...options, env } };
+            const vars = this.mToolParameterCBs.reduce((prev, cb) => {
+              return { ...prev, ...cb(runParams) };
+            }, {});
 
-          args = args.map(arg => applyVariables(arg, vars));
+            args = args.map(arg => applyVariables(arg, vars));
 
-          const child = spawn(runExe, options.shell ? args : args.map(arg => arg.replace(/"/g, '')),
-                              spawnOptions);
-          if (!!child['exitCode']){
-            // brilliant, apparently there is no way for me to get at the stdout/stderr when running
-            // through a shell if starting the application fails immediately
-            return reject(new Error(`Failed to start (exit code ${child['exitCode']})`));
-          }
-          if (options.onSpawned !== undefined) {
-            options.onSpawned(child.pid);
-          }
+            const child = spawn(runExe, options.shell ? args : args.map(arg => arg.replace(/"/g, '')),
+              spawnOptions);
+            if (!!child['exitCode']) {
+              // brilliant, apparently there is no way for me to get at the stdout/stderr when running
+              // through a shell if starting the application fails immediately
+              return reject(new Error(`Failed to start (exit code ${child['exitCode']})`));
+            }
+            if (options.onSpawned !== undefined) {
+              options.onSpawned(child.pid);
+            }
 
-          if (options.detach) {
-            child.unref();
-          }
+            if (options.detach) {
+              child.unref();
+            }
 
-          let stdOut: string;
-          let errOut: string;
-          child
-            .on('error', (err) => {
-              reject(err);
-            })
-            .on('close', (code) => {
-              const game = activeGameId(this.mApi.store.getState());
-              if ((game === 'fallout3') && (code === 0xC0000135)) {
-                // 0xC0000135 means that a dll couldn't be found.
-                // In the context of FO3 it's commonly xlive or other redistribs are
-                //  not installed.
-                return reject(new MissingDependency());
-              } else if (code === 0xE0434352) {
-                // A .net error, unfortunately we can't now if/how the actual exception
-                // text has been reported
-                log('warn', '.NET error', { stdOut, errOut });
-                if (game === 'stardewvalley') {
-                  // In the case of SDV the interesting information seems to get printed to stdout
-                  return reject(new ThirdPartyError(stdOut || errOut));
-                } else if (errOut) {
-                  return reject(new ThirdPartyError(errOut));
-                } else {
-                  return reject(new ProcessCanceled('.NET error'));
-                }
-              } else if (code === 0xC000026B) {
-                return reject(new ProcessCanceled('Windows shutting down'));
-              } else if (code !== 0) {
-                // TODO: the child process returns an exit code of 53 for SSE and
-                // FO4, and an exit code of 1 for Skyrim. We don't know why but it
-                // doesn't seem to affect anything
-                log('warn', 'child process exited with code: ' + code.toString(16), {});
-                if (errOut !== undefined) {
-                  log('warn', 'child output', errOut.trim());
-                }
-                if (options.expectSuccess) {
-                  let lastLine = '<No output>';
-
-                  if (errOut !== undefined) {
-                    const lines = errOut.trim().split('\n');
-                    lastLine = (lines.length > ERROR_OUTPUT_CUTOFF)
-                      ? lines[lines.length - 1]
-                      : lines.join('\n');
+            let stdOut: string;
+            let errOut: string;
+            child
+              .on('error', err => {
+                reject(err);
+              })
+              .on('close', (code) => {
+                const game = activeGameId(this.mApi.store.getState());
+                if ((game === 'fallout3') && (code === 0xC0000135)) {
+                  // 0xC0000135 means that a dll couldn't be found.
+                  // In the context of FO3 it's commonly xlive or other redistribs are
+                  //  not installed.
+                  return reject(new MissingDependency());
+                } else if (code === 0xE0434352) {
+                  // A .net error, unfortunately we can't now if/how the actual exception
+                  // text has been reported
+                  log('warn', '.NET error', { stdOut, errOut });
+                  if (game === 'stardewvalley') {
+                    // In the case of SDV the interesting information seems to get printed to stdout
+                    return reject(new ThirdPartyError(stdOut || errOut));
+                  } else if (errOut) {
+                    return reject(new ThirdPartyError(errOut));
+                  } else {
+                    return reject(new ProcessCanceled('.NET error'));
                   }
-                  const err: any = new Error(
-                    `Failed to run "${executable}": "${lastLine} (${code.toString(16)})"`);
-                  err.exitCode = code;
-                  return reject(err);
+                } else if (code === 0xC000026B) {
+                  return reject(new ProcessCanceled('Windows shutting down'));
+                } else if (code !== 0) {
+                  // TODO: the child process returns an exit code of 53 for SSE and
+                  // FO4, and an exit code of 1 for Skyrim. We don't know why but it
+                  // doesn't seem to affect anything
+                  log('warn', 'child process exited with code: ' + code.toString(16), {});
+                  if (errOut !== undefined) {
+                    log('warn', 'child output', errOut.trim());
+                  }
+                  if (options.expectSuccess) {
+                    let lastLine = '<No output>';
+
+                    if (errOut !== undefined) {
+                      const lines = errOut.trim().split('\n');
+                      lastLine = (lines.length > ERROR_OUTPUT_CUTOFF)
+                        ? lines[lines.length - 1]
+                        : lines.join('\n');
+                    }
+                    const err: any = new Error(
+                      `Failed to run "${executable}": "${lastLine} (${code.toString(16)})"`);
+                    err.exitCode = code;
+                    return reject(err);
+                  }
                 }
-              }
-              resolve();
-          });
-          if (child.stderr !== undefined) {
-            child.stderr.on('data', (chunk: Buffer) => {
-              if (errOut === undefined) {
-                errOut = '';
-              }
-              try {
-                errOut += chunk.toString();
-              } catch (err) {
-                log('warn', 'error output from external process couldn\'t be processed',
+                resolve();
+              });
+            if (child.stderr !== undefined) {
+              child.stderr.on('data', (chunk: Buffer) => {
+                if (errOut === undefined) {
+                  errOut = '';
+                }
+                try {
+                  errOut += chunk.toString();
+                } catch (err) {
+                  log('warn', 'error output from external process couldn\'t be processed',
                     { executable });
-              }
-            });
-          }
-          if (child.stdout !== undefined) {
-            child.stdout.on('data', (chunk: Buffer) => {
-              if (stdOut === undefined) {
-                stdOut = '';
-              }
-              try {
-                stdOut += chunk.toString();
-              } catch (err) {
-                log('warn', 'output from external process couldn\'t be processed',
+                }
+              });
+            }
+            if (child.stdout !== undefined) {
+              child.stdout.on('data', (chunk: Buffer) => {
+                if (stdOut === undefined) {
+                  stdOut = '';
+                }
+                try {
+                  stdOut += chunk.toString();
+                } catch (err) {
+                  log('warn', 'output from external process couldn\'t be processed',
                     { executable });
-              }
-            });
+                }
+              });
+            }
+          } catch (err) {
+            if (err.code === 'EINVAL') {
+              err['attachLogOnReport'] = true;
+              log('error', 'Invalid spawn parameters', {
+                runExe,
+                args,
+                options: JSON.stringify(options),
+              });
+            }
+            return reject(err);
           }
-        } catch (err) {
-          return reject(err);
-        }
-      }))
+        }))
         .catch(ProcessCanceled, () => null)
         .catch({ code: 'EACCES' }, () =>
           this.runElevated(executable, cwd, args, env, options.onSpawned))
@@ -2298,7 +2330,7 @@ class ExtensionManager {
       'installer_fomod',
       'installer_nested_fomod',
       'instructions_overlay',
-      'harmony_injector',
+      // 'harmony_injector',
       'settings_metaserver',
       'test_runner',
       'extension_manager',

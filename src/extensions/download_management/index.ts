@@ -615,6 +615,11 @@ function checkPendingTransfer(api: IExtensionApi): Promise<ITestResult> {
 let shutdownPending: boolean = false;
 let shutdownInitiated: boolean = false;
 
+/**
+ * schedule or abort shutdown as necessary. This gets called constantly as downloads
+ * are happening, the shutdown is sheduled when there are no active downloads, it's
+ * canceled when new downloads are started
+ */
 function updateShutdown(downloads: { [key: string]: IDownload }) {
   if (shutdownInitiated
       && ((Object.keys(downloads).length > 0)
@@ -626,7 +631,7 @@ function updateShutdown(downloads: { [key: string]: IDownload }) {
 
   if (!shutdownInitiated
       && shutdownPending
-      && (Object.keys(downloads).length > 0)) {
+      && (Object.keys(downloads).length === 0)) {
     // schedule shutdown if conditions are met
     winapi.InitiateSystemShutdown('Vortex downloads finished', 30, false, false);
     shutdownInitiated = true;

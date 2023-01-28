@@ -473,7 +473,10 @@ class InstallManager {
       .then(newModId => {
         if (newModId === undefined) {
           // this shouldn't be possible, how would checkNameLoop return undefined?
-          return Bluebird.reject(new Error('failed to generate mod id'));
+          const err = new Error('failed to generate mod id');
+          err['originalModId'] = modId;
+          err['archivePath'] = archivePath;
+          return Bluebird.reject(err);
         }
         modId = newModId;
         log('debug', 'mod id for newly installed mod', { archivePath, modId });
@@ -2250,9 +2253,20 @@ class InstallManager {
               allowReport: false,
             });
             return Bluebird.resolve();
-          }
-
-          if (err.name === 'HTTPError') {
+          } else if (err.code === 'ERR_INVALID_PROTOCOL') {
+            const msg = err.message.replace(/ Expected .*/, '');
+            api.showErrorNotification(
+              'Failed to install dependency',
+              'The URL protocol used in the dependency is not supported, '
+              + 'you may be missing an extension required to handle it:\n{{errorMessage}}', {
+              message: refName,
+              id: notiId,
+              allowReport: false,
+              replace: {
+                errorMessage: msg,
+              },
+            });
+          } else if (err.name === 'HTTPError') {
             err['attachLogOnReport'] = true;
             api.showErrorNotification('Failed to install dependency', err, {
               id: notiId,
@@ -2642,8 +2656,9 @@ class InstallManager {
       error: IDependencyError[];
     }
 
+    // get updated mod state
     const modState = (profile !== undefined)
-      ? (api.getState().persistent.profiles[profile.id].modState ?? {})
+      ? (api.getState().persistent.profiles[profile.id]?.modState ?? {})
       : {};
 
     const { success, existing, error } = dependencies.reduce(

@@ -48,7 +48,7 @@ export interface IRenderOptions {
 export function renderModReference(ref: IModReference, mod?: IMod, options?: IRenderOptions) {
   const version = (options === undefined) || options.version !== false;
 
-  if ((ref.id !== undefined) && (mod !== undefined)) {
+  if (mod !== undefined) {
     return modName(mod, { version });
   }
 

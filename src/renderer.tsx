@@ -324,6 +324,9 @@ function errorHandler(evt: any) {
       `at ${extPath}(Vortex Extension Update - )?([^/\\\\]*)`);
     const reMatch = error.stack.match(re);
     const extName = reMatch?.[2] ?? 'unknown';
+
+    error['extension'] = extName;
+
     log('error', 'extension caused an unhandled exception', {
       name: extName,
       error: error.stack,
@@ -347,6 +350,13 @@ function errorHandler(evt: any) {
   } else if ((error.code === 'ERR_SSL_WRONG_VERSION_NUMBER')
              || (error.function === 'OPENSSL_internal')) {
     log('warn', 'internal ssl error', error.message);
+    return;
+  }
+
+  if ((error.stack !== undefined) && (error.stack.includes('finishClassComponent'))) {
+    // don't report errors from react components because they will be handled (usually),
+    // for some reason the "unhandled" callback is invoked before reacts componentDidCatch
+    // handler.
     return;
   }
 
@@ -413,13 +423,15 @@ let startupFinished: (value?: any) => void;
 let extensions: ExtensionManager;
 
 function init() {
+  const reportReducerError = err =>
+    extensions.getApi().showErrorNotification('Failed to update application state', err);
   // I only want to add reducers, but redux-electron-store seems to break
   // when calling replaceReducer in the renderer
   // (https://github.com/samiskin/redux-electron-store/issues/48)
   // now that we're not using it any more, may want to try again
   // store.replaceReducer(reducer(extReducers));
   store = createStore(
-    reducer([], () => Decision.QUIT),
+    reducer([], () => Decision.QUIT, reportReducerError),
     initialState(),
     enhancer
   );

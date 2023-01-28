@@ -1,4 +1,4 @@
-import { IExtensionDownloadInfo } from '../extensions/extension_manager/types';
+import { IAvailableExtension, IExtensionDownloadInfo } from '../extensions/extension_manager/types';
 import { ILoadOrderGameInfo } from '../extensions/file_based_loadorder/types/types';
 import {
   GameVersionProviderFunc, GameVersionProviderTest, IGameVersionProviderOptions,
@@ -208,9 +208,6 @@ export type StateChangeCallback<T = any> =
 /**
  * additional detail to further narrow down which file is meant
  * in a lookup
- *
- * @export
- * @interface ILookupDetails
  */
 export interface ILookupDetails {
   filePath?: string;
@@ -227,9 +224,6 @@ export type PersistorKey = string[];
  * a persistor is used to hook a data file into the store.
  * This way any data file can be made available through the store and
  * updated through actions, as long as it can be represented in json
- *
- * @export
- * @interface IPersistor
  */
 export interface IPersistor {
   setResetCallback(cb: () => Promise<void>): void;
@@ -259,9 +253,6 @@ export interface IArchiveOptions {
 
 /**
  * interface for archive handlers, exposing files inside archives to to other extensions
- *
- * @export
- * @interface IArchiveHandler
  */
 export interface IArchiveHandler {
   readDir(archPath: string): Promise<string[]>;
@@ -311,6 +302,8 @@ export interface IErrorOptions {
   replace?: { [key: string]: string };
   attachments?: IAttachment[];
   extensionName?: string;
+  extension?: IRegisteredExtension;
+  extensionRemote?: IAvailableExtension;
   actions?: INotificationAction[];
 }
 
@@ -409,9 +402,6 @@ export interface IExtensionApiExtension extends INexusAPIExtension {
 
 /**
  * interface for convenience functions made available to extensions
- *
- * @export
- * @interface IExtensionApi
  */
 export interface IExtensionApi {
   /**
@@ -424,9 +414,6 @@ export interface IExtensionApi {
    * This is not available in the call to registerReducer
    *
    * @return the notification id
-   *
-   * @type {INotification}
-   * @memberOf IExtensionApi
    */
   sendNotification: (notification: INotification) => string;
 
@@ -451,8 +438,6 @@ export interface IExtensionApi {
 
   /**
    * hides a notification by its id
-   *
-   * @memberOf IExtensionApi
    */
   dismissNotification: (id: string) => void;
 
@@ -465,22 +450,16 @@ export interface IExtensionApi {
 
   /**
    * show a system dialog to open a single file
-   *
-   * @memberOf IExtensionApi
    */
   selectFile: (options: IOpenOptions) => Promise<string>;
 
   /**
    * show a system dialog to select an executable file
-   *
-   * @memberOf IExtensionApi
    */
   selectExecutable: (options: IOpenOptions) => Promise<string>;
 
   /**
    * show a system dialog to open a single directory
-   *
-   * @memberOf IExtensionApi
    */
   selectDir: (options: IOpenOptions) => Promise<string>;
 
@@ -495,7 +474,6 @@ export interface IExtensionApi {
    *   actually want a "snapshot" of the state.
    *
    * @type {Redux.Store<IState>}
-   * @memberOf IExtensionApi
    */
   store: ThunkStore<IState>;
 
@@ -503,7 +481,6 @@ export interface IExtensionApi {
    * event emitter
    *
    * @type {NodeJS.EventEmitter}
-   * @memberOf IExtensionApi
    */
   events: NodeJS.EventEmitter;
 
@@ -542,7 +519,6 @@ export interface IExtensionApi {
    * adjust your extension.
    *
    * @type {Electron.AppPathName}
-   * @memberOf IExtensionApi
    */
   getPath: (name: string) => string;
 
@@ -560,9 +536,6 @@ export interface IExtensionApi {
    * is set to true, this application will also be inserted as the system wide default handler
    * for the protocol. Use with caution, as this will overwrite the previous value, which
    * can't be undone automatically
-   *
-   * @type {IRegisterProtocol}
-   * @memberOf IExtensionContext
    */
   registerProtocol: IRegisterProtocol;
 
@@ -578,15 +551,11 @@ export interface IExtensionApi {
 
   /**
    * deregister an uri protocol currently being handled by us
-   *
-   * @memberOf IExtensionApi
    */
   deregisterProtocol: (protocol: string) => void;
 
   /**
    * find meta information about a mod
-   *
-   * @memberOf IExtensionApi
    */
   lookupModReference: (ref: IModReference, options?: ILookupOptions) => Promise<IModLookupResult[]>;
 
@@ -604,15 +573,11 @@ export interface IExtensionApi {
    * Please note that it's still possible for the file to get multiple
    * matches, i.e. if it has been re-uploaded, potentially for a different
    * game.
-   *
-   * @memberOf IExtensionApi
    */
   lookupModMeta: (details: ILookupDetails, ignoreCache?: boolean) => Promise<ILookupResult[]>;
 
   /**
    * save meta information about a mod
-   *
-   * @memberOf IExtensionApi
    */
   saveModMeta: (modInfo: IModInfo) => Promise<void>;
 
@@ -649,8 +614,6 @@ export interface IExtensionApi {
    * @param {string} key identify the key to set. If this is an existing sheet, that sheet will be
    *                     replaced
    * @param {string} filePath path of the corresponding stylesheet file
-   *
-   * @memberOf IExtensionContext
    */
   setStylesheet: (key: string, filePath: string) => void;
 
@@ -792,9 +755,6 @@ export function addReducer<ActionT, StateT>(
  * specification a reducer registration has to follow.
  * defaults must be an object with the same keys as
  * reducers
- *
- * @export
- * @interface IReducerSpec
  */
 export interface IReducerSpec<T = { [key: string]: any }> {
   reducers: { [key: string]: (state: T, payload: any) => T };

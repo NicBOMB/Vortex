@@ -692,8 +692,13 @@ function genUpdateModDeployment() {
           if (attachLogErrCodes.includes(err.code)) {
             err['attachLogOnReport'] = true;
           }
+          const isFSErr = ['EMFILE'].includes(err.code);
+          if (isFSErr) {
+            err.message = 'A filesystem error prevented deploying some files. '
+                        + 'please try deploying again.\n' + err.message;
+          }
           return api.showErrorNotification('Failed to deploy mods', err, {
-            allowReport: (err.code !== 'EPERM') && (err.allowReport !== false),
+            allowReport: (err.code !== 'EPERM') && !isFSErr && (err.allowReport !== false),
           });
         })
         .finally(() => {
@@ -1555,7 +1560,7 @@ function init(context: IExtensionContext): boolean {
         .catch(err => {
           context.api.showErrorNotification('Failed to install recommendations', err);
         });
-    }, instanceIds => {
+    }, modIds => {
       // only show the option if there is at least one recommendation not already fulfilled.
       // though this doesn't do the full mod reference lookup, it just goes by id hint
       const state = context.api.getState();
@@ -1564,10 +1569,15 @@ function init(context: IExtensionContext): boolean {
 
       const hasUnfulfilled = (modId: string) => (mods[modId].rules ?? [])
         .find(rule => !rule.ignored
+            && (rule.type === 'recommends')
+            // if idHint is undefined this rule has never been fulfilled,
             && (!rule.reference.idHint
+            // if the mod can't be found by idHint it probably was removed
               || (mods[rule.reference.idHint] === undefined)));
-
-      return (instanceIds.find(hasUnfulfilled) !== undefined)
+      
+      const unfulfilled = modIds.find(hasUnfulfilled);
+      
+      return (unfulfilled !== undefined)
           || 'No unfulfilled recommendations';
     });
 
