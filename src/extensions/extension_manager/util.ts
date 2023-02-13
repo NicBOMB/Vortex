@@ -328,7 +328,7 @@ const UPDATE_PREFIX = 'Vortex Extension Update -';
 function archiveFileName(ext: IExtensionDownloadInfo): string {
   const name = ext.name.startsWith('Game:')
     ? ext.name.replace('Game:', UPDATE_PREFIX)
-    : UPDATE_PREFIX + ' ' + ext.name;
+    : `${UPDATE_PREFIX} ${ext.name}`;
   return (ext['version'] !== undefined)
     ? `${sanitize(name)} v${ext['version']}.7z`
     : `${sanitize(name)}.7z`;

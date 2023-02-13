@@ -70,7 +70,7 @@ export function isExtSame(installed: IExtension, remote: IAvailableExtension): b
   if (installed.modId !== undefined) {
     return installed.modId === remote.modId;
   }
-  
+
   return installed.name === remote.name;
 }
 
@@ -924,7 +924,7 @@ class ExtensionManager {
         extension = (this.getLoadedExtensions() as IRegisteredExtension[])
           .find(iter => (iter.name === details['extension']));
       }
-      
+
       if ((extension !== undefined)
           && (extension.info !== undefined)
           && (extension.info.author !== COMPANY_ID + 'x')) {

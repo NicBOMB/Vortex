@@ -35,7 +35,7 @@ import Settings from './Settings';
 import WindowControls from './WindowControls';
 
 import update from 'immutability-helper';
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import { Button as ReactButton, Nav } from 'react-bootstrap';

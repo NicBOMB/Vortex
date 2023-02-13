@@ -406,7 +406,7 @@ const INVALID_FILEPATH_CHARACTERS = process.platform === 'win32'
 /**
  * characters invalid in a file name
  */
-const INVALID_FILENAME_CHARACTERS = [].concat(INVALID_FILEPATH_CHARACTERS, path.sep);
+const INVALID_FILENAME_CHARACTERS = new Array<string>().concat(INVALID_FILEPATH_CHARACTERS, path.sep);
 
 const INVALID_FILENAME_RE = new RegExp(`[${escapeRE(INVALID_FILENAME_CHARACTERS.join(''))}]`, 'g');
 

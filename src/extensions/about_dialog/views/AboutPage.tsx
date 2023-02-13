@@ -70,7 +70,7 @@ class AboutPage extends ComponentEx<IProps, IComponentState> {
   public override componentDidMount() {
     this.mMounted = true;
 
-    if (this.mApp.name === 'vortex_devel') {
+    if (this.mApp.name === 'vortex-devel') {
       this.nextState.tag = 'Development';
     } else {
       github.releases()

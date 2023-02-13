@@ -1,16 +1,16 @@
 {
   "name": "vortex-run",
   "version": "0.0.13",
+  "author": "Black Tree Gaming Ltd.",
   "description": "Helpers to run code in different modes (elevated, in separate threads)",
+  "license": "GPL-3.0",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
-    "build": "../../../node_modules/.bin/tsc -p . -d"
+    "install": "tsc -p . -d"
   },
-  "typings": "lib/index.d.ts",
   "files": [
     "lib/",
     "bin/"
-  ],
-  "author": "Black Tree Gaming Ltd.",
-  "license": "GPL-3.0"
+  ]
 }

@@ -65,11 +65,10 @@ Create and `cd` to an appropriate directory (i.e. `C:\GitHub\Nexus-Mods\`, `/Git
 ```sh
 git clone --recursive https://github.com/NicBOMB/Vortex.git
 cd Vortex
-pnpm i
 ```
-Running the following commands will build Vortex, its extensions, and start the app using the built extensions and transpiled sources.
+Running the following commands will build Vortex, its extensions, and start the app using those builds.
 ```sh
-pnpm build
+pnpm install
 pnpm start
 ```
 ------
@@ -78,10 +77,7 @@ pnpm start
 - See [https://wiki.nexusmods.com/index.php/Vortex](https://wiki.nexusmods.com/index.php/Vortex) for usage information
 ## Developer Guides
 - For development
-  - `pnpm install` to install dependencies
-  - `pnpm build` to build
-  - `pnpm start` to run
-- See [structure.md](structure.md) for an extended overview of the project.
+  - See [structure.md](structure.md) for an extended overview of the project.
 - For production
   - The scripts ([electron-builder-oneclick.json](electron-builder-oneclick.json) and [electron-builder-advanced.json](electron-builder-advanced.json) require code signing with a certificate you don't have so change those.
   - `pnpm dist` to make distributable packages (this will take a while)
@@ -104,7 +100,7 @@ All data the client generates (including settings and logs) are stored at the fo
 
 or
 
-`C:\Users\<username>\AppData\Roaming\vortex_devel` (development build)
+`C:\Users\<username>\AppData\Roaming\vortex-devel` (development build)
 
 </details>
 <details><summary>Linux</summary>
@@ -113,7 +109,7 @@ or
 
 or
 
-`/home/<username>/.config/vortex_devel` (development build)
+`/home/<username>/.config/vortex-devel` (development build)
 
 or
 

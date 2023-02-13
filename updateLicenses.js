@@ -1,7 +1,7 @@
 // @ts-check
-const fs = require('fs');
-const checker = require('license-checker');
-const path = require('path');
+import fs from 'node:fs';
+import checker from 'license-checker';
+import path from 'node:path';
 
 checker.init(
   {
@@ -14,6 +14,7 @@ checker.init(
     if (err){ return console.error('error', err); }
 
     const filtered = Object.entries(json).reduce((prev, [key, value]) => {
+      const licensePath = value.licenseFile?.split?.(path.sep)?.slice?.(1);
       if (key === ""
         || value.publisher?.startsWith?.('Black Tree Gaming')
         || key.startsWith('@types')
@@ -31,7 +32,10 @@ checker.init(
       if (value.email === ""){ delete value.email; }
       if (value.url === ""){ delete value.url; }
       if (value.licenses === ""){ delete value.licenses; }
-      if (value.licenseFile === ""){ delete value.licenseFile; }
+      if (value.licenseFile === "" || licensePath?.includes?.("node_modules")){
+        delete value.licenseFile;
+        licensePath?.splice(0);
+      }
       delete value.licenseText;
       delete value.licenseModified;
       delete value.private;
@@ -40,9 +44,9 @@ checker.init(
       if (value.noticeFile === ""){ delete value.noticeFile; }
       prev[key] = {
         ...value,
-        licenseFile: value.licenseFile ?
-          value.licenseFile.split(path.sep).slice(1) :
-          undefined
+        licenseFile: licensePath?.length && licensePath.length > 0
+          ? licensePath
+          : undefined
       };
       return prev;
     }, {});
@@ -53,4 +57,5 @@ checker.init(
       { encoding: 'utf-8' },
       () => null
     );
-  });
+  }
+);

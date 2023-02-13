@@ -268,5 +268,6 @@ function mapDispatchToProps(dispatch: ThunkDispatch<any, null, Redux.Action>): I
   };
 }
 
-export default translate(['common'])(connect(mapStateToProps, mapDispatchToProps)(
-  QuickLauncher)) as React.ComponentClass<IBaseProps>;
+export default translate(['common'])(
+  connect(mapStateToProps, mapDispatchToProps)(QuickLauncher)
+);

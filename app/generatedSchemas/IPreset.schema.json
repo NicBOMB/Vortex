@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "anyOf": [
+    {
+      "$ref": "#/definitions/IPreset"
+    },
+    {
+      "$ref": "#/definitions/IPresetsState"
+    }
+  ],
+  "definitions": {
+    "IPreset": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IPresetStep"
+          }
+        }
+      },
+      "required": [
+        "steps"
+      ]
+    },
+    "IPresetStep": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/IPresetStepCommandLine"
+        },
+        {
+          "$ref": "#/definitions/IPresetStepInstallMod"
+        },
+        {
+          "$ref": "#/definitions/IPresetStepHydrateState"
+        },
+        {
+          "$ref": "#/definitions/IPresetStepSetGame"
+        },
+        {
+          "$ref": "#/definitions/IPresetStepRestart"
+        },
+        {
+          "$ref": "#/definitions/IPresetStepLoginNexus"
+        }
+      ]
+    },
+    "IPresetStepCommandLine": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "commandline"
+        },
+        "id": {
+          "type": "string"
+        },
+        "arguments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ICommandLineArg"
+          }
+        }
+      },
+      "required": [
+        "arguments",
+        "id",
+        "type"
+      ]
+    },
+    "ICommandLineArg": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {}
+      },
+      "required": [
+        "key"
+      ]
+    },
+    "IPresetStepInstallMod": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "installmod"
+        },
+        "id": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "url"
+      ]
+    },
+    "IPresetStepHydrateState": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "hydrate"
+        },
+        "id": {
+          "type": "string"
+        },
+        "state": {}
+      },
+      "required": [
+        "id",
+        "state",
+        "type"
+      ]
+    },
+    "IPresetStepSetGame": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "setgame"
+        },
+        "id": {
+          "type": "string"
+        },
+        "game": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "game",
+        "id",
+        "type"
+      ]
+    },
+    "IPresetStepRestart": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "restart"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ]
+    },
+    "IPresetStepLoginNexus": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "login_nexus"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type"
+      ]
+    },
+    "IPresetsState": {
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/IPresetState"
+          }
+        },
+        "processing": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "presets"
+      ]
+    },
+    "IPresetState": {
+      "type": "object",
+      "properties": {
+        "completed": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data": {}
+      },
+      "required": [
+        "completed",
+        "data"
+      ]
+    }
+  },
+  "exported": [
+    "IPreset",
+    "IPresetsState"
+  ]
+}

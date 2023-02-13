@@ -2,12 +2,12 @@
 
 - **/**: The project base directory contains mostly configuration files at the top level
   - *package.json*: the vortex_devel project file
-    - scripts: The most common/convenient are scripts are described below.
-      - build: Builds the rest of Vortex before transpiling Vortex's sources.
+    - scripts: The most common/convenient scripts are described below.
+      - install: Builds all of Vortex's dependencies and extensions before transpiling Vortex's sources.
       - build_api: Creates the typings of Vortex's sources in the api/lib directory.
       - devel: Transpiles Vortex's sources using strict settings.
-      - start: Launches electron in development mode.
-      - dist: Builds and packages all extensions, updates all assets, transpiles Vortex's sources
+      - start: Launches Vortex in 'development' mode.
+      - dist: run the install script then creates compressed archives and distributables of Vortex
       - lint: Formats Vortex's sources. Temporarily disabled. The linting configuration will return.
   - *tsconfig.json*: configuration file for the typescript compiler
   - *eslint.json*: configuration which implements the CODESTYLE guidelines

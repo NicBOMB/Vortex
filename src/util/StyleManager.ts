@@ -81,7 +81,7 @@ if (ipcMain !== undefined) {
 
     sassIndex = `$theme-path: "${pathToFileURL(themePath)}";\n` + sassIndex;
 
-    const isDevel = getApplication().name === 'vortex_devel';
+    const isDevel = getApplication().name === 'vortex-devel';
 
     const assetsPath = path.join(getVortexPath('assets_unpacked'), 'css');
     const modulesPath = getVortexPath('modules_unpacked');

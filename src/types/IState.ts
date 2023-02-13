@@ -117,7 +117,7 @@ export interface IExtensionState {
 /** settings relating to the vortex application itself */
 export interface IApp {
   instanceId: string;
-  name: 'vortex'|'vortex_devel';
+  name: 'vortex'|'vortex-devel';
   version: string;
   appVersion: string;
   extensions: { [id: string]: IExtensionState };
@@ -141,7 +141,7 @@ export interface ITableStates {
 export interface IStateDownloads {
   speed: number;
   speedHistory: number[];
-  files: { [id: string]: IDownload };
+  files: { [dlId: string]: IDownload };
 }
 
 export interface IDashletSettings {
@@ -162,7 +162,7 @@ export interface ISettingsInterface {
   foregroundDL: boolean;
   dashletSettings: { [dashletId: string]: IDashletSettings };
   usage: { [usageId: string]: boolean };
-  primaryTool: { [gameMode: string]: '' };
+  primaryTool: { [gameMode: string]: string };
   tools:{ order: { [gamemode: string]: string[]}; };
 }
 
@@ -439,15 +439,17 @@ export interface INexusInfo {
 export interface IPersistent {
     profiles: { [profileId: string]: IProfile };
     collections: {
-      [collectionId: string]: {
-        timestamp: number;
-        info: ICollection;
+      collections: {
+        [collectionId: string]: {
+          timestamp: number;
+          info: ICollection;
+        };
       };
-    };
-    revisions: {
-      [revisionId: string]: {
-        timestamp: number;
-        info: IRevision;
+      revisions: {
+        [revisionId: string]: {
+          timestamp: number;
+          info: IRevision;
+        };
       };
     };
     changelogs: { changelogs: any[] };

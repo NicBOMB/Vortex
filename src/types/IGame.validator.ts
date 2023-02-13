@@ -1,7 +1,7 @@
 // @ts-nocheck
 
 'use strict';
-var equal = require('ajv/lib/compile/equal');
+var equal = require('fast-deep-equal/es6');
 var validate = (function() {
   var refVal = [];
   var refVal1 = {

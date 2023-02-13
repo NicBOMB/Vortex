@@ -9,8 +9,8 @@ import RadialProgress, { IBar } from '../controls/RadialProgress';
 import Debouncer from '../util/Debouncer';
 import Notification from './Notification';
 
-import * as _ from 'lodash';
-import * as React from 'react';
+import _ from 'lodash';
+import React from 'react';
 import { Badge, Button, Overlay, Popover } from 'react-bootstrap';
 
 export interface IBaseProps {

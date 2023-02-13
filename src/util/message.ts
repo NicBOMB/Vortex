@@ -151,7 +151,7 @@ function shouldAllowReport(err: string | Error | any, options?: IErrorOptions): 
       || (err instanceof ThirdPartyError)) {
     return false;
   }
-  
+
   return !noReportErrors.includes(err.code);
 }
 
@@ -342,8 +342,8 @@ export function showError(
   }
 
   let extIssueTrackerURL = undefined;
-  if (options.extension?.info?.issueTrackerURL !== undefined) {
-    extIssueTrackerURL = options.extension.info.issueTrackerURL;
+  if (options.extension?.info?.bugs !== undefined) {
+    extIssueTrackerURL = options.extension.info.bugs;
   } else if (options.extension?.info?.modId !== undefined) {
     extIssueTrackerURL = nexusModsURL(['site', 'mods', options.extension.info.modId.toString()], { parameters: ['tab=bugs'] });
   } else if (options.extensionRemote?.github !== undefined) {

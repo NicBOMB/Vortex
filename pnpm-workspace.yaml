@@ -2,5 +2,6 @@ packages:
   - 'api'
   - 'app'
   - 'extensions/*'
+  - 'extensions/games/game-pillarsofeternity2'
   - 'src/util/vortex-run'
   - 'tools/remote/*'

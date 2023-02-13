@@ -1,5 +1,8 @@
 {
   "$schema": "node_modules/app-builder-lib/scheme.json",
+  "directories": {
+    "output": "dist_test"
+  },
   "asar": true,
   "asarUnpack": [
     "7z.exe",
@@ -7,7 +10,6 @@
     "bundledPlugins",
     "lib/modinstaller",
     "node_modules/7z-bin",
-    "node_modules/nbind",
     "node_modules/bootstrap-sass/assets/stylesheets",
     "node_modules/react-select/scss",
     "node_modules/fomod-installer/dist",
@@ -17,19 +19,12 @@
     "assets/css/**",
     "**/*.node"
   ],
-  "afterSign": "./createMD5List.js",
   "appId": "com.nexusmods.vortex",
+  "includeSubNodeModules": true,
   "win": {
     "target": "nsis",
     "forceCodeSigning": false,
-    "publisherName": "Black Tree Gaming Limited",
-    "extraFiles": [
-      {
-        "from": "assets/vcruntime",
-        "to": ".",
-        "filter": "*.dll"
-      }
-    ]
+    "publisherName": "Black Tree Gaming Limited"
   },
   "nsis": {
     "perMachine": true,
@@ -75,6 +70,7 @@
     "!**/*.js.map",
     "!**/*.iobj",
     "!**/*.ipdb",
+    "!**/*.ilk",
     "!**/*.vcxproj",
     "!**/*.vcxproj.filters",
     "!**/Makefile",
@@ -89,12 +85,17 @@
     "!**/binding.gyp",
     "!**/binding.map",
     "!**/build/src/Release/obj${/*}",
+    "!**/node_modules/7z-bin/**/*",
+    "**/node_modules/7z-bin/*",
+    "**/node_modules/7z-bin/${platform}/*",
+    "**/node_modules/7z-bin/bin/*",
     "!**/node_modules/edge/lib/native${/*}",
     "!**/node_modules/edge/src${/*}",
     "!**/node_modules/leveldown/deps${/*}",
     "!**/node_modules/node-sass/{build,src,vendor}${/*}",
     "!**/node_modules/recharts/umd${/*}",
     "!**/node_modules/ffi/deps",
+    "!**/node_modules/harmony-patcher/VortexHarmonyInstaller",
     "!**/Release/*.map",
     "!**/node_modules/bootstrap-sass/assets/fonts",
     "!**/node_modules/recharts/node_modules/d3-scale/img",
@@ -110,6 +111,6 @@
     "!**/node_modules/zeromq/build/libzmq",
     "!**/node_modules/zeromq/prebuilds"
   ],
-  "buildDependenciesFromSource": true,
+  "buildDependenciesFromSource": false,
   "npmRebuild": true
 }

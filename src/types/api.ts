@@ -21,8 +21,13 @@ export { IDiscoveredTool } from '../types/IDiscoveredTool';
 export { IExecInfo } from '../types/IExecInfo';
 export { IStoreQuery } from '../util/GameStoreHelper';
 export { IGameStoreEntry } from './IGameStoreEntry';
-export { GameEntryNotFound, GameStoreNotFound, ICustomExecutionInfo,
-  IGameStore, GameLaunchType } from './IGameStore';
+export {
+  GameEntryNotFound,
+  GameStoreNotFound,
+  ICustomExecutionInfo,
+  IGameStore,
+  GameLaunchType
+} from './IGameStore';
 export { IStarterInfo } from '../util/StarterInfo';
 
 export { IRegisteredExtension } from '../util/ExtensionManager';
@@ -40,6 +45,7 @@ export {
 } from '../extensions/mod_management/types/IDeploymentMethod';
 export { IDiscoveryResult } from '../extensions/gamemode_management/types/IDiscoveryResult';
 export { IGameStored } from '../extensions/gamemode_management/types/IGameStored';
+export { IToolStored } from '../extensions/gamemode_management/types/IToolStored';
 export { IDeploymentManifest } from '../extensions/mod_management/types/IDeploymentManifest';
 export { IModLookupInfo } from '../extensions/mod_management/util/testModReference';
 export { IMod, IModReference, IModRepoId, IModRule } from '../extensions/mod_management/types/IMod';

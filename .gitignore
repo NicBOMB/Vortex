@@ -1,19 +1,21 @@
 # User-specific files
 .env
-.vscode
-*.VC.db
+**/.vscode
+**/*.VC.db
 **/*.kate-swp
 **/*.kateproject*
 
 # auto generated
+**/node_modules/*
 **/npm-debug.log
 **/yarn-error.log
+**/eslint.log
 
-# temporary fonts directory used during font-svg generation
+# temporary fonts directory used during font-svg generation (see tools/renameicons.js)
 /fonts/
 
-# Build results
-**/node_modules/*
+# build results
+app/*
 dist
 dist_custom
 dist_portable
@@ -25,4 +27,8 @@ icons/Nucleo_Colored/
 icons/Nucleo_Glyph/
 icons/Nucleo_Outline/
 icons/nucleo-standard-license.txt
-eslint.log
+
+# tracked results
+!app/*lock*
+!app/package.json
+!app/generatedSchemas

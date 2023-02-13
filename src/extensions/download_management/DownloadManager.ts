@@ -17,7 +17,7 @@ import FileAssembler from './FileAssembler';
 import SpeedCalculator from './SpeedCalculator';
 
 import Promise from 'bluebird';
-import * as contentDisposition from 'content-disposition';
+import contentDisposition from 'content-disposition';
 import * as contentType from 'content-type';
 import * as http from 'http';
 import * as https from 'https';

@@ -9,7 +9,7 @@ import { getGame } from '../util/getGame';
 import { IModWithState } from '../../mod_management/types/IModProps';
 import { useTranslation } from 'react-i18next';
 import { activeGameId } from '../../profile_management/selectors';
-import { midClip, truthy } from '../../../util/util';
+import { midClip } from '../../../util/util';
 import { util } from '../../..';
 
 export interface IModTypeWidget {
@@ -18,12 +18,12 @@ export interface IModTypeWidget {
 
 function ModTypeWidget(props: IModTypeWidget) {
   const mods = Array.isArray(props.mods) ? props.mods : [props.mods];
-  
+
   const dispatch = useDispatch();
   const { t } = useTranslation();
 
   const modTypeId = mods[0].type;
-  
+
   const gameMode = useSelector<IState, string>(activeGameId);
   const discovery = useSelector<IState, IDiscoveryResult>(state =>
     state.settings.gameMode.discovered[gameMode]);
@@ -53,7 +53,7 @@ function ModTypeWidget(props: IModTypeWidget) {
       dispatch(setModType(gameMode, mod.id, newValue.key || ''));
     }
   }, [gameMode]);
-  
+
   const openPath = React.useCallback(() => {
     util.opn(modTypePath).catch(() => null);
   }, [modTypePath]);
@@ -61,7 +61,7 @@ function ModTypeWidget(props: IModTypeWidget) {
   if (mods.length === 0) {
     return null;
   }
-  
+
   if (mods.find(iter => iter.type !== modTypeId) !== undefined) {
     return <div>{t('Multiple')}</div>;
   }
@@ -75,7 +75,7 @@ function ModTypeWidget(props: IModTypeWidget) {
         valueKey='key'
         labelKey='text'
       />
-      {truthy(modTypePath)
+      {!!modTypePath
         ? <div>{t('Deploys to')}&nbsp;<a onClick={openPath} title={modTypePath} className='modtype-path'>{midClip(modTypePath, 40)}</a></div>
         : t('Does not deploy')}
     </div>

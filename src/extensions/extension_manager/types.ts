@@ -25,7 +25,7 @@ export interface IExtension {
   bundled?: boolean;
   path?: string;
   modId?: number;
-  issueTrackerURL?: string;
+  bugs?: string;
 }
 
 export type IExtensionWithState = IExtension & IExtensionState & {
